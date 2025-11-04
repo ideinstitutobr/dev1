@@ -40,13 +40,36 @@ class NotificationManager {
     private function setupMailer() {
         // Verifica se PHPMailer está disponível
         if (!class_exists('PHPMailer\PHPMailer\PHPMailer')) {
-            // Se não tiver via Composer, usa versão standalone
-            require_once __DIR__ . '/../../vendor/phpmailer/src/PHPMailer.php';
-            require_once __DIR__ . '/../../vendor/phpmailer/src/SMTP.php';
-            require_once __DIR__ . '/../../vendor/phpmailer/src/Exception.php';
+            // Tenta carregar via Composer autoload
+            if (file_exists(__DIR__ . '/../../vendor/autoload.php')) {
+                require_once __DIR__ . '/../../vendor/autoload.php';
+            }
+            // Senão, tenta caminho standalone
+            elseif (file_exists(__DIR__ . '/../../vendor/phpmailer/src/PHPMailer.php')) {
+                require_once __DIR__ . '/../../vendor/phpmailer/src/PHPMailer.php';
+                require_once __DIR__ . '/../../vendor/phpmailer/src/SMTP.php';
+                require_once __DIR__ . '/../../vendor/phpmailer/src/Exception.php';
+            }
+            // Tenta instalação global do servidor
+            elseif (file_exists('/usr/share/php/PHPMailer/PHPMailer.php')) {
+                require_once '/usr/share/php/PHPMailer/PHPMailer.php';
+                require_once '/usr/share/php/PHPMailer/SMTP.php';
+                require_once '/usr/share/php/PHPMailer/Exception.php';
+            }
+            // Versão antiga (class.phpmailer.php)
+            elseif (file_exists(__DIR__ . '/../../lib/PHPMailer/class.phpmailer.php')) {
+                require_once __DIR__ . '/../../lib/PHPMailer/class.phpmailer.php';
+                require_once __DIR__ . '/../../lib/PHPMailer/class.smtp.php';
+            }
         }
 
-        $this->mailer = new PHPMailer(true);
+        // Usa namespace se disponível, senão classe antiga
+        if (class_exists('PHPMailer\PHPMailer\PHPMailer')) {
+            $this->mailer = new PHPMailer(true);
+        } else {
+            // Fallback para versão antiga
+            $this->mailer = new \PHPMailer(true);
+        }
 
         // Configurações SMTP
         $this->mailer->isSMTP();

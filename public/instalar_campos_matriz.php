@@ -25,10 +25,8 @@ $erros = [];
 $sucessos = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['instalar'])) {
-    $transactionStarted = false;
     try {
-        $pdo->beginTransaction();
-        $transactionStarted = true;
+        // Nota: ALTER TABLE faz commit implícito, não usamos transações para DDL
 
         // ETAPA 1: Alterar ENUM tipo
         $sucessos[] = "ETAPA 1: Alterando campo 'tipo'...";
@@ -161,19 +159,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['instalar'])) {
             }
         }
 
-        $pdo->commit();
-        $transactionStarted = false;
         $instalado = true;
         $sucessos[] = "🎉 INSTALAÇÃO CONCLUÍDA COM SUCESSO!";
 
     } catch (Exception $e) {
-        if ($transactionStarted) {
-            try {
-                $pdo->rollBack();
-            } catch (Exception $rollbackError) {
-                // Ignora erro de rollback se a transação já foi finalizada
-            }
-        }
         $erros[] = "❌ Erro durante a instalação: " . $e->getMessage();
         $erros[] = "Detalhes técnicos: " . $e->getFile() . " linha " . $e->getLine();
     }
