@@ -184,7 +184,43 @@ include __DIR__ . '/../../app/views/layouts/header.php';
         color: #999;
         font-size: 14px;
     }
+
+    .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .chart-card {
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .chart-card h3 {
+        color: #333;
+        font-size: 18px;
+        margin: 0 0 20px 0;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #667eea;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 350px;
+    }
+
+    @media (max-width: 1024px) {
+        .charts-grid {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 <!-- Ações -->
 <div class="actions-bar">
@@ -253,6 +289,41 @@ include __DIR__ . '/../../app/views/layouts/header.php';
         <div class="icon">⭐</div>
         <div class="label">Avaliação Média Geral</div>
         <div class="value"><?php echo number_format($stats['media_avaliacao_geral'], 1, ',', '.'); ?></div>
+    </div>
+</div>
+
+<!-- Gráficos Interativos -->
+<div class="charts-grid">
+    <!-- Gráfico: Status dos Treinamentos -->
+    <div class="chart-card">
+        <h3>📊 Status dos Treinamentos</h3>
+        <div class="chart-container">
+            <canvas id="chartStatus"></canvas>
+        </div>
+    </div>
+
+    <!-- Gráfico: Distribuição por Tipo -->
+    <div class="chart-card">
+        <h3>📂 Distribuição por Tipo</h3>
+        <div class="chart-container">
+            <canvas id="chartTipo"></canvas>
+        </div>
+    </div>
+
+    <!-- Gráfico: Participações por Mês -->
+    <div class="chart-card">
+        <h3>📈 Evolução Mensal de Participações</h3>
+        <div class="chart-container">
+            <canvas id="chartMensal"></canvas>
+        </div>
+    </div>
+
+    <!-- Gráfico: Top 5 Treinamentos -->
+    <div class="chart-card">
+        <h3>🏆 Top 5 Treinamentos</h3>
+        <div class="chart-container">
+            <canvas id="chartTop5"></canvas>
+        </div>
     </div>
 </div>
 
@@ -365,5 +436,274 @@ include __DIR__ . '/../../app/views/layouts/header.php';
         </table>
     <?php endif; ?>
 </div>
+
+<script>
+// Configuração global dos gráficos
+Chart.defaults.font.family = 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif';
+Chart.defaults.color = '#666';
+
+// 1. Gráfico de Status dos Treinamentos (Pizza)
+const ctxStatus = document.getElementById('chartStatus').getContext('2d');
+new Chart(ctxStatus, {
+    type: 'doughnut',
+    data: {
+        labels: ['Executados', 'Em Andamento', 'Programados', 'Cancelados'],
+        datasets: [{
+            data: [
+                <?php echo $stats['treinamentos_executado'] ?? 0; ?>,
+                <?php echo $stats['treinamentos_em_andamento'] ?? 0; ?>,
+                <?php echo $stats['treinamentos_programado'] ?? 0; ?>,
+                <?php echo $stats['treinamentos_cancelado'] ?? 0; ?>
+            ],
+            backgroundColor: [
+                '#28a745',
+                '#ffc107',
+                '#667eea',
+                '#dc3545'
+            ],
+            borderWidth: 2,
+            borderColor: '#fff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    padding: 15,
+                    font: {
+                        size: 12
+                    }
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const label = context.label || '';
+                        const value = context.parsed || 0;
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                        return `${label}: ${value} (${percentage}%)`;
+                    }
+                }
+            }
+        }
+    }
+});
+
+// 2. Gráfico de Distribuição por Tipo (Pizza)
+const ctxTipo = document.getElementById('chartTipo').getContext('2d');
+new Chart(ctxTipo, {
+    type: 'pie',
+    data: {
+        labels: [
+            <?php foreach ($relatorioGeral['distribuicao_tipo'] as $d): ?>
+                '<?php echo addslashes($d['tipo']); ?>',
+            <?php endforeach; ?>
+        ],
+        datasets: [{
+            data: [
+                <?php foreach ($relatorioGeral['distribuicao_tipo'] as $d): ?>
+                    <?php echo $d['total']; ?>,
+                <?php endforeach; ?>
+            ],
+            backgroundColor: [
+                '#667eea',
+                '#764ba2',
+                '#f093fb',
+                '#4facfe',
+                '#43e97b',
+                '#fa709a',
+                '#fee140',
+                '#30cfd0'
+            ],
+            borderWidth: 2,
+            borderColor: '#fff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    padding: 15,
+                    font: {
+                        size: 12
+                    }
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const label = context.label || '';
+                        const value = context.parsed || 0;
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                        return `${label}: ${value} (${percentage}%)`;
+                    }
+                }
+            }
+        }
+    }
+});
+
+// 3. Gráfico de Evolução Mensal (Linha)
+<?php
+// Preparar dados mensais (últimos 12 meses)
+$db = Database::getInstance();
+$pdo = $db->getConnection();
+
+$sqlMensal = "SELECT
+                DATE_FORMAT(t.data_inicio, '%Y-%m') as mes,
+                COUNT(DISTINCT tp.id) as total_participacoes
+              FROM treinamentos t
+              LEFT JOIN treinamento_participantes tp ON t.id = tp.treinamento_id
+              WHERE t.data_inicio >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+              AND t.status = 'Executado'
+              GROUP BY DATE_FORMAT(t.data_inicio, '%Y-%m')
+              ORDER BY mes";
+
+$stmtMensal = $pdo->query($sqlMensal);
+$dadosMensais = $stmtMensal->fetchAll();
+
+// Preparar arrays para o gráfico
+$meses = [];
+$valores = [];
+foreach ($dadosMensais as $dm) {
+    $meses[] = date('M/Y', strtotime($dm['mes'] . '-01'));
+    $valores[] = $dm['total_participacoes'];
+}
+?>
+
+const ctxMensal = document.getElementById('chartMensal').getContext('2d');
+new Chart(ctxMensal, {
+    type: 'line',
+    data: {
+        labels: [<?php echo "'" . implode("','", $meses) . "'"; ?>],
+        datasets: [{
+            label: 'Participações',
+            data: [<?php echo implode(',', $valores); ?>],
+            borderColor: '#667eea',
+            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#667eea',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 5,
+            pointHoverRadius: 7
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                backgroundColor: 'rgba(0,0,0,0.8)',
+                padding: 12,
+                titleFont: {
+                    size: 14
+                },
+                bodyFont: {
+                    size: 13
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                },
+                grid: {
+                    color: 'rgba(0,0,0,0.05)'
+                }
+            },
+            x: {
+                grid: {
+                    display: false
+                }
+            }
+        }
+    }
+});
+
+// 4. Gráfico Top 5 Treinamentos (Barras Horizontais)
+const ctxTop5 = document.getElementById('chartTop5').getContext('2d');
+new Chart(ctxTop5, {
+    type: 'bar',
+    data: {
+        labels: [
+            <?php
+            $top5 = array_slice($relatorioGeral['treinamentos_mais_realizados'], 0, 5);
+            foreach ($top5 as $t):
+            ?>
+                '<?php echo addslashes(substr($t['nome'], 0, 30)); ?><?php echo strlen($t['nome']) > 30 ? '...' : ''; ?>',
+            <?php endforeach; ?>
+        ],
+        datasets: [{
+            label: 'Participantes',
+            data: [
+                <?php foreach ($top5 as $t): ?>
+                    <?php echo $t['total_participantes']; ?>,
+                <?php endforeach; ?>
+            ],
+            backgroundColor: [
+                'rgba(102, 126, 234, 0.8)',
+                'rgba(118, 75, 162, 0.8)',
+                'rgba(240, 147, 251, 0.8)',
+                'rgba(79, 172, 254, 0.8)',
+                'rgba(67, 233, 123, 0.8)'
+            ],
+            borderColor: [
+                '#667eea',
+                '#764ba2',
+                '#f093fb',
+                '#4facfe',
+                '#43e97b'
+            ],
+            borderWidth: 2
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                backgroundColor: 'rgba(0,0,0,0.8)',
+                padding: 12
+            }
+        },
+        scales: {
+            x: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                },
+                grid: {
+                    color: 'rgba(0,0,0,0.05)'
+                }
+            },
+            y: {
+                grid: {
+                    display: false
+                }
+            }
+        }
+    }
+});
+</script>
 
 <?php include __DIR__ . '/../../app/views/layouts/footer.php'; ?>

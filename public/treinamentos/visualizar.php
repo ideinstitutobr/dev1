@@ -288,6 +288,15 @@ include __DIR__ . '/../../app/views/layouts/header.php';
         background: #218838;
     }
 
+    .btn-info {
+        background: #17a2b8;
+        color: white;
+    }
+
+    .btn-info:hover {
+        background: #138496;
+    }
+
     .observacoes-box {
         background: white;
         padding: 25px;
@@ -701,6 +710,10 @@ include __DIR__ . '/../../app/views/layouts/header.php';
         ✅ Marcar como Executado
     </a>
     <?php endif; ?>
+
+    <a href="../agenda/gerenciar.php?treinamento_id=<?php echo $treinamento['id']; ?>" class="btn btn-info">
+        📅 Gerenciar Agenda/Turmas
+    </a>
 
     <a href="../participantes/vincular.php?treinamento_id=<?php echo $treinamento['id']; ?>" class="btn btn-primary">
         ➕ Vincular Participantes

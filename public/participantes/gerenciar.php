@@ -350,6 +350,11 @@ include __DIR__ . '/../../app/views/layouts/header.php';
             ➕ Adicionar Participantes
         </a>
         <?php if (count($participantes) > 0): ?>
+            <?php if (Auth::hasLevel(['admin', 'gestor'])): ?>
+            <button type="button" onclick="enviarConvitesTodos()" class="btn" style="background: #17a2b8; color: white;">
+                📧 Enviar Convites a Todos
+            </button>
+            <?php endif; ?>
             <a href="actions.php?action=exportar&treinamento_id=<?php echo $treinamentoId; ?>" class="btn btn-success">
                 📥 Exportar CSV
             </a>
@@ -432,6 +437,16 @@ include __DIR__ . '/../../app/views/layouts/header.php';
                         </td>
                         <td>
                             <div class="actions-cell">
+                                <?php if (Auth::hasLevel(['admin', 'gestor'])): ?>
+                                    <button type="button"
+                                            onclick="enviarConvite(<?php echo $p['id']; ?>, '<?php echo e($p['colaborador_nome']); ?>')"
+                                            class="btn btn-sm"
+                                            style="background: #17a2b8; color: white;"
+                                            title="Enviar convite por e-mail">
+                                        📧
+                                    </button>
+                                <?php endif; ?>
+
                                 <?php if (!$p['check_in_realizado'] && Auth::hasLevel(['admin', 'gestor', 'instrutor'])): ?>
                                     <a href="actions.php?action=checkin&id=<?php echo $p['id']; ?>&treinamento_id=<?php echo $treinamentoId; ?>"
                                        class="btn btn-success btn-sm"
@@ -482,6 +497,55 @@ function filterTable() {
             row.style.display = 'none';
         }
     }
+}
+
+// Enviar convite individual
+function enviarConvite(participanteId, nomeColaborador) {
+    if (!confirm(`Enviar convite por e-mail para ${nomeColaborador}?`)) {
+        return;
+    }
+
+    const btn = event.target;
+    btn.disabled = true;
+    btn.textContent = '⏳';
+
+    window.location.href = `actions.php?action=enviar_convite&id=${participanteId}&treinamento_id=<?php echo $treinamentoId; ?>`;
+}
+
+// Enviar convites para todos
+function enviarConvitesTodos() {
+    if (!confirm('Enviar convites por e-mail para TODOS os participantes?')) {
+        return;
+    }
+
+    const btn = event.target;
+    btn.disabled = true;
+    btn.textContent = '⏳ Enviando...';
+
+    // Coleta IDs de todos os participantes
+    const participantes = <?php echo json_encode(array_column($participantes, 'id')); ?>;
+
+    fetch('actions.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: `action=enviar_convites_multiplos&participantes=${JSON.stringify(participantes)}`
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ ' + data.message);
+            location.reload();
+        } else {
+            alert('❌ ' + data.message);
+            btn.disabled = false;
+            btn.textContent = '📧 Enviar Convites a Todos';
+        }
+    })
+    .catch(e => {
+        alert('Erro ao enviar convites: ' + e.message);
+        btn.disabled = false;
+        btn.textContent = '📧 Enviar Convites a Todos';
+    });
 }
 </script>
 

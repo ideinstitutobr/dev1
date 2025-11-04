@@ -181,12 +181,20 @@
         </li>
 
         <li>
+            <a href="<?php echo BASE_URL; ?>frequencia/">
+                <span class="icon">📝</span>
+                <span class="text">Frequência</span>
+            </a>
+        </li>
+
+        <li>
             <a href="#" onclick="toggleSubmenu('relatorios'); return false;">
                 <span class="icon">📈</span>
                 <span class="text">Relatórios</span>
             </a>
             <ul class="submenu" id="submenu-relatorios">
                 <li><a href="<?php echo BASE_URL; ?>relatorios/dashboard.php">📊 Dashboard</a></li>
+                <li><a href="<?php echo BASE_URL; ?>relatorios/indicadores.php">📈 Indicadores de RH</a></li>
                 <li><a href="<?php echo BASE_URL; ?>relatorios/geral.php">📋 Relatório Geral</a></li>
                 <li><a href="<?php echo BASE_URL; ?>relatorios/departamentos.php">🏢 Por Departamento</a></li>
                 <li><a href="<?php echo BASE_URL; ?>relatorios/matriz.php">📋 Matriz de Capacitações</a></li>
@@ -209,9 +217,9 @@
                 <span class="text">Configurações</span>
             </a>
             <ul class="submenu" id="submenu-configuracoes">
-                <li><a href="<?php echo BASE_URL; ?>config/sistema.php">Sistema</a></li>
-                <li><a href="<?php echo BASE_URL; ?>config/usuarios.php">Usuários</a></li>
-                <li><a href="<?php echo BASE_URL; ?>config/email.php">E-mail</a></li>
+                <li><a href="<?php echo BASE_URL; ?>configuracoes/email.php">📧 E-mail (SMTP)</a></li>
+                <li><a href="<?php echo BASE_URL; ?>config/sistema.php">⚙️ Sistema</a></li>
+                <li><a href="<?php echo BASE_URL; ?>config/usuarios.php">👤 Usuários</a></li>
             </ul>
         </li>
         <?php endif; ?>

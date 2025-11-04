@@ -1,0 +1,78 @@
+==============================================
+INSTRUÇÕES PARA CORRIGIR O BOTÃO FALTANTE
+==============================================
+
+PROBLEMA: O arquivo visualizar.php no servidor está desatualizado.
+
+SOLUÇÃO: Adicionar o botão manualmente via cPanel ou FTP.
+
+----------------------------------------------
+PASSO A PASSO VIA CPANEL:
+----------------------------------------------
+
+1. Acesse o cPanel do seu servidor
+2. Vá em "Gerenciador de Arquivos" (File Manager)
+3. Navegue até:
+   public_html/comercial/public/treinamentos/
+4. Localize o arquivo: visualizar.php
+5. Clique com botão direito > Editar (Edit)
+6. Procure pela linha que tem:
+
+   ➕ Vincular Participantes
+
+7. ANTES dessa linha, adicione o seguinte código:
+
+    <a href="../agenda/gerenciar.php?treinamento_id=<?php echo $treinamento['id']; ?>" class="btn btn-info">
+        📅 Gerenciar Agenda/Turmas
+    </a>
+
+8. Procure também pela seção de ESTILOS CSS (dentro de <style>)
+9. Procure por ".btn-success:hover" e DEPOIS dele adicione:
+
+    .btn-info {
+        background: #17a2b8;
+        color: white;
+    }
+
+    .btn-info:hover {
+        background: #138496;
+    }
+
+10. Clique em "Salvar" (Save Changes)
+11. Teste a página novamente
+
+----------------------------------------------
+LOCALIZAÇÃO EXATA NO CÓDIGO:
+----------------------------------------------
+
+O botão deve ficar ENTRE estas duas linhas:
+
+ANTES:
+    <?php endif; ?>
+
+    <a href="../participantes/vincular.php?treinamento_id=<?php echo $treinamento['id']; ?>" class="btn btn-primary">
+        ➕ Vincular Participantes
+    </a>
+
+DEPOIS:
+    <?php endif; ?>
+
+    <a href="../agenda/gerenciar.php?treinamento_id=<?php echo $treinamento['id']; ?>" class="btn btn-info">
+        📅 Gerenciar Agenda/Turmas
+    </a>
+
+    <a href="../participantes/vincular.php?treinamento_id=<?php echo $treinamento['id']; ?>" class="btn btn-primary">
+        ➕ Vincular Participantes
+    </a>
+
+----------------------------------------------
+VERIFICAÇÃO:
+----------------------------------------------
+
+Após salvar, limpe o cache do navegador:
+- Windows/Linux: Ctrl + Shift + R
+- Mac: Cmd + Shift + R
+
+O botão azul claro "📅 Gerenciar Agenda/Turmas" deve aparecer!
+
+==============================================
