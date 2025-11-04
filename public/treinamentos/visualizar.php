@@ -380,9 +380,17 @@ include __DIR__ . '/../../app/views/layouts/header.php';
         </span>
         <span>
             <?php
-            $tipoClass = $treinamento['tipo'] === 'Interno' ? 'badge-info' : 'badge-warning';
+            $tipoClass = match($treinamento['tipo']) {
+                'Normativos' => 'badge-info',
+                'Comportamentais' => 'badge-success',
+                'Técnicos' => 'badge-warning',
+                default => 'badge-secondary'
+            };
             ?>
             <span class="badge <?php echo $tipoClass; ?>"><?php echo e($treinamento['tipo']); ?></span>
+        </span>
+        <span>
+            <span class="badge badge-primary"><?php echo e($treinamento['modalidade'] ?? 'Presencial'); ?></span>
         </span>
         <span>📅 ID: #<?php echo $treinamento['id']; ?></span>
         <span>📅 Cadastrado em: <?php echo date('d/m/Y', strtotime($treinamento['created_at'])); ?></span>
@@ -437,9 +445,20 @@ include __DIR__ . '/../../app/views/layouts/header.php';
             <span class="info-label">Tipo:</span>
             <span class="info-value">
                 <?php
-                $tipoClass = $treinamento['tipo'] === 'Interno' ? 'badge-info' : 'badge-warning';
+                $tipoClass = match($treinamento['tipo']) {
+                    'Normativos' => 'badge-info',
+                    'Comportamentais' => 'badge-success',
+                    'Técnicos' => 'badge-warning',
+                    default => 'badge-secondary'
+                };
                 ?>
                 <span class="badge <?php echo $tipoClass; ?>"><?php echo e($treinamento['tipo']); ?></span>
+            </span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Modalidade:</span>
+            <span class="info-value">
+                <span class="badge badge-primary"><?php echo e($treinamento['modalidade'] ?? 'Presencial'); ?></span>
             </span>
         </div>
         <?php if ($treinamento['fornecedor']): ?>
@@ -470,6 +489,25 @@ include __DIR__ . '/../../app/views/layouts/header.php';
             </span>
         </div>
     </div>
+
+    <!-- Planejamento Estratégico -->
+    <?php if ($treinamento['componente_pe'] || $treinamento['programa']): ?>
+    <div class="info-card">
+        <h3>🎯 Planejamento Estratégico</h3>
+        <?php if ($treinamento['componente_pe']): ?>
+        <div class="info-row">
+            <span class="info-label">Componente P.E.:</span>
+            <span class="info-value"><?php echo e($treinamento['componente_pe']); ?></span>
+        </div>
+        <?php endif; ?>
+        <?php if ($treinamento['programa']): ?>
+        <div class="info-row">
+            <span class="info-label">Programa:</span>
+            <span class="info-value"><?php echo e($treinamento['programa']); ?></span>
+        </div>
+        <?php endif; ?>
+    </div>
+    <?php endif; ?>
 
     <!-- Período e Carga Horária -->
     <div class="info-card">
@@ -568,10 +606,38 @@ include __DIR__ . '/../../app/views/layouts/header.php';
     </div>
 </div>
 
+<!-- Descritivos da Matriz -->
+<?php if ($treinamento['objetivo'] || $treinamento['resultados_esperados'] || $treinamento['justificativa']): ?>
+<div class="observacoes-box">
+    <h3>📝 Descritivos da Matriz</h3>
+
+    <?php if ($treinamento['objetivo']): ?>
+    <div style="margin-bottom: 20px;">
+        <strong style="color: #667eea;">O Que (Objetivo):</strong>
+        <p style="margin-top: 5px;"><?php echo nl2br(e($treinamento['objetivo'])); ?></p>
+    </div>
+    <?php endif; ?>
+
+    <?php if ($treinamento['resultados_esperados']): ?>
+    <div style="margin-bottom: 20px;">
+        <strong style="color: #667eea;">Resultados Esperados:</strong>
+        <p style="margin-top: 5px;"><?php echo nl2br(e($treinamento['resultados_esperados'])); ?></p>
+    </div>
+    <?php endif; ?>
+
+    <?php if ($treinamento['justificativa']): ?>
+    <div>
+        <strong style="color: #667eea;">Por Que (Justificativa):</strong>
+        <p style="margin-top: 5px;"><?php echo nl2br(e($treinamento['justificativa'])); ?></p>
+    </div>
+    <?php endif; ?>
+</div>
+<?php endif; ?>
+
 <!-- Observações -->
 <?php if ($treinamento['observacoes']): ?>
 <div class="observacoes-box">
-    <h3>📝 Observações</h3>
+    <h3>📝 Observações Adicionais</h3>
     <p><?php echo nl2br(e($treinamento['observacoes'])); ?></p>
 </div>
 <?php endif; ?>

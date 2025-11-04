@@ -183,9 +183,6 @@ include __DIR__ . '/../../app/views/layouts/header.php';
         font-size: 14px;
     }
 
-    #campos-externo {
-        display: none;
-    }
 
     .meta-info {
         background: #f8f9fa;
@@ -235,55 +232,97 @@ include __DIR__ . '/../../app/views/layouts/header.php';
         <div class="form-row">
             <div class="form-group">
                 <label>Tipo <span class="required">*</span></label>
-                <select name="tipo" id="tipo" required onchange="toggleCamposExterno()">
+                <select name="tipo" required>
                     <option value="">Selecione...</option>
-                    <option value="Interno" <?php echo ($_POST['tipo'] ?? $treinamento['tipo']) === 'Interno' ? 'selected' : ''; ?>>
-                        Interno (Realizado pela empresa)
+                    <option value="Normativos" <?php echo ($_POST['tipo'] ?? $treinamento['tipo']) === 'Normativos' ? 'selected' : ''; ?>>
+                        Normativos (Obrigatórios/Legais)
                     </option>
-                    <option value="Externo" <?php echo ($_POST['tipo'] ?? $treinamento['tipo']) === 'Externo' ? 'selected' : ''; ?>>
-                        Externo (Fornecedor externo)
+                    <option value="Comportamentais" <?php echo ($_POST['tipo'] ?? $treinamento['tipo']) === 'Comportamentais' ? 'selected' : ''; ?>>
+                        Comportamentais (Soft Skills)
+                    </option>
+                    <option value="Técnicos" <?php echo ($_POST['tipo'] ?? $treinamento['tipo']) === 'Técnicos' ? 'selected' : ''; ?>>
+                        Técnicos (Hard Skills)
                     </option>
                 </select>
             </div>
 
             <div class="form-group">
-                <label>Status <span class="required">*</span></label>
-                <select name="status" required>
-                    <option value="Programado" <?php echo ($_POST['status'] ?? $treinamento['status']) === 'Programado' ? 'selected' : ''; ?>>
-                        Programado
+                <label>Modalidade <span class="required">*</span></label>
+                <select name="modalidade" required>
+                    <option value="Presencial" <?php echo ($_POST['modalidade'] ?? $treinamento['modalidade'] ?? 'Presencial') === 'Presencial' ? 'selected' : ''; ?>>
+                        Presencial
                     </option>
-                    <option value="Em Andamento" <?php echo ($_POST['status'] ?? $treinamento['status']) === 'Em Andamento' ? 'selected' : ''; ?>>
-                        Em Andamento
+                    <option value="Híbrido" <?php echo ($_POST['modalidade'] ?? $treinamento['modalidade']) === 'Híbrido' ? 'selected' : ''; ?>>
+                        Híbrido
                     </option>
-                    <option value="Executado" <?php echo ($_POST['status'] ?? $treinamento['status']) === 'Executado' ? 'selected' : ''; ?>>
-                        Executado
-                    </option>
-                    <option value="Cancelado" <?php echo ($_POST['status'] ?? $treinamento['status']) === 'Cancelado' ? 'selected' : ''; ?>>
-                        Cancelado
+                    <option value="Remoto" <?php echo ($_POST['modalidade'] ?? $treinamento['modalidade']) === 'Remoto' ? 'selected' : ''; ?>>
+                        Remoto
                     </option>
                 </select>
             </div>
         </div>
 
-        <div id="campos-externo">
-            <div class="info-box">
-                <p>ℹ️ Campos para treinamentos externos (fornecidos por empresas parceiras)</p>
+        <div class="section-title">🎯 Planejamento Estratégico</div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Componente do P.E.</label>
+                <select name="componente_pe">
+                    <option value="">Selecione...</option>
+                    <option value="Clientes" <?php echo ($_POST['componente_pe'] ?? $treinamento['componente_pe']) === 'Clientes' ? 'selected' : ''; ?>>Clientes</option>
+                    <option value="Financeiro" <?php echo ($_POST['componente_pe'] ?? $treinamento['componente_pe']) === 'Financeiro' ? 'selected' : ''; ?>>Financeiro</option>
+                    <option value="Processos Internos" <?php echo ($_POST['componente_pe'] ?? $treinamento['componente_pe']) === 'Processos Internos' ? 'selected' : ''; ?>>Processos Internos</option>
+                    <option value="Aprendizagem e Crescimento" <?php echo ($_POST['componente_pe'] ?? $treinamento['componente_pe']) === 'Aprendizagem e Crescimento' ? 'selected' : ''; ?>>Aprendizagem e Crescimento</option>
+                </select>
+                <small>Componente do Planejamento Estratégico</small>
             </div>
 
+            <div class="form-group">
+                <label>Programa</label>
+                <select name="programa">
+                    <option value="">Selecione...</option>
+                    <option value="PGR" <?php echo ($_POST['programa'] ?? $treinamento['programa']) === 'PGR' ? 'selected' : ''; ?>>PGR</option>
+                    <option value="Líderes em Transformação" <?php echo ($_POST['programa'] ?? $treinamento['programa']) === 'Líderes em Transformação' ? 'selected' : ''; ?>>Líderes em Transformação</option>
+                    <option value="Crescer" <?php echo ($_POST['programa'] ?? $treinamento['programa']) === 'Crescer' ? 'selected' : ''; ?>>Crescer</option>
+                    <option value="Gerais" <?php echo ($_POST['programa'] ?? $treinamento['programa']) === 'Gerais' ? 'selected' : ''; ?>>Gerais</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="section-title">📝 Descritivos</div>
+
+        <div class="form-group">
+            <label>O Que (Objetivo)</label>
+            <textarea name="objetivo" placeholder="Descreva o objetivo do treinamento"><?php echo e($_POST['objetivo'] ?? $treinamento['objetivo']); ?></textarea>
+            <small>Objetivo principal do treinamento</small>
+        </div>
+
+        <div class="form-group">
+            <label>Resultados Esperados</label>
+            <textarea name="resultados_esperados" placeholder="Quais resultados espera-se alcançar?"><?php echo e($_POST['resultados_esperados'] ?? $treinamento['resultados_esperados']); ?></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>Por Que (Justificativa)</label>
+            <textarea name="justificativa" placeholder="Justifique a necessidade deste treinamento"><?php echo e($_POST['justificativa'] ?? $treinamento['justificativa']); ?></textarea>
+        </div>
+
+        <div class="section-title">👥 Responsáveis</div>
+
+        <div class="form-row">
             <div class="form-group">
                 <label>Fornecedor/Instituição</label>
                 <input type="text" name="fornecedor"
                        value="<?php echo e($_POST['fornecedor'] ?? $treinamento['fornecedor']); ?>"
-                       placeholder="Ex: SENAI, SESI, Nome da empresa">
-                <small>Nome da empresa ou instituição que fornecerá o treinamento</small>
+                       placeholder="Ex: SENAI, SESI, Interno">
             </div>
-        </div>
 
-        <div class="form-group">
-            <label>Instrutor/Responsável</label>
-            <input type="text" name="instrutor"
-                   value="<?php echo e($_POST['instrutor'] ?? $treinamento['instrutor']); ?>"
-                   placeholder="Nome do instrutor ou responsável pelo treinamento">
+            <div class="form-group">
+                <label>Instrutor/Responsável</label>
+                <input type="text" name="instrutor"
+                       value="<?php echo e($_POST['instrutor'] ?? $treinamento['instrutor']); ?>"
+                       placeholder="Nome do instrutor">
+            </div>
         </div>
 
         <div class="section-title">📅 Período e Carga Horária</div>
@@ -320,29 +359,41 @@ include __DIR__ . '/../../app/views/layouts/header.php';
             </div>
         </div>
 
-        <div class="section-title">💰 Informações Financeiras</div>
+        <div class="section-title">💰 Informações Financeiras e Status</div>
 
-        <div class="form-group">
-            <label>Custo Total (R$)</label>
-            <input type="text" name="custo_total" id="custo_total"
-                   value="<?php
-                       $custo = $_POST['custo_total'] ?? $treinamento['custo_total'];
-                       if ($custo && !isset($_POST['custo_total'])) {
-                           echo number_format($custo, 2, ',', '.');
-                       } else {
-                           echo e($custo);
-                       }
-                   ?>"
-                   placeholder="0,00"
-                   onkeyup="formatarMoeda(this)">
-            <small>Custo total do treinamento (incluindo taxas, materiais, etc.)</small>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Custo Total (R$)</label>
+                <input type="text" name="custo_total" id="custo_total"
+                       value="<?php
+                           $custo = $_POST['custo_total'] ?? $treinamento['custo_total'];
+                           if ($custo && !isset($_POST['custo_total'])) {
+                               echo number_format($custo, 2, ',', '.');
+                           } else {
+                               echo e($custo);
+                           }
+                       ?>"
+                       placeholder="0,00"
+                       onkeyup="formatarMoeda(this)">
+                <small>Custo total do treinamento</small>
+            </div>
+
+            <div class="form-group">
+                <label>Status <span class="required">*</span></label>
+                <select name="status" required>
+                    <option value="Programado" <?php echo ($_POST['status'] ?? $treinamento['status']) === 'Programado' ? 'selected' : ''; ?>>Programado</option>
+                    <option value="Em Andamento" <?php echo ($_POST['status'] ?? $treinamento['status']) === 'Em Andamento' ? 'selected' : ''; ?>>Em Andamento</option>
+                    <option value="Executado" <?php echo ($_POST['status'] ?? $treinamento['status']) === 'Executado' ? 'selected' : ''; ?>>Executado</option>
+                    <option value="Cancelado" <?php echo ($_POST['status'] ?? $treinamento['status']) === 'Cancelado' ? 'selected' : ''; ?>>Cancelado</option>
+                </select>
+            </div>
         </div>
 
         <div class="section-title">📝 Informações Adicionais</div>
 
         <div class="form-group">
             <label>Observações</label>
-            <textarea name="observacoes" placeholder="Informações adicionais sobre o treinamento, objetivos, requisitos, etc."><?php echo e($_POST['observacoes'] ?? $treinamento['observacoes']); ?></textarea>
+            <textarea name="observacoes" placeholder="Informações adicionais sobre o treinamento"><?php echo e($_POST['observacoes'] ?? $treinamento['observacoes']); ?></textarea>
         </div>
 
         <div class="btn-group">
@@ -357,23 +408,6 @@ include __DIR__ . '/../../app/views/layouts/header.php';
 </div>
 
 <script>
-// Mostra/oculta campos de treinamento externo
-function toggleCamposExterno() {
-    const tipo = document.getElementById('tipo').value;
-    const camposExterno = document.getElementById('campos-externo');
-
-    if (tipo === 'Externo') {
-        camposExterno.style.display = 'block';
-    } else {
-        camposExterno.style.display = 'none';
-    }
-}
-
-// Chama ao carregar a página para manter estado
-document.addEventListener('DOMContentLoaded', function() {
-    toggleCamposExterno();
-});
-
 // Formatação de Moeda
 function formatarMoeda(campo) {
     let valor = campo.value.replace(/\D/g, '');

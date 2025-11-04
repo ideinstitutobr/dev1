@@ -98,19 +98,27 @@ class Treinamento {
     }
 
     /**
-     * Cria novo treinamento
+     * Cria novo treinamento (com 14 campos da matriz)
      */
     public function criar($dados) {
         try {
             $sql = "INSERT INTO treinamentos
-                    (nome, tipo, fornecedor, instrutor, carga_horaria, carga_horaria_complementar,
+                    (nome, tipo, modalidade, componente_pe, programa,
+                     objetivo, resultados_esperados, justificativa,
+                     fornecedor, instrutor, carga_horaria, carga_horaria_complementar,
                      data_inicio, data_fim, custo_total, observacoes, status, origem)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'local')";
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'local')";
 
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute([
                 $dados['nome'],
                 $dados['tipo'],
+                $dados['modalidade'] ?? 'Presencial',
+                $dados['componente_pe'] ?? null,
+                $dados['programa'] ?? null,
+                $dados['objetivo'] ?? null,
+                $dados['resultados_esperados'] ?? null,
+                $dados['justificativa'] ?? null,
                 $dados['fornecedor'] ?? null,
                 $dados['instrutor'] ?? null,
                 $dados['carga_horaria'] ?? null,
@@ -134,7 +142,7 @@ class Treinamento {
     }
 
     /**
-     * Atualiza treinamento
+     * Atualiza treinamento (com 14 campos da matriz)
      */
     public function atualizar($id, $dados) {
         try {
@@ -146,6 +154,12 @@ class Treinamento {
             $sql = "UPDATE treinamentos SET
                     nome = ?,
                     tipo = ?,
+                    modalidade = ?,
+                    componente_pe = ?,
+                    programa = ?,
+                    objetivo = ?,
+                    resultados_esperados = ?,
+                    justificativa = ?,
                     fornecedor = ?,
                     instrutor = ?,
                     carga_horaria = ?,
@@ -162,6 +176,12 @@ class Treinamento {
             $stmt->execute([
                 $dados['nome'],
                 $dados['tipo'],
+                $dados['modalidade'] ?? 'Presencial',
+                $dados['componente_pe'] ?? null,
+                $dados['programa'] ?? null,
+                $dados['objetivo'] ?? null,
+                $dados['resultados_esperados'] ?? null,
+                $dados['justificativa'] ?? null,
                 $dados['fornecedor'] ?? null,
                 $dados['instrutor'] ?? null,
                 $dados['carga_horaria'] ?? null,
