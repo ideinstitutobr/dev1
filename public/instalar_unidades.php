@@ -418,6 +418,17 @@ $pageTitle = 'Instalação - Sistema de Unidades';
 
                         } elseif (file_exists($filePath)) {
                             $sql = file_get_contents($filePath);
+
+                            // DEBUG: Verifica se arquivo foi lido
+                            if ($sql === false || strlen($sql) == 0) {
+                                echo 'error">';
+                                echo '<span>' . $descricao . '</span>';
+                                echo '<span class="status status-error">❌ Erro ao ler arquivo</span>';
+                                $totalErro++;
+                                echo '</div>';
+                                continue;
+                            }
+
                             $statements = array_filter(
                                 array_map('trim', explode(';', $sql)),
                                 function($stmt) {
@@ -428,13 +439,30 @@ $pageTitle = 'Instalação - Sistema de Unidades';
                             $erro = false;
                             $avisos = [];
 
-                            foreach ($statements as $statement) {
+                            // DEBUG: Mostra quantas declarações foram encontradas
+                            $numStatements = count($statements);
+                            if ($numStatements == 0) {
+                                $erro = true;
+                                $avisos[] = "CRÍTICO: Nenhuma declaração SQL encontrada! Tamanho arquivo: " . strlen($sql) . " bytes";
+                            }
+
+                            foreach ($statements as $idx => $statement) {
                                 try {
+                                    // DEBUG: Detecta tipo de statement
+                                    $stmtPreview = substr(str_replace(["\n", "\r", "\t"], ' ', $statement), 0, 50);
+
                                     $result = $pdo->exec($statement);
+
+                                    // Verifica se exec() retornou false (erro sem exception)
+                                    if ($result === false) {
+                                        $errorInfo = $pdo->errorInfo();
+                                        $erro = true;
+                                        $avisos[] = "EXEC FALHOU: " . $stmtPreview . "... - " . implode(' ', $errorInfo);
+                                        break;
+                                    }
 
                                     // Para DDL (CREATE/ALTER/DROP), força commit imediato
                                     if (preg_match('/^(CREATE|ALTER|DROP)\s+/i', trim($statement))) {
-                                        // MySQL faz autocommit em DDL, mas vamos garantir
                                         usleep(100000); // Aguarda 0.1 segundo
                                     }
 
@@ -447,20 +475,23 @@ $pageTitle = 'Instalação - Sistema de Unidades';
                                             $check = $pdo->query("SHOW TABLES LIKE '$tableName'")->fetch();
                                             if (!$check) {
                                                 $erro = true;
-                                                $avisos[] = "Tabela $tableName não foi criada! Possível problema de transação.";
+                                                $avisos[] = "CRÍTICO: CREATE TABLE $tableName executou sem erro mas tabela não existe!";
                                                 break;
                                             } else {
-                                                $avisos[] = "Tabela $tableName criada";
+                                                $avisos[] = "$tableName criada OK";
                                             }
                                         }
+                                    } elseif (stripos($statement, 'INSERT') !== false) {
+                                        $avisos[] = "INSERT executado ($result registros)";
                                     }
                                 } catch (PDOException $e) {
-                                    if (strpos($e->getMessage(), 'already exists') !== false ||
-                                        strpos($e->getMessage(), 'Duplicate') !== false) {
-                                        $avisos[] = 'Já existe';
+                                    $errorMsg = $e->getMessage();
+                                    if (strpos($errorMsg, 'already exists') !== false ||
+                                        strpos($errorMsg, 'Duplicate') !== false) {
+                                        $avisos[] = 'Já existe (OK)';
                                     } else {
                                         $erro = true;
-                                        $avisos[] = $e->getMessage();
+                                        $avisos[] = "ERRO PDO: " . $errorMsg;
                                         break;
                                     }
                                 }
