@@ -286,7 +286,132 @@ $pageTitle = 'Instalação - Sistema de Unidades';
 
                         echo '<div class="migration-item ';
 
-                        if (file_exists($filePath)) {
+                        // Tratamento especial para migrations 006 e 007 (ALTER TABLE)
+                        if ($file === '006_alter_colaboradores_add_unidade.sql') {
+                            $erro = false;
+                            $avisos = [];
+
+                            try {
+                                // Verifica e adiciona coluna unidade_principal_id
+                                $checkCol = $pdo->query("SHOW COLUMNS FROM colaboradores LIKE 'unidade_principal_id'")->fetch();
+                                if (!$checkCol) {
+                                    $pdo->exec("ALTER TABLE colaboradores ADD COLUMN unidade_principal_id INT DEFAULT NULL COMMENT 'Unidade principal do colaborador' AFTER departamento");
+                                } else {
+                                    $avisos[] = 'unidade_principal_id já existe';
+                                }
+
+                                // Verifica e adiciona coluna setor_principal
+                                $checkCol = $pdo->query("SHOW COLUMNS FROM colaboradores LIKE 'setor_principal'")->fetch();
+                                if (!$checkCol) {
+                                    $pdo->exec("ALTER TABLE colaboradores ADD COLUMN setor_principal VARCHAR(100) DEFAULT NULL COMMENT 'Setor principal' AFTER unidade_principal_id");
+                                } else {
+                                    $avisos[] = 'setor_principal já existe';
+                                }
+
+                                // Verifica e adiciona foreign key
+                                $checkFK = $pdo->query("SELECT CONSTRAINT_NAME FROM information_schema.TABLE_CONSTRAINTS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'colaboradores' AND CONSTRAINT_NAME = 'fk_colaboradores_unidade_principal'")->fetch();
+                                if (!$checkFK) {
+                                    $pdo->exec("ALTER TABLE colaboradores ADD CONSTRAINT fk_colaboradores_unidade_principal FOREIGN KEY (unidade_principal_id) REFERENCES unidades(id) ON DELETE SET NULL");
+                                } else {
+                                    $avisos[] = 'FK já existe';
+                                }
+
+                                // Adiciona índices
+                                $checkIdx = $pdo->query("SHOW INDEX FROM colaboradores WHERE Key_name = 'idx_unidade_principal'")->fetch();
+                                if (!$checkIdx) {
+                                    $pdo->exec("ALTER TABLE colaboradores ADD INDEX idx_unidade_principal (unidade_principal_id)");
+                                }
+
+                                $checkIdx = $pdo->query("SHOW INDEX FROM colaboradores WHERE Key_name = 'idx_setor_principal'")->fetch();
+                                if (!$checkIdx) {
+                                    $pdo->exec("ALTER TABLE colaboradores ADD INDEX idx_setor_principal (setor_principal)");
+                                }
+                            } catch (PDOException $e) {
+                                $erro = true;
+                                $avisos[] = $e->getMessage();
+                            }
+
+                            // Exibe resultado da migration 006
+                            if ($erro) {
+                                echo 'error">';
+                                echo '<span>' . $descricao . '</span>';
+                                echo '<span class="status status-error">❌ Erro: ' . implode(', ', $avisos) . '</span>';
+                                $totalErro++;
+                            } elseif (!empty($avisos)) {
+                                echo 'warning">';
+                                echo '<span>' . $descricao . '</span>';
+                                echo '<span class="status status-warning">⚠️ ' . implode(', ', $avisos) . '</span>';
+                                $totalSucesso++;
+                            } else {
+                                echo 'success">';
+                                echo '<span>' . $descricao . '</span>';
+                                echo '<span class="status status-success">✅ OK</span>';
+                                $totalSucesso++;
+                            }
+
+                        } elseif ($file === '007_alter_treinamentos_add_unidade.sql') {
+                            $erro = false;
+                            $avisos = [];
+
+                            try {
+                                // Verifica e adiciona coluna unidade_destino_id
+                                $checkCol = $pdo->query("SHOW COLUMNS FROM treinamentos LIKE 'unidade_destino_id'")->fetch();
+                                if (!$checkCol) {
+                                    $pdo->exec("ALTER TABLE treinamentos ADD COLUMN unidade_destino_id INT DEFAULT NULL COMMENT 'Unidade destino' AFTER local");
+                                } else {
+                                    $avisos[] = 'unidade_destino_id já existe';
+                                }
+
+                                // Verifica e adiciona coluna setor_destino
+                                $checkCol = $pdo->query("SHOW COLUMNS FROM treinamentos LIKE 'setor_destino'")->fetch();
+                                if (!$checkCol) {
+                                    $pdo->exec("ALTER TABLE treinamentos ADD COLUMN setor_destino VARCHAR(100) DEFAULT NULL COMMENT 'Setor destino' AFTER unidade_destino_id");
+                                } else {
+                                    $avisos[] = 'setor_destino já existe';
+                                }
+
+                                // Verifica e adiciona foreign key
+                                $checkFK = $pdo->query("SELECT CONSTRAINT_NAME FROM information_schema.TABLE_CONSTRAINTS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'treinamentos' AND CONSTRAINT_NAME = 'fk_treinamentos_unidade_destino'")->fetch();
+                                if (!$checkFK) {
+                                    $pdo->exec("ALTER TABLE treinamentos ADD CONSTRAINT fk_treinamentos_unidade_destino FOREIGN KEY (unidade_destino_id) REFERENCES unidades(id) ON DELETE SET NULL");
+                                } else {
+                                    $avisos[] = 'FK já existe';
+                                }
+
+                                // Adiciona índices
+                                $checkIdx = $pdo->query("SHOW INDEX FROM treinamentos WHERE Key_name = 'idx_unidade_destino'")->fetch();
+                                if (!$checkIdx) {
+                                    $pdo->exec("ALTER TABLE treinamentos ADD INDEX idx_unidade_destino (unidade_destino_id)");
+                                }
+
+                                $checkIdx = $pdo->query("SHOW INDEX FROM treinamentos WHERE Key_name = 'idx_setor_destino'")->fetch();
+                                if (!$checkIdx) {
+                                    $pdo->exec("ALTER TABLE treinamentos ADD INDEX idx_setor_destino (setor_destino)");
+                                }
+                            } catch (PDOException $e) {
+                                $erro = true;
+                                $avisos[] = $e->getMessage();
+                            }
+
+                            // Exibe resultado da migration 007
+                            if ($erro) {
+                                echo 'error">';
+                                echo '<span>' . $descricao . '</span>';
+                                echo '<span class="status status-error">❌ Erro: ' . implode(', ', $avisos) . '</span>';
+                                $totalErro++;
+                            } elseif (!empty($avisos)) {
+                                echo 'warning">';
+                                echo '<span>' . $descricao . '</span>';
+                                echo '<span class="status status-warning">⚠️ ' . implode(', ', $avisos) . '</span>';
+                                $totalSucesso++;
+                            } else {
+                                echo 'success">';
+                                echo '<span>' . $descricao . '</span>';
+                                echo '<span class="status status-success">✅ OK</span>';
+                                $totalSucesso++;
+                            }
+
+                        } elseif (file_exists($filePath)) {
                             $sql = file_get_contents($filePath);
                             $statements = array_filter(
                                 array_map('trim', explode(';', $sql)),
