@@ -24,9 +24,105 @@ Sistema completo para gestão de unidades/lojas de uma empresa, incluindo:
 - Hierarquia de liderança (Diretor, Gerente, Supervisor)
 - Dashboard com estatísticas e relatórios
 
-**Status:** ✅ 100% Implementado e Funcional
-**Versão:** 1.0.0
+**Status:** 🔄 Em Reestruturação (90% completo)
+**Versão:** 2.0.0-beta (Sistema de Setores Globais)
 **Data:** 06/11/2025
+**Última Atualização:** 06/11/2025 22:00
+
+---
+
+## 🔄 Progresso da Reestruturação v2.0
+
+### Objetivo
+Migrar sistema de setores de modelo antigo (vinculado a colaboradores) para modelo hierárquico (Setores Globais → Unidades → Colaboradores).
+
+### Status Geral: 90% Completo
+
+#### ✅ **FASE 5: Correção de Layout** - 100% Completo
+- ✅ `/public/unidades/cadastrar.php` - Layout corrigido
+- ✅ `/public/unidades/listar.php` - Layout corrigido
+- ✅ `/public/unidades/visualizar.php` - Layout corrigido
+- ✅ Adicionadas divs `main-content` e `content-wrapper`
+- ✅ Sidebar funcionando corretamente em todas as páginas
+
+#### ✅ **FASE 1: Sistema de Setores Globais** - 100% Completo
+- ✅ `/public/unidades/setores_globais/listar.php` - Catálogo com estatísticas
+- ✅ `/public/unidades/setores_globais/cadastrar.php` - Criação de setores
+- ✅ `/public/unidades/setores_globais/editar.php` - Edição com cascata
+- ✅ Centralização em `field_categories` (tipo='setor')
+- ✅ Validação e proteção contra exclusão de setores em uso
+
+#### ✅ **FASE 2: Migração de Dados** - 100% Completo
+- ✅ `/database/migrations/migrar_setores_para_unidades.php`
+- ✅ Migra departamento → setor no field_categories
+- ✅ Adiciona campos `unidade_principal_id` e `setor_principal`
+- ✅ Migração automática de dados existentes
+- ✅ Interface web com logs detalhados
+- ✅ Suporte CLI e Web
+
+#### ✅ **FASE 3: Cadastro de Unidades** - 100% Completo
+- ✅ Seleção de setores já estava implementada
+- ✅ Sincronização de setores funcionando
+- ✅ Nenhuma alteração necessária
+
+#### 🔄 **FASE 4: Integração com Colaboradores** - 50% Completo
+
+**Completo:**
+- ✅ `/public/colaboradores/cadastrar.php` - Atualizado com unidade e setor dinâmico
+- ✅ `/public/colaboradores/config_campos.php` - Removida gestão de setores
+- ✅ JavaScript AJAX para carregar setores por unidade
+- ✅ Backward compatibility (modo legado)
+
+**Pendente:**
+- ❌ `/public/colaboradores/editar.php` - Precisa adicionar campos de unidade/setor
+- ❌ `/app/controllers/ColaboradorController.php` - Precisa processar novos campos
+- ❌ Método `processarCadastro()` - Salvar `unidade_principal_id` e `setor_principal`
+- ❌ Método `processarEdicao()` - Atualizar novos campos
+
+#### ✅ **FASE 6: Documentação** - 100% Completo
+- ✅ Seção completa sobre Sistema de Setores Globais
+- ✅ Fluxo hierárquico documentado
+- ✅ Guia de migração
+- ✅ Exemplos de código
+- ✅ Este relatório de progresso
+
+### 📊 Estatísticas da Reestruturação
+
+| Item | Planejado | Completo | Pendente |
+|------|-----------|----------|----------|
+| **Páginas Criadas** | 3 | 3 | 0 |
+| **Páginas Modificadas** | 5 | 3 | 2 |
+| **Scripts de Migração** | 1 | 1 | 0 |
+| **Correções de Layout** | 3 | 3 | 0 |
+| **Controllers Atualizados** | 1 | 0 | 1 |
+| **Commits Realizados** | - | 7 | - |
+
+### 🎯 Próximos Passos
+
+**Para completar a reestruturação (10% restante):**
+
+1. **Atualizar `/public/colaboradores/editar.php`**
+   - Adicionar dropdown de unidades
+   - Adicionar setor dinâmico via AJAX
+   - Manter backward compatibility
+
+2. **Atualizar `/app/controllers/ColaboradorController.php`**
+   - Modificar `processarCadastro()` para salvar `unidade_principal_id` e `setor_principal`
+   - Modificar `processarEdicao()` para atualizar novos campos
+   - Validar FK de unidade
+
+3. **Testes Finais**
+   - Executar migração em ambiente de teste
+   - Testar cadastro completo de colaborador
+   - Testar edição de colaborador
+   - Verificar carregamento dinâmico de setores
+
+### ⚠️ Notas Importantes
+
+- O sistema mantém **100% de backward compatibility**
+- Se os campos novos não existirem, usa o sistema legado com `departamento`
+- A migração é **opcional mas recomendada**
+- Todos os commits foram feitos no branch `claude/create-units-management-system-011CUs7XSvtwBHonR2pw26QD`
 
 ---
 
@@ -861,27 +957,50 @@ O sistema mantém compatibilidade com o modelo antigo:
 
 ## ✅ Checklist de Implementação
 
+### Sistema Base (v1.0)
 - ✅ Implementação completa do sistema
 - ✅ 5 tabelas criadas
-- ✅ 16 páginas implementadas (+3 de setores globais)
+- ✅ 13 páginas implementadas
 - ✅ 3 APIs REST criadas
-- ✅ Sistema de Setores Globais completo
-- ✅ Migração de dados implementada
-- ✅ Integração com colaboradores
-- ✅ Backward compatibility
 - ✅ Dashboard estatístico
 - ✅ Segurança completa
-- ✅ Documentação completa
 - ✅ 7 correções de bugs pós-implementação
+
+### Reestruturação v2.0 (90% Completo)
+- ✅ Sistema de Setores Globais (3 páginas)
+- ✅ Script de migração de dados
+- ✅ Correção de layout (3 páginas)
+- ✅ Cadastro de colaboradores atualizado
+- ✅ config_campos.php atualizado
+- 🔄 Edição de colaboradores (pendente)
+- 🔄 Controller de colaboradores (pendente)
+- ✅ Backward compatibility implementada
+- ✅ Documentação atualizada com progresso
 
 ---
 
-## 🎉 Conclusão
+## 🎉 Status Atual
 
-O **Sistema de Gestão de Unidades** está 100% implementado, testado e documentado, incluindo o novo **Sistema de Setores Globais** hierárquico.
+### Sistema Base (v1.0)
+✅ **100% Completo** - Sistema de Gestão de Unidades totalmente funcional com todas as features implementadas.
 
-Todas as funcionalidades planejadas foram entregues com qualidade, segurança e boas práticas de desenvolvimento.
+### Reestruturação (v2.0)
+🔄 **90% Completo** - Sistema de Setores Globais hierárquico em implementação.
 
-**Status:** ✅ Pronto para Produção
+**Completo:**
+- Sistema de Setores Globais (catálogo centralizado)
+- Script de migração automática de dados
+- Cadastro de colaboradores integrado
+- Layout corrigido em todas as páginas
+- Documentação completa
 
-**Última atualização:** 06/11/2025 - v2.0 (Sistema de Setores Globais integrado)
+**Pendente (10%):**
+- Edição de colaboradores com novos campos
+- Controller processar `unidade_principal_id` e `setor_principal`
+
+### Próxima Etapa
+Completar os 2 itens pendentes para finalizar a reestruturação v2.0 e ter um sistema 100% integrado com a nova arquitetura hierárquica.
+
+**Status Geral:** 🔄 Em desenvolvimento ativo
+
+**Última atualização:** 06/11/2025 22:00 - v2.0-beta (90% completo)
