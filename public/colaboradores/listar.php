@@ -361,7 +361,6 @@ $departamentoOptions = mergeUniqueSorted($departamentosDB, $departamentosCategor
                     <th>Nível Hierárquico</th>
                     <th>Cargo</th>
                     <th>Setor</th>
-                    <!-- Removidos Status e Origem -->
                     <th>Ações</th>
                 </tr>
             </thead>
@@ -372,39 +371,25 @@ $departamentoOptions = mergeUniqueSorted($departamentosDB, $departamentosCategor
                     <td><strong><?php echo e($col['nome']); ?></strong></td>
                     <td><?php echo e($col['email']); ?></td>
                     <td>
-                        <?php
-                        // Exibe o nível hierárquico do colaborador
-                        if (isset($col['nivel_hierarquico']) && $col['nivel_hierarquico'] !== '') {
-                            echo '<span class="badge badge-info">' . e($col['nivel_hierarquico']) . '</span>';
-                        } else {
-                            echo '<span class="badge badge-info">-</span>';
-                        }
-                        ?>
+                        <span class="badge badge-info">
+                            <?php echo e($col['nivel_hierarquico']); ?>
+                        </span>
                     </td>
                     <td><?php echo !empty($col['cargo']) ? e($col['cargo']) : '-'; ?></td>
                     <td><?php echo !empty($col['departamento']) ? e($col['departamento']) : '-'; ?></td>
-                    <!-- Coluna Setor removida -->
                     <td>
                         <div style="display: flex; gap: 5px;">
-                            <a href="visualizar.php?id=<?php echo $col['id']; ?>" class="btn btn-sm btn-primary" title="Visualizar">
-                                👁️
-                            </a>
-                            <a href="editar.php?id=<?php echo $col['id']; ?>" class="btn btn-sm btn-secondary" title="Editar">
-                                ✏️
-                            </a>
+                            <a href="visualizar.php?id=<?php echo $col['id']; ?>" class="btn btn-sm btn-primary" title="Visualizar">👁️</a>
+                            <a href="editar.php?id=<?php echo $col['id']; ?>" class="btn btn-sm btn-secondary" title="Editar">✏️</a>
                             <?php if ($col['ativo']): ?>
                                 <a href="actions.php?action=inativar&id=<?php echo $col['id']; ?>"
                                    class="btn btn-sm btn-danger"
                                    onclick="return confirm('Deseja realmente inativar este colaborador?')"
-                                   title="Inativar">
-                                    ❌
-                                </a>
+                                   title="Inativar">❌</a>
                             <?php else: ?>
                                 <a href="actions.php?action=ativar&id=<?php echo $col['id']; ?>"
                                    class="btn btn-sm btn-success"
-                                   title="Ativar">
-                                    ✅
-                                </a>
+                                   title="Ativar">✅</a>
                             <?php endif; ?>
                         </div>
                     </td>
