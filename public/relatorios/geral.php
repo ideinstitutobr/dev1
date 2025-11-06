@@ -199,9 +199,9 @@ include __DIR__ . '/../../app/views/layouts/header.php';
     <button onclick="window.print()" class="btn btn-success">
         🖨️ Imprimir/PDF
     </button>
-    <a href="actions.php?action=exportar&tipo=geral" class="btn btn-success">
-        📥 Exportar CSV
-    </a>
+    <a href="actions.php?action=exportar&tipo=geral&formato=csv" class="btn btn-success">📥 Exportar CSV</a>
+    <a href="actions.php?action=exportar&tipo=geral&formato=xlsx" class="btn btn-success">📊 Exportar Excel</a>
+    <a href="actions.php?action=exportar&tipo=geral&formato=pdf" class="btn btn-success">📄 Exportar PDF</a>
     <a href="dashboard.php" class="btn btn-secondary">
         ← Voltar
     </a>

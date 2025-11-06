@@ -184,7 +184,7 @@ try {
     <div class="stat-card green">
         <div class="icon">📚</div>
         <div class="value"><?php echo number_format($totalTreinamentos, 0, ',', '.'); ?></div>
-        <div class="label">Treinamentos Total</div>
+        <div class="label">TOTAL DE TREINAMENTOS</div>
     </div>
 
     <div class="stat-card orange">

@@ -38,6 +38,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Inclui header
 include __DIR__ . '/../../app/views/layouts/header.php';
+
+// Carrega opções dinâmicas do ENUM 'nivel_hierarquico'
+$pdo = Database::getInstance()->getConnection();
+$nivelOptions = [];
+try {
+    $stmt = $pdo->prepare("SELECT COLUMN_TYPE FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'colaboradores' AND column_name = 'nivel_hierarquico'");
+    $stmt->execute();
+    $row = $stmt->fetch();
+    if ($row && isset($row['COLUMN_TYPE']) && preg_match("/^enum\\((.*)\\)$/i", $row['COLUMN_TYPE'], $m)) {
+        preg_match_all("/'((?:\\\\'|[^'])*)'/", $m[1], $matches);
+        foreach ($matches[1] as $v) { $nivelOptions[] = str_replace("\\'", "'", $v); }
+    }
+} catch (Exception $e) { /* ignora erro */ }
+
+// Opções para Cargo, Departamento e Setor
+function hasColumn($pdo, $table, $column) {
+    $stmt = $pdo->prepare("SELECT COUNT(*) AS cnt FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?");
+    $stmt->execute([$table, $column]);
+    return ((int)($stmt->fetch()['cnt'] ?? 0)) > 0;
+}
+
+function mergeUniqueSorted($dbList, $catalogList) {
+    $map = [];
+    foreach ((array)$dbList as $v) { if ($v !== null && $v !== '') { $map[strtolower($v)] = $v; } }
+    foreach ((array)$catalogList as $v) { if ($v !== null && $v !== '') { $map[strtolower($v)] = $v; } }
+    $vals = array_values($map);
+    natcasesort($vals);
+    return array_values($vals);
+}
+
+$catalogPath = __DIR__ . '/../../app/config/field_catalog.json';
+$catalog = ['cargos'=>[], 'departamentos'=>[], 'setores'=>[]];
+if (file_exists($catalogPath)) {
+    $j = json_decode(@file_get_contents($catalogPath), true);
+    if (is_array($j)) {
+        $catalog['cargos'] = isset($j['cargos']) && is_array($j['cargos']) ? $j['cargos'] : [];
+        $catalog['departamentos'] = isset($j['departamentos']) && is_array($j['departamentos']) ? $j['departamentos'] : [];
+        $catalog['setores'] = isset($j['setores']) && is_array($j['setores']) ? $j['setores'] : [];
+    }
+}
+
+$cargosDB = [];
+$departamentosDB = [];
+try {
+    $cargosDB = $pdo->query("SELECT DISTINCT cargo FROM colaboradores WHERE cargo IS NOT NULL AND cargo <> '' ORDER BY cargo ASC")->fetchAll(PDO::FETCH_COLUMN);
+    $departamentosDB = $pdo->query("SELECT DISTINCT departamento FROM colaboradores WHERE departamento IS NOT NULL AND departamento <> '' ORDER BY departamento ASC")->fetchAll(PDO::FETCH_COLUMN);
+} catch (Exception $e) { /* ignore */ }
+$cargosOptions = mergeUniqueSorted($cargosDB, $catalog['cargos']);
+$departamentosOptions = mergeUniqueSorted($departamentosDB, $catalog['departamentos']);
+
+$setorExists = hasColumn($pdo, 'colaboradores', 'setor');
+$setoresOptions = [];
+if ($setorExists) {
+    try {
+        $setoresDB = $pdo->query("SELECT DISTINCT setor FROM colaboradores WHERE setor IS NOT NULL AND setor <> '' ORDER BY setor ASC")->fetchAll(PDO::FETCH_COLUMN);
+    } catch (Exception $e) { $setoresDB = []; }
+    $setoresOptions = mergeUniqueSorted($setoresDB, $catalog['setores']);
+}
 ?>
 
 <style>
@@ -214,33 +272,63 @@ include __DIR__ . '/../../app/views/layouts/header.php';
         </div>
 
         <div class="section-title">💼 Dados Profissionais</div>
+        <div style="margin-bottom: 15px;">
+            <a href="config_campos.php" class="btn btn-secondary">⚙️ Configurar Campos (Cargo, Departamento, Setor)</a>
+        </div>
 
         <div class="form-row">
             <div class="form-group">
                 <label>Nível Hierárquico <span class="required">*</span></label>
                 <select name="nivel_hierarquico" required>
                     <option value="">Selecione...</option>
-                    <option value="Estratégico" <?php echo ($_POST['nivel_hierarquico'] ?? '') === 'Estratégico' ? 'selected' : ''; ?>>Estratégico</option>
-                    <option value="Tático" <?php echo ($_POST['nivel_hierarquico'] ?? '') === 'Tático' ? 'selected' : ''; ?>>Tático</option>
-                    <option value="Operacional" <?php echo ($_POST['nivel_hierarquico'] ?? '') === 'Operacional' ? 'selected' : ''; ?>>Operacional</option>
+                    <?php foreach ($nivelOptions as $opt): ?>
+                        <option value="<?php echo e($opt); ?>" <?php echo ($_POST['nivel_hierarquico'] ?? '') === $opt ? 'selected' : ''; ?>><?php echo e($opt); ?></option>
+                    <?php endforeach; ?>
                 </select>
             </div>
 
             <div class="form-group">
                 <label>Cargo</label>
-                <input type="text" name="cargo"
-                       value="<?php echo e($_POST['cargo'] ?? ''); ?>"
-                       placeholder="Ex: Analista, Gerente, etc.">
+                <select name="cargo">
+                    <option value="">Selecione...</option>
+                    <?php foreach ($cargosOptions as $opt): ?>
+                        <option value="<?php echo e($opt); ?>" <?php echo (($_POST['cargo'] ?? '') === $opt) ? 'selected' : ''; ?>><?php echo e($opt); ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <small>Gerencie opções em “Configurar Campos”.</small>
             </div>
         </div>
 
         <div class="form-row">
             <div class="form-group">
                 <label>Departamento</label>
-                <input type="text" name="departamento"
-                       value="<?php echo e($_POST['departamento'] ?? ''); ?>"
-                       placeholder="Ex: RH, TI, Comercial, etc.">
+                <select name="departamento">
+                    <option value="">Selecione...</option>
+                    <?php foreach ($departamentosOptions as $opt): ?>
+                        <option value="<?php echo e($opt); ?>" <?php echo (($_POST['departamento'] ?? '') === $opt) ? 'selected' : ''; ?>><?php echo e($opt); ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <small>Gerencie opções em “Configurar Campos”.</small>
             </div>
+
+            <?php if ($setorExists): ?>
+            <div class="form-group">
+                <label>Setor</label>
+                <select name="setor">
+                    <option value="">Selecione...</option>
+                    <?php foreach ($setoresOptions as $opt): ?>
+                        <option value="<?php echo e($opt); ?>" <?php echo (($_POST['setor'] ?? '') === $opt) ? 'selected' : ''; ?>><?php echo e($opt); ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <small>Gerencie opções em “Configurar Campos”.</small>
+            </div>
+            <?php else: ?>
+            <div class="form-group">
+                <label>Setor</label>
+                <input type="text" name="setor" placeholder="Instale o campo Setor para habilitar seleção" disabled>
+                <small>Use “Instalar Setor” para criar a coluna no banco.</small>
+            </div>
+            <?php endif; ?>
 
             <div class="form-group">
                 <label>Data de Admissão</label>

@@ -12,6 +12,7 @@ require_once __DIR__ . '/../../app/config/config.php';
 require_once __DIR__ . '/../../app/classes/Database.php';
 require_once __DIR__ . '/../../app/classes/Auth.php';
 require_once __DIR__ . '/../../app/classes/NotificationManager.php';
+require_once __DIR__ . '/../../app/classes/SystemConfig.php';
 
 // Verifica autenticação
 Auth::requireLogin(BASE_URL);
@@ -31,6 +32,80 @@ $pdo = $db->getConnection();
 $action = $_REQUEST['action'] ?? '';
 
 switch ($action) {
+    /**
+     * ==========================================
+     * SALVAR CONFIGURAÇÕES DO SISTEMA
+     * ==========================================
+     */
+    case 'salvar_config_sistema':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: sistema.php');
+            exit;
+        }
+
+        if (!csrf_validate($_POST['csrf_token'] ?? '')) {
+            $_SESSION['flash_error'] = 'Token de segurança inválido';
+            header('Location: sistema.php');
+            exit;
+        }
+
+        // Campos texto/cores
+        $appName = trim($_POST['app_name'] ?? '');
+        $primary = trim($_POST['primary_color'] ?? '#667eea');
+        $gradStart = trim($_POST['gradient_start'] ?? '#667eea');
+        $gradEnd = trim($_POST['gradient_end'] ?? '#764ba2');
+        $loginText = trim($_POST['login_text'] ?? '');
+        $footerText = trim($_POST['footer_text'] ?? '');
+        $sidebarCollapsed = isset($_POST['sidebar_default_collapsed']) ? '1' : '0';
+
+        // Persistir
+        SystemConfig::set('app_name', $appName !== '' ? $appName : APP_NAME);
+        SystemConfig::set('primary_color', $primary);
+        SystemConfig::set('gradient_start', $gradStart);
+        SystemConfig::set('gradient_end', $gradEnd);
+        SystemConfig::set('login_text', $loginText);
+        SystemConfig::set('footer_text', $footerText);
+        SystemConfig::set('sidebar_default_collapsed', $sidebarCollapsed);
+
+        // Uploads
+        $uploadBase = PUBLIC_PATH . 'uploads/branding';
+        if (!is_dir($uploadBase)) { @mkdir($uploadBase, 0775, true); }
+
+        $allowed = ['image/png' => 'png', 'image/jpeg' => 'jpg'];
+        // Logo
+        if (!empty($_FILES['logo_file']['name']) && $_FILES['logo_file']['error'] === UPLOAD_ERR_OK) {
+            $type = mime_content_type($_FILES['logo_file']['tmp_name']);
+            if (!isset($allowed[$type])) {
+                $_SESSION['flash_error'] = 'Formato de logo inválido (use PNG/JPEG)';
+                header('Location: sistema.php');
+                exit;
+            }
+            $ext = $allowed[$type];
+            $dest = $uploadBase . '/logo.' . $ext;
+            if (move_uploaded_file($_FILES['logo_file']['tmp_name'], $dest)) {
+                $rel = 'uploads/branding/logo.' . $ext;
+                SystemConfig::set('logo_path', $rel);
+            }
+        }
+        // Favicon
+        if (!empty($_FILES['favicon_file']['name']) && $_FILES['favicon_file']['error'] === UPLOAD_ERR_OK) {
+            $type = mime_content_type($_FILES['favicon_file']['tmp_name']);
+            if (!isset($allowed[$type])) {
+                $_SESSION['flash_error'] = 'Formato de favicon inválido (use PNG/JPEG)';
+                header('Location: sistema.php');
+                exit;
+            }
+            $ext = $allowed[$type];
+            $dest = $uploadBase . '/favicon.' . $ext;
+            if (move_uploaded_file($_FILES['favicon_file']['tmp_name'], $dest)) {
+                $rel = 'uploads/branding/favicon.' . $ext;
+                SystemConfig::set('favicon_path', $rel);
+            }
+        }
+
+        $_SESSION['flash_success'] = 'Configurações do sistema salvas com sucesso!';
+        header('Location: sistema.php');
+        exit;
     /**
      * ==========================================
      * SALVAR CONFIGURAÇÕES DE E-MAIL

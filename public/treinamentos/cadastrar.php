@@ -19,6 +19,21 @@ $breadcrumb = '<a href="../dashboard.php">Dashboard</a> > <a href="listar.php">T
 
 // Instancia controller
 $controller = new TreinamentoController();
+$db = Database::getInstance();
+$pdo = $db->getConnection();
+// Carregar opções dinâmicas dos grupos
+$opts = [];
+$groups = ['tipo','modalidade','componente_pe','programa','status'];
+foreach ($groups as $g) {
+    // Se tabela não existir ainda, usa fallback
+    try {
+        $stmt = $pdo->prepare("SELECT valor FROM treinamento_opcoes WHERE grupo = ? AND ativo = 1 ORDER BY valor");
+        $stmt->execute([$g]);
+        $opts[$g] = array_map(fn($r)=>$r['valor'], $stmt->fetchAll());
+    } catch (Exception $e) {
+        $opts[$g] = [];
+    }
+}
 
 // Processa formulário
 $erro = '';
@@ -196,30 +211,26 @@ include __DIR__ . '/../../app/views/layouts/header.php';
                 <label>Tipo <span class="required">*</span></label>
                 <select name="tipo" required>
                     <option value="">Selecione...</option>
-                    <option value="Normativos" <?php echo ($_POST['tipo'] ?? '') === 'Normativos' ? 'selected' : ''; ?>>
-                        Normativos (Obrigatórios/Legais)
-                    </option>
-                    <option value="Comportamentais" <?php echo ($_POST['tipo'] ?? '') === 'Comportamentais' ? 'selected' : ''; ?>>
-                        Comportamentais (Soft Skills)
-                    </option>
-                    <option value="Técnicos" <?php echo ($_POST['tipo'] ?? '') === 'Técnicos' ? 'selected' : ''; ?>>
-                        Técnicos (Hard Skills)
-                    </option>
+                    <?php if (!empty($opts['tipo'])): foreach ($opts['tipo'] as $v): ?>
+                        <option value="<?php echo e($v); ?>" <?php echo ($_POST['tipo'] ?? '') === $v ? 'selected' : ''; ?>><?php echo e($v); ?></option>
+                    <?php endforeach; else: ?>
+                        <option value="Normativos" <?php echo ($_POST['tipo'] ?? '') === 'Normativos' ? 'selected' : ''; ?>>Normativos</option>
+                        <option value="Comportamentais" <?php echo ($_POST['tipo'] ?? '') === 'Comportamentais' ? 'selected' : ''; ?>>Comportamentais</option>
+                        <option value="Técnicos" <?php echo ($_POST['tipo'] ?? '') === 'Técnicos' ? 'selected' : ''; ?>>Técnicos</option>
+                    <?php endif; ?>
                 </select>
             </div>
 
             <div class="form-group">
                 <label>Modalidade <span class="required">*</span></label>
                 <select name="modalidade" required>
-                    <option value="Presencial" <?php echo ($_POST['modalidade'] ?? 'Presencial') === 'Presencial' ? 'selected' : ''; ?>>
-                        Presencial
-                    </option>
-                    <option value="Híbrido" <?php echo ($_POST['modalidade'] ?? '') === 'Híbrido' ? 'selected' : ''; ?>>
-                        Híbrido
-                    </option>
-                    <option value="Remoto" <?php echo ($_POST['modalidade'] ?? '') === 'Remoto' ? 'selected' : ''; ?>>
-                        Remoto
-                    </option>
+                    <?php if (!empty($opts['modalidade'])): foreach ($opts['modalidade'] as $v): ?>
+                        <option value="<?php echo e($v); ?>" <?php echo ($_POST['modalidade'] ?? '') === $v ? 'selected' : ''; ?>><?php echo e($v); ?></option>
+                    <?php endforeach; else: ?>
+                        <option value="Presencial" <?php echo ($_POST['modalidade'] ?? 'Presencial') === 'Presencial' ? 'selected' : ''; ?>>Presencial</option>
+                        <option value="Híbrido" <?php echo ($_POST['modalidade'] ?? '') === 'Híbrido' ? 'selected' : ''; ?>>Híbrido</option>
+                        <option value="Remoto" <?php echo ($_POST['modalidade'] ?? '') === 'Remoto' ? 'selected' : ''; ?>>Remoto</option>
+                    <?php endif; ?>
                 </select>
             </div>
         </div>
@@ -231,10 +242,14 @@ include __DIR__ . '/../../app/views/layouts/header.php';
                 <label>Componente do P.E.</label>
                 <select name="componente_pe">
                     <option value="">Selecione...</option>
-                    <option value="Clientes" <?php echo ($_POST['componente_pe'] ?? '') === 'Clientes' ? 'selected' : ''; ?>>Clientes</option>
-                    <option value="Financeiro" <?php echo ($_POST['componente_pe'] ?? '') === 'Financeiro' ? 'selected' : ''; ?>>Financeiro</option>
-                    <option value="Processos Internos" <?php echo ($_POST['componente_pe'] ?? '') === 'Processos Internos' ? 'selected' : ''; ?>>Processos Internos</option>
-                    <option value="Aprendizagem e Crescimento" <?php echo ($_POST['componente_pe'] ?? '') === 'Aprendizagem e Crescimento' ? 'selected' : ''; ?>>Aprendizagem e Crescimento</option>
+                    <?php if (!empty($opts['componente_pe'])): foreach ($opts['componente_pe'] as $v): ?>
+                        <option value="<?php echo e($v); ?>" <?php echo ($_POST['componente_pe'] ?? '') === $v ? 'selected' : ''; ?>><?php echo e($v); ?></option>
+                    <?php endforeach; else: ?>
+                        <option value="Clientes" <?php echo ($_POST['componente_pe'] ?? '') === 'Clientes' ? 'selected' : ''; ?>>Clientes</option>
+                        <option value="Financeiro" <?php echo ($_POST['componente_pe'] ?? '') === 'Financeiro' ? 'selected' : ''; ?>>Financeiro</option>
+                        <option value="Processos Internos" <?php echo ($_POST['componente_pe'] ?? '') === 'Processos Internos' ? 'selected' : ''; ?>>Processos Internos</option>
+                        <option value="Aprendizagem e Crescimento" <?php echo ($_POST['componente_pe'] ?? '') === 'Aprendizagem e Crescimento' ? 'selected' : ''; ?>>Aprendizagem e Crescimento</option>
+                    <?php endif; ?>
                 </select>
                 <small>Componente do Planejamento Estratégico</small>
             </div>
@@ -243,10 +258,14 @@ include __DIR__ . '/../../app/views/layouts/header.php';
                 <label>Programa</label>
                 <select name="programa">
                     <option value="">Selecione...</option>
-                    <option value="PGR" <?php echo ($_POST['programa'] ?? '') === 'PGR' ? 'selected' : ''; ?>>PGR</option>
-                    <option value="Líderes em Transformação" <?php echo ($_POST['programa'] ?? '') === 'Líderes em Transformação' ? 'selected' : ''; ?>>Líderes em Transformação</option>
-                    <option value="Crescer" <?php echo ($_POST['programa'] ?? '') === 'Crescer' ? 'selected' : ''; ?>>Crescer</option>
-                    <option value="Gerais" <?php echo ($_POST['programa'] ?? '') === 'Gerais' ? 'selected' : ''; ?>>Gerais</option>
+                    <?php if (!empty($opts['programa'])): foreach ($opts['programa'] as $v): ?>
+                        <option value="<?php echo e($v); ?>" <?php echo ($_POST['programa'] ?? '') === $v ? 'selected' : ''; ?>><?php echo e($v); ?></option>
+                    <?php endforeach; else: ?>
+                        <option value="PGR" <?php echo ($_POST['programa'] ?? '') === 'PGR' ? 'selected' : ''; ?>>PGR</option>
+                        <option value="Líderes em Transformação" <?php echo ($_POST['programa'] ?? '') === 'Líderes em Transformação' ? 'selected' : ''; ?>>Líderes em Transformação</option>
+                        <option value="Crescer" <?php echo ($_POST['programa'] ?? '') === 'Crescer' ? 'selected' : ''; ?>>Crescer</option>
+                        <option value="Gerais" <?php echo ($_POST['programa'] ?? '') === 'Gerais' ? 'selected' : ''; ?>>Gerais</option>
+                    <?php endif; ?>
                 </select>
             </div>
         </div>
@@ -336,10 +355,14 @@ include __DIR__ . '/../../app/views/layouts/header.php';
             <div class="form-group">
                 <label>Status <span class="required">*</span></label>
                 <select name="status" required>
-                    <option value="Programado" <?php echo ($_POST['status'] ?? 'Programado') === 'Programado' ? 'selected' : ''; ?>>Programado</option>
-                    <option value="Em Andamento" <?php echo ($_POST['status'] ?? '') === 'Em Andamento' ? 'selected' : ''; ?>>Em Andamento</option>
-                    <option value="Executado" <?php echo ($_POST['status'] ?? '') === 'Executado' ? 'selected' : ''; ?>>Executado</option>
-                    <option value="Cancelado" <?php echo ($_POST['status'] ?? '') === 'Cancelado' ? 'selected' : ''; ?>>Cancelado</option>
+                    <?php if (!empty($opts['status'])): foreach ($opts['status'] as $v): ?>
+                        <option value="<?php echo e($v); ?>" <?php echo ($_POST['status'] ?? 'Programado') === $v ? 'selected' : ''; ?>><?php echo e($v); ?></option>
+                    <?php endforeach; else: ?>
+                        <option value="Programado" <?php echo ($_POST['status'] ?? 'Programado') === 'Programado' ? 'selected' : ''; ?>>Programado</option>
+                        <option value="Em Andamento" <?php echo ($_POST['status'] ?? '') === 'Em Andamento' ? 'selected' : ''; ?>>Em Andamento</option>
+                        <option value="Executado" <?php echo ($_POST['status'] ?? '') === 'Executado' ? 'selected' : ''; ?>>Executado</option>
+                        <option value="Cancelado" <?php echo ($_POST['status'] ?? '') === 'Cancelado' ? 'selected' : ''; ?>>Cancelado</option>
+                    <?php endif; ?>
                 </select>
             </div>
         </div>

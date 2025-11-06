@@ -52,23 +52,7 @@ include __DIR__ . '/../../app/views/layouts/header.php';
 ?>
 
 <style>
-    .page-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 30px;
-        border-radius: 10px;
-        margin-bottom: 30px;
-    }
-
-    .page-header h1 {
-        margin: 0 0 10px 0;
-        font-size: 28px;
-    }
-
-    .page-header p {
-        margin: 0;
-        opacity: 0.9;
-    }
+    /* Removidos overrides de .page-header para usar estilos globais do layout */
 
     .treinamento-info-card {
         background: white;
@@ -126,14 +110,7 @@ include __DIR__ . '/../../app/views/layouts/header.php';
         font-size: 14px;
     }
 
-    .btn-primary {
-        background: #667eea;
-        color: white;
-    }
-
-    .btn-primary:hover {
-        background: #5568d3;
-    }
+    /* Removidos overrides de .btn-primary para usar var(--primary-color) do layout */
 
     .btn-success {
         background: #28a745;
@@ -248,7 +225,7 @@ include __DIR__ . '/../../app/views/layouts/header.php';
     }
 
     .progress-fill {
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(90deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
         height: 100%;
         transition: width 0.3s;
     }

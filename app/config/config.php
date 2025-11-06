@@ -20,24 +20,36 @@ define('UPLOAD_PATH', PUBLIC_PATH . 'uploads/');
 define('LOGS_PATH', BASE_PATH . 'logs/');
 define('TEMP_PATH', BASE_PATH . 'temp/');
 
-// Configurações de URL
-define('BASE_URL', 'https://comercial.ideinstituto.com.br/public/');
+// Override opcional via config.local.php
+if (file_exists(APP_PATH . 'config/config.local.php')) {
+    require_once APP_PATH . 'config/config.local.php';
+}
+
+// Configurações de URL (fallback)
+if (!defined('BASE_URL')) {
+    define('BASE_URL', 'http://localhost/sgc/public/');
+}
 define('ASSETS_URL', BASE_URL . 'assets/');
 define('UPLOAD_URL', BASE_URL . 'uploads/');
 
 // Configurações da aplicação
 define('APP_NAME', 'SGC - Sistema de Gestão de Capacitações');
 define('APP_VERSION', '1.0.0');
-define('APP_ENV', 'development'); // development ou production
+if (!defined('APP_ENV')) {
+    define('APP_ENV', 'development'); // development ou production
+}
 
 // Timezone
 date_default_timezone_set('America/Sao_Paulo');
 
-// Configurações de sessão
-ini_set('session.cookie_httponly', 1);
-ini_set('session.use_only_cookies', 1);
-ini_set('session.cookie_secure', 0); // Mude para 1 se usar HTTPS
-ini_set('session.cookie_samesite', 'Lax');
+// Configurações de sessão (aplicar somente se a sessão NÃO estiver ativa)
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    ini_set('session.cookie_httponly', 1);
+    ini_set('session.use_only_cookies', 1);
+    // Cookie Secure configurável via config.local.php (COOKIE_SECURE)
+    ini_set('session.cookie_secure', defined('COOKIE_SECURE') && COOKIE_SECURE ? 1 : 0);
+    ini_set('session.cookie_samesite', 'Lax');
+}
 
 // Configurações de erro
 if (APP_ENV === 'development') {

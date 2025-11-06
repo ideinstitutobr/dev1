@@ -1,0 +1,11 @@
+/* Placeholder main.css – aplica estilos básicos para layout geral */
+:root {
+  --primary-color: #667eea;
+}
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f6fa; color: #333; }
+a { color: var(--primary-color); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.btn { display: inline-block; padding: 8px 12px; border-radius: 6px; background: var(--primary-color); color: #fff; border: none; cursor: pointer; }
+.badge { display: inline-block; padding: 4px 8px; border-radius: 999px; font-size: 12px; }
+.icon-btn { background: transparent; border: none; padding: 6px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+.icon-btn:hover { background: #f0f2f8; }

@@ -276,9 +276,9 @@ include __DIR__ . '/../../app/views/layouts/header.php';
         <?php endif; ?>
     </div>
     <div style="display: flex; gap: 10px;">
-        <a href="actions.php?action=exportar&tipo=matriz<?php echo $departamentoFiltro ? '&departamento=' . urlencode($departamentoFiltro) : ''; ?>" class="btn btn-success">
-            📥 Exportar CSV
-        </a>
+        <a href="actions.php?action=exportar&tipo=matriz&formato=csv<?php echo $departamentoFiltro ? '&departamento=' . urlencode($departamentoFiltro) : ''; ?>" class="btn btn-success">📥 Exportar CSV</a>
+        <a href="actions.php?action=exportar&tipo=matriz&formato=xlsx<?php echo $departamentoFiltro ? '&departamento=' . urlencode($departamentoFiltro) : ''; ?>" class="btn btn-success">📊 Exportar Excel</a>
+        <a href="actions.php?action=exportar&tipo=matriz&formato=pdf<?php echo $departamentoFiltro ? '&departamento=' . urlencode($departamentoFiltro) : ''; ?>" class="btn btn-success">📄 Exportar PDF</a>
         <a href="dashboard.php" class="btn btn-secondary">
             ← Voltar
         </a>

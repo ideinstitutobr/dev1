@@ -95,7 +95,7 @@ include __DIR__ . '/../../app/views/layouts/header.php';
     .form-group textarea:focus,
     .form-group select:focus {
         outline: none;
-        border-color: #667eea;
+        border-color: var(--primary-color);
     }
 
     .form-group textarea {

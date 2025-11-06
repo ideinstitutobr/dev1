@@ -141,6 +141,9 @@ Controle de turmas, vagas, horários e locais de treinamento.
 - Composer (opcional, para PHPMailer)
 - Servidor web (Apache/Nginx)
 
+### Instalação Rápida (Recomendada)
+- Para instalações locais no XAMPP (pasta `htdocs/sgc`), acesse `http://localhost/sgc/public/instalar_tudo.php` e clique em "Instalar Tudo". O instalador é idempotente e aplica o schema e todas as migrações conhecidas.
+
 ### Passo a Passo
 
 #### 1. Clone o Repositório
@@ -171,6 +174,11 @@ http://localhost/comercial-do-norte/public/instalar_notificacoes.php
 http://localhost/comercial-do-norte/public/instalar_agenda.php
 ```
 
+Ou use o instalador unificado:
+```
+http://localhost/sgc/public/instalar_tudo.php
+```
+
 **Opção B: SQL Direto**
 ```bash
 mysql -u root -p comercial_sgc < database/migrations/migration_inicial.sql
@@ -195,6 +203,11 @@ chmod 755 vendor/
 #### 6. Acesse o Sistema
 ```
 http://localhost/comercial-do-norte/public/
+```
+
+No XAMPP com `htdocs/sgc`, use:
+```
+http://localhost/sgc/public/
 ```
 
 **Login padrão:**
@@ -445,3 +458,16 @@ Desenvolvido com dedicação para otimizar a gestão de capacitações da **Come
 **[⬆ Voltar ao topo](#-sgc---sistema-de-gestão-de-capacitações)**
 
 </div>
+## 📖 Documentação
+- Índice geral: `docs/README.md`
+- Principais seções:
+  - Overview: `docs/01-overview/`
+  - Deployment: `docs/02-deployment/`
+  - Guia rápido (raiz): `GUIA_INSTALACAO.md`
+  - Arquitetura: `docs/04-architecture/`
+  - Banco de Dados: `docs/05-database/`
+  - Roadmap: `docs/07-roadmap/`
+  - Progresso: `docs/08-progress/`
+  - Issues: `docs/09-issues/`
+  - Changelog: `docs/10-changelog/`
+  - Operacional: `docs/11-operacional/`

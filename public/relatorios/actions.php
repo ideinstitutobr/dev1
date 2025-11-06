@@ -23,9 +23,24 @@ $controller = new RelatorioController();
 // Identifica ação
 $action = $_GET['action'] ?? '';
 $tipo = $_GET['tipo'] ?? '';
+$formato = $_GET['formato'] ?? 'csv';
 
 if ($action === 'exportar' && !empty($tipo)) {
-    $controller->exportarCSV($tipo);
+    switch (strtolower($formato)) {
+        case 'csv':
+            $controller->exportarCSV($tipo);
+            break;
+        case 'xlsx':
+            $controller->exportarExcel($tipo);
+            break;
+        case 'pdf':
+            $controller->exportarPDF($tipo);
+            break;
+        default:
+            $_SESSION['error_message'] = 'Formato inválido';
+            header('Location: dashboard.php');
+            exit;
+    }
 } else {
     $_SESSION['error_message'] = 'Ação inválida';
     header('Location: dashboard.php');

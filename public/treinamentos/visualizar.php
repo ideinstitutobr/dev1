@@ -402,25 +402,25 @@ include __DIR__ . '/../../app/views/layouts/header.php';
     <div class="stat-card">
         <div class="icon">👥</div>
         <div class="number"><?php echo $treinamento['estatisticas']['total_participantes']; ?></div>
-        <div class="label">Total de Participantes</div>
+        <div class="label">Total de Inscritos</div>
     </div>
 
     <div class="stat-card">
         <div class="icon">✅</div>
         <div class="number"><?php echo $treinamento['estatisticas']['total_presentes']; ?></div>
-        <div class="label">Presentes</div>
+        <div class="label">Total de Presentes</div>
     </div>
 
     <div class="stat-card">
         <div class="icon">❌</div>
         <div class="number"><?php echo $treinamento['estatisticas']['total_ausentes']; ?></div>
-        <div class="label">Ausentes</div>
+        <div class="label">Total de Ausentes</div>
     </div>
 
     <div class="stat-card">
         <div class="icon">📊</div>
         <div class="number"><?php echo number_format($treinamento['estatisticas']['percentual_presenca'], 1); ?>%</div>
-        <div class="label">Presença</div>
+        <div class="label">Indice de Frequência</div>
     </div>
 
     <?php if ($treinamento['estatisticas']['media_avaliacao'] > 0): ?>

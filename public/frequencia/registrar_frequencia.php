@@ -54,23 +54,7 @@ include __DIR__ . '/../../app/views/layouts/header.php';
 ?>
 
 <style>
-    .page-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 30px;
-        border-radius: 10px;
-        margin-bottom: 30px;
-    }
-
-    .page-header h1 {
-        margin: 0 0 10px 0;
-        font-size: 28px;
-    }
-
-    .page-header p {
-        margin: 0;
-        opacity: 0.9;
-    }
+    /* Removidos overrides de .page-header para utilizar estilos globais do layout */
 
     .stats-grid {
         display: grid;
@@ -209,7 +193,7 @@ include __DIR__ . '/../../app/views/layouts/header.php';
 
     .status-select:focus {
         outline: none;
-        border-color: #667eea;
+        border-color: var(--primary-color);
     }
 
     .status-select.presente { background: #d4edda; color: #155724; border-color: #155724; }

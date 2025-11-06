@@ -5,7 +5,28 @@
 **Ambiente:** PHP 8.x + MySQL
 **Arquitetura:** MVC (Model-View-Controller)
 
----
+ ---
+
+## 🛠️ Atualização: Seletores de cor em Configurações
+
+**Data:** 2025-11-05
+
+**Resumo:** Ajuste visual e de usabilidade nos inputs de cor da página `Configurações > Sistema` para garantir visualização correta e feedback imediato da cor escolhida.
+
+**Detalhes da mudança**
+- Removido `padding` de `input[type="color"]` para evitar ocultar a amostra nativa em alguns navegadores.
+- Definidas dimensões do controle (`width: 64px; height: 36px`) para melhor legibilidade.
+- Adicionada pré-visualização ao lado do colorpicker (caixa da cor + código HEX) com atualização em tempo real.
+- Mantida a carga automática dos valores salvos nos inputs.
+
+**Arquivos relacionados**
+- `public/configuracoes/sistema.php` — estilos e preview dos seletores de cor.
+- `app/views/layouts/header.php` — variáveis CSS definidas: `--primary-color`, `--gradient-start`, `--gradient-end`.
+- `app/views/layouts/sidebar.php` — consumo de `--gradient-start` e `--gradient-end` na lateral.
+
+**Observações/Troubleshooting**
+- Se o controle exibir `—` ou a amostra não aparecer, verifique estilos globais que apliquem `padding`, `appearance`, `filter`, `opacity` ou `background` genérico em `input`.
+- Solução rápida: remover `padding` do `input[type="color"]` ou isolar estilos do colorpicker com maior especificidade.
 
 ## 🎯 Visão Geral do Sistema
 

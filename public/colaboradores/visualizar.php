@@ -365,6 +365,20 @@ include __DIR__ . '/../../app/views/layouts/header.php';
             <span class="info-label">Departamento:</span>
             <span class="info-value"><?php echo $colaborador['departamento'] ? e($colaborador['departamento']) : '-'; ?></span>
         </div>
+        <?php
+        // Exibe Setor quando a coluna existir
+        try {
+            $pdo = Database::getInstance()->getConnection();
+            $stmt = $pdo->prepare("SELECT COUNT(*) AS cnt FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'colaboradores' AND column_name = 'setor'");
+            $stmt->execute();
+            $hasSetor = ((int)($stmt->fetch()['cnt'] ?? 0)) > 0;
+        } catch (Exception $e) { $hasSetor = false; }
+        if ($hasSetor): ?>
+        <div class="info-row">
+            <span class="info-label">Setor:</span>
+            <span class="info-value"><?php echo isset($colaborador['setor']) && $colaborador['setor'] !== '' ? e($colaborador['setor']) : '-'; ?></span>
+        </div>
+        <?php endif; ?>
         <div class="info-row">
             <span class="info-label">Data de Admissão:</span>
             <span class="info-value"><?php echo $colaborador['data_admissao'] ? date('d/m/Y', strtotime($colaborador['data_admissao'])) : '-'; ?></span>

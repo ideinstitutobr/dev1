@@ -97,7 +97,7 @@ include __DIR__ . '/../../app/views/layouts/header.php';
     .form-group textarea:focus,
     .form-group select:focus {
         outline: none;
-        border-color: #667eea;
+        border-color: var(--primary-color);
     }
 
     .form-group textarea {
@@ -122,7 +122,7 @@ include __DIR__ . '/../../app/views/layouts/header.php';
         background: #f8f9fa;
         padding: 15px;
         border-radius: 5px;
-        border-left: 4px solid #667eea;
+        border-left: 4px solid var(--primary-color);
         margin-bottom: 20px;
     }
 

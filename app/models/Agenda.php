@@ -22,7 +22,7 @@ class Agenda {
                     (SELECT COUNT(*) FROM treinamento_participantes WHERE agenda_id = a.id) as total_inscritos
                 FROM agenda_treinamentos a
                 WHERE a.treinamento_id = ?
-                ORDER BY a.data_inicio ASC, a.turma ASC";
+                ORDER BY a.data_inicio ASC, a.hora_inicio ASC";
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$treinamentoId]);
@@ -49,24 +49,22 @@ class Agenda {
     public function criar($dados) {
         try {
             $sql = "INSERT INTO agenda_treinamentos
-                    (treinamento_id, turma, data_inicio, data_fim, hora_inicio, hora_fim,
-                     dias_semana, local, vagas_total, instrutor, observacoes, status)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    (treinamento_id, data_inicio, data_fim, hora_inicio, hora_fim,
+                     local, vagas_disponiveis, instrutor, observacoes, carga_horaria_dia)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute([
                 $dados['treinamento_id'],
-                $dados['turma'] ?? null,
                 $dados['data_inicio'],
-                $dados['data_fim'] ?? null,
+                $dados['data_fim'] ?? $dados['data_inicio'],
                 $dados['hora_inicio'] ?? null,
                 $dados['hora_fim'] ?? null,
-                $dados['dias_semana'] ?? null,
                 $dados['local'] ?? null,
-                $dados['vagas_total'] ?? 0,
+                $dados['vagas_disponiveis'] ?? null,
                 $dados['instrutor'] ?? null,
                 $dados['observacoes'] ?? null,
-                $dados['status'] ?? 'Programado'
+                $dados['carga_horaria_dia'] ?? null
             ]);
 
             return [
@@ -89,32 +87,28 @@ class Agenda {
     public function atualizar($id, $dados) {
         try {
             $sql = "UPDATE agenda_treinamentos SET
-                    turma = ?,
                     data_inicio = ?,
                     data_fim = ?,
                     hora_inicio = ?,
                     hora_fim = ?,
-                    dias_semana = ?,
                     local = ?,
-                    vagas_total = ?,
+                    vagas_disponiveis = ?,
                     instrutor = ?,
                     observacoes = ?,
-                    status = ?
+                    carga_horaria_dia = ?
                     WHERE id = ?";
 
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute([
-                $dados['turma'] ?? null,
                 $dados['data_inicio'],
-                $dados['data_fim'] ?? null,
+                $dados['data_fim'] ?? $dados['data_inicio'],
                 $dados['hora_inicio'] ?? null,
                 $dados['hora_fim'] ?? null,
-                $dados['dias_semana'] ?? null,
                 $dados['local'] ?? null,
-                $dados['vagas_total'] ?? 0,
+                $dados['vagas_disponiveis'] ?? null,
                 $dados['instrutor'] ?? null,
                 $dados['observacoes'] ?? null,
-                $dados['status'] ?? 'Programado',
+                $dados['carga_horaria_dia'] ?? null,
                 $id
             ]);
 
@@ -165,33 +159,30 @@ class Agenda {
     }
 
     /**
-     * Atualizar contagem de vagas ocupadas
-     */
-    public function atualizarVagasOcupadas($agendaId) {
-        $stmt = $this->pdo->prepare("
-            SELECT COUNT(*) FROM treinamento_participantes
-            WHERE agenda_id = ?
-        ");
-        $stmt->execute([$agendaId]);
-        $ocupadas = $stmt->fetchColumn();
-
-        $stmt = $this->pdo->prepare("UPDATE agenda_treinamentos SET vagas_ocupadas = ? WHERE id = ?");
-        $stmt->execute([$ocupadas, $agendaId]);
-
-        return $ocupadas;
-    }
-
-    /**
      * Verificar disponibilidade de vagas
      */
     public function temVagasDisponiveis($agendaId) {
         $agenda = $this->buscarPorId($agendaId);
 
-        if (!$agenda || $agenda['vagas_total'] == 0) {
+        if (!$agenda || !$agenda['vagas_disponiveis'] || $agenda['vagas_disponiveis'] == 0) {
             return true; // Sem limite de vagas
         }
 
-        return $agenda['vagas_ocupadas'] < $agenda['vagas_total'];
+        // Conta quantos participantes estão vinculados
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM treinamento_participantes WHERE agenda_id = ?");
+        $stmt->execute([$agendaId]);
+        $ocupadas = $stmt->fetchColumn();
+
+        return $ocupadas < $agenda['vagas_disponiveis'];
+    }
+
+    /**
+     * Contar vagas ocupadas de uma agenda
+     */
+    public function contarVagasOcupadas($agendaId) {
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM treinamento_participantes WHERE agenda_id = ?");
+        $stmt->execute([$agendaId]);
+        return $stmt->fetchColumn();
     }
 
     /**
@@ -205,7 +196,6 @@ class Agenda {
                 FROM agenda_treinamentos a
                 INNER JOIN treinamentos t ON a.treinamento_id = t.id
                 WHERE a.data_inicio >= CURDATE()
-                AND a.status IN ('Programado', 'Em Andamento')
                 ORDER BY a.data_inicio ASC
                 LIMIT ?";
 
@@ -215,44 +205,18 @@ class Agenda {
     }
 
     /**
-     * Contar total de agendas por status
+     * Contar total de agendas
      */
-    public function contarPorStatus($treinamentoId = null) {
-        $sql = "SELECT status, COUNT(*) as total
-                FROM agenda_treinamentos";
-
+    public function contarTotal($treinamentoId = null) {
         if ($treinamentoId) {
-            $sql .= " WHERE treinamento_id = ?";
-        }
-
-        $sql .= " GROUP BY status";
-
-        $stmt = $this->pdo->prepare($sql);
-
-        if ($treinamentoId) {
+            $sql = "SELECT COUNT(*) FROM agenda_treinamentos WHERE treinamento_id = ?";
+            $stmt = $this->pdo->prepare($sql);
             $stmt->execute([$treinamentoId]);
         } else {
-            $stmt->execute();
+            $sql = "SELECT COUNT(*) FROM agenda_treinamentos";
+            $stmt = $this->pdo->query($sql);
         }
 
-        $resultado = [];
-        while ($row = $stmt->fetch()) {
-            $resultado[$row['status']] = $row['total'];
-        }
-
-        return $resultado;
-    }
-
-    /**
-     * Buscar agenda por turma
-     */
-    public function buscarPorTurma($treinamentoId, $turma) {
-        $sql = "SELECT * FROM agenda_treinamentos
-                WHERE treinamento_id = ? AND turma = ?
-                LIMIT 1";
-
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([$treinamentoId, $turma]);
-        return $stmt->fetch();
+        return $stmt->fetchColumn();
     }
 }

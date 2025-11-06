@@ -4,11 +4,11 @@
  * Sistema de Gestão de Capacitações (SGC)
  */
 
-// Configurações do Hostinger
+// Configurações para ambiente local (XAMPP)
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'u411458227_comercial');
-define('DB_USER', 'u411458227_comercial25');
-define('DB_PASS', '#Ide@2k25');
+define('DB_NAME', 'comercial_sgc');
+define('DB_USER', 'root');
+define('DB_PASS', '');
 define('DB_CHARSET', 'utf8mb4');
 define('DB_COLLATE', 'utf8mb4_unicode_ci');
 

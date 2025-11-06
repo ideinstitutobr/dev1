@@ -15,6 +15,13 @@ if (Auth::checkSessionTimeout()) {
     header('Location: ' . BASE_URL . 'logout.php?timeout=1');
     exit;
 }
+// Carrega configurações visuais do sistema
+require_once APP_PATH . 'classes/SystemConfig.php';
+$appNameCfg = SystemConfig::get('app_name', APP_NAME);
+$primaryColor = SystemConfig::get('primary_color', '#667eea');
+$gradStart = SystemConfig::get('gradient_start', '#667eea');
+$gradEnd = SystemConfig::get('gradient_end', '#764ba2');
+$cfgFavicon = SystemConfig::get('favicon_path');
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -22,14 +29,14 @@ if (Auth::checkSessionTimeout()) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title><?php echo $pageTitle ?? 'Dashboard'; ?> - <?php echo APP_NAME; ?></title>
+    <title><?php echo $pageTitle ?? 'Dashboard'; ?> - <?php echo $appNameCfg; ?></title>
 
     <!-- CSS do Sistema -->
     <link rel="stylesheet" href="<?php echo ASSETS_URL; ?>css/main.css">
     <link rel="stylesheet" href="<?php echo ASSETS_URL; ?>css/dashboard.css">
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="<?php echo ASSETS_URL; ?>img/favicon.png">
+    <link rel="icon" type="image/png" href="<?php echo $cfgFavicon ? BASE_URL . $cfgFavicon : (ASSETS_URL . 'img/favicon.png'); ?>">
 
     <!-- Meta tags -->
     <meta name="description" content="Sistema de Gestão de Capacitações">
@@ -43,6 +50,11 @@ if (Auth::checkSessionTimeout()) {
     <?php endif; ?>
 
     <style>
+        :root {
+            --primary-color: <?php echo $primaryColor; ?>;
+            --gradient-start: <?php echo $gradStart; ?>;
+            --gradient-end: <?php echo $gradEnd; ?>;
+        }
         * {
             margin: 0;
             padding: 0;
@@ -95,7 +107,7 @@ if (Auth::checkSessionTimeout()) {
         }
 
         .page-header .breadcrumb a {
-            color: #667eea;
+            color: var(--primary-color);
             text-decoration: none;
         }
 
@@ -158,6 +170,14 @@ if (Auth::checkSessionTimeout()) {
             .page-header h1 {
                 font-size: 22px;
             }
+        }
+        /* Overrides globais para cor primária */
+        .btn-primary {
+            background: var(--primary-color);
+            color: #fff;
+        }
+        .btn-primary:hover {
+            filter: brightness(0.92);
         }
     </style>
 </head>

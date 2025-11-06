@@ -12,6 +12,7 @@ class NotificationManager {
     private $pdo;
     private $mailer;
     private $config;
+    private $lastError;
 
     /**
      * Construtor
@@ -24,6 +25,50 @@ class NotificationManager {
         if ($this->config && $this->config['habilitado']) {
             $this->setupMailer();
         }
+    }
+
+    /**
+     * Envia e-mail genérico (credenciais, avisos, etc.)
+     * @param string $destinatario
+     * @param string $assunto
+     * @param string $corpoHtml
+     * @return bool
+     */
+    public function enviarEmailGenerico($destinatario, $assunto, $corpoHtml) {
+        if (!$this->isConfigured()) {
+            $this->lastError = 'Sistema de e-mail não configurado';
+            return false;
+        }
+
+        try {
+            $this->mailer->clearAddresses();
+            $this->mailer->addAddress($destinatario);
+            $this->mailer->Subject = $assunto;
+            $this->mailer->isHTML(true);
+            $this->mailer->Body = $corpoHtml;
+            $this->mailer->send();
+
+            // Log opcional
+            if ($this->pdo) {
+                $stmt = $this->pdo->prepare("INSERT INTO email_logs (destinatario, assunto, status) VALUES (?, ?, 'sucesso')");
+                $stmt->execute([$destinatario, $assunto]);
+            }
+            return true;
+        } catch (Exception $e) {
+            $this->lastError = $e->getMessage();
+            if ($this->pdo) {
+                $stmt = $this->pdo->prepare("INSERT INTO email_logs (destinatario, assunto, status, mensagem_erro) VALUES (?, ?, 'erro', ?)");
+                $stmt->execute([$destinatario, $assunto, $e->getMessage()]);
+            }
+            return false;
+        }
+    }
+
+    /**
+     * Retorna última mensagem de erro ao enviar e-mail
+     */
+    public function getLastError() {
+        return $this->lastError ?? null;
     }
 
     /**

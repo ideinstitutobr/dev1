@@ -7,7 +7,7 @@
 <style>
     .sidebar {
         width: 260px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
         height: 100vh;
         position: fixed;
         left: 0;
@@ -147,8 +147,21 @@
     <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
 
     <div class="sidebar-header">
-        <h2>🎓 SGC</h2>
-        <p>Sistema de Capacitações</p>
+        <?php
+            // Exibir logomarca se configurada
+            if (!isset($cfgLogo)) {
+                require_once APP_PATH . 'classes/SystemConfig.php';
+                $cfgLogo = SystemConfig::get('logo_path');
+                $appNameCfg = SystemConfig::get('app_name', APP_NAME);
+            }
+        ?>
+        <?php if (!empty($cfgLogo)): ?>
+            <img src="<?php echo BASE_URL . $cfgLogo; ?>" alt="Logo" style="max-height:60px; max-width:180px;">
+            <p style="color:#fff; font-size:12px; opacity:0.85;"><?php echo e($appNameCfg); ?></p>
+        <?php else: ?>
+            <h2 style="color:#fff;">🎓 <?php echo e($appNameCfg ?? 'SGC'); ?></h2>
+            <p>Sistema de Capacitações</p>
+        <?php endif; ?>
     </div>
 
     <ul class="sidebar-menu">
@@ -160,17 +173,32 @@
         </li>
 
         <li>
-            <a href="<?php echo BASE_URL; ?>colaboradores/listar.php">
+            <a href="#" onclick="toggleSubmenu('colaboradores'); return false;">
                 <span class="icon">👥</span>
                 <span class="text">Colaboradores</span>
             </a>
+            <ul class="submenu" id="submenu-colaboradores">
+                <li><a href="<?php echo BASE_URL; ?>colaboradores/listar.php">📋 Listar Colaboradores</a></li>
+                <li><a href="<?php echo BASE_URL; ?>colaboradores/cadastrar.php">➕ Cadastrar Novo</a></li>
+                <li><a href="<?php echo BASE_URL; ?>colaboradores/gerenciar_senhas.php">🔑 Gerenciar Senhas do Portal</a></li>
+                <?php if (Auth::isAdmin()): ?>
+                <li><a href="<?php echo BASE_URL; ?>colaboradores/config_campos.php">⚙️ Configurar Campos</a></li>
+                <?php endif; ?>
+            </ul>
         </li>
 
         <li>
-            <a href="<?php echo BASE_URL; ?>treinamentos/listar.php">
+            <a href="#" onclick="toggleSubmenu('treinamentos'); return false;">
                 <span class="icon">📚</span>
                 <span class="text">Treinamentos</span>
             </a>
+            <ul class="submenu" id="submenu-treinamentos">
+                <li><a href="<?php echo BASE_URL; ?>treinamentos/listar.php">📋 Listar Treinamentos</a></li>
+                <li><a href="<?php echo BASE_URL; ?>treinamentos/cadastrar.php">➕ Cadastrar Novo</a></li>
+                <?php if (Auth::isAdmin()): ?>
+                <li><a href="<?php echo BASE_URL; ?>treinamentos/opcoes.php">🧩 Gerir Campos</a></li>
+                <?php endif; ?>
+            </ul>
         </li>
 
         <li>
@@ -218,8 +246,7 @@
             </a>
             <ul class="submenu" id="submenu-configuracoes">
                 <li><a href="<?php echo BASE_URL; ?>configuracoes/email.php">📧 E-mail (SMTP)</a></li>
-                <li><a href="<?php echo BASE_URL; ?>config/sistema.php">⚙️ Sistema</a></li>
-                <li><a href="<?php echo BASE_URL; ?>config/usuarios.php">👤 Usuários</a></li>
+                <li><a href="<?php echo BASE_URL; ?>configuracoes/sistema.php">⚙️ Sistema</a></li>
             </ul>
         </li>
         <?php endif; ?>
@@ -260,6 +287,23 @@
 
     // Restaura estado do sidebar do localStorage
     document.addEventListener('DOMContentLoaded', function() {
+        // Aplicar colapso padrão do sistema se não houver estado salvo
+        try {
+            const stored = localStorage.getItem('sidebarCollapsed');
+            if (stored === null) {
+                <?php
+                    if (!isset($sidebarDefault)) {
+                        require_once APP_PATH . 'classes/SystemConfig.php';
+                        $sidebarDefault = SystemConfig::get('sidebar_default_collapsed', '0') === '1';
+                    }
+                ?>
+                const shouldCollapse = <?php echo $sidebarDefault ? 'true' : 'false'; ?>;
+                if (shouldCollapse) {
+                    document.getElementById('sidebar').classList.add('collapsed');
+                    document.getElementById('mainContent').classList.add('sidebar-collapsed');
+                }
+            }
+        } catch (e) {}
         const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
         if (sidebarCollapsed) {
             document.getElementById('sidebar').classList.add('collapsed');

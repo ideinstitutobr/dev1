@@ -1,274 +1,143 @@
 <?php
 /**
- * Script de Instalação do SGC
- * Cria as tabelas no banco de dados e configura o sistema
+ * Instalador Unificado SGC
+ * Executa schema inicial, migrations e correções em uma única execução
+ * Lê credenciais e BASE_URL exclusivamente dos arquivos de configuração
  */
 
-// Define constante do sistema
 define('SGC_SYSTEM', true);
-
-// Carrega configurações
 require_once __DIR__ . '/../app/config/config.php';
+require_once __DIR__ . '/../app/config/database.php';
 require_once __DIR__ . '/../app/classes/Database.php';
 
-// Função para exibir mensagem
-function showMessage($message, $type = 'info') {
-    $colors = [
-        'success' => '#28a745',
-        'error' => '#dc3545',
-        'warning' => '#ffc107',
-        'info' => '#17a2b8'
-    ];
-    $color = $colors[$type] ?? $colors['info'];
-    echo "<div style='padding: 10px; margin: 10px 0; background: {$color}; color: white; border-radius: 5px;'>{$message}</div>";
+function h($s) { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8'); }
+function base_url($path = '') { return rtrim(BASE_URL, '/') . '/' . ltrim($path, '/'); }
+
+$env_checks = [
+    'PHP >= 8.0' => version_compare(PHP_VERSION, '8.0.0', '>=') ,
+    'Extensão PDO' => extension_loaded('pdo'),
+    'Extensão pdo_mysql' => extension_loaded('pdo_mysql'),
+    'Extensão mbstring' => extension_loaded('mbstring'),
+    'Extensão openssl' => extension_loaded('openssl'),
+    'Diretório logs gravável' => is_writable(LOGS_PATH) || (!is_dir(LOGS_PATH) && is_writable(dirname(LOGS_PATH))),
+];
+
+function resumo_sql($sql){ $one = preg_replace('/\s+/', ' ', trim($sql)); return mb_strimwidth($one, 0, 120, '...'); }
+function is_duplicate_warning($msg){ $low=strtolower($msg); foreach(['already exists','duplicate','exists','can\'t drop','unknown column','cannot add foreign key','multiple primary key'] as $p){ if(strpos($low,$p)!==false) return true; } return false; }
+function execute_sql_file(PDO $pdo, $file, &$log){
+    if (!file_exists($file)) { $log[] = ['type'=>'error','msg'=>'Arquivo não encontrado: '.basename($file)]; return false; }
+    $sql = file_get_contents($file);
+    $clean = preg_replace('/^--.*$/m', '', $sql);
+    $clean = preg_replace('/\/\*.*?\*\//s', '', $clean);
+    $clean = preg_replace('/DELIMITER\s+[^\n]+/i', '', $clean);
+    $clean = preg_replace('/^\s*USE\s+[^;]+;?/mi', '', $clean);
+    $statements = array_filter(array_map('trim', explode(';', $clean)), fn($s)=>$s!=='');
+    $ok=0; $warn=0; $err=0;
+    foreach ($statements as $stmt){
+        try{
+            $isResultSet = preg_match('/^\s*(select|show|describe)\b/i', $stmt)===1;
+            if ($isResultSet){ $rs=$pdo->query($stmt); if($rs){ $rs->fetchAll(); $rs->closeCursor(); } $log[]=['type'=>'info','msg'=>resumo_sql($stmt)]; }
+            else { $pdo->exec($stmt); $log[]=['type'=>'ok','msg'=>resumo_sql($stmt)]; $ok++; }
+        }catch(PDOException $e){ $msg=$e->getMessage(); if(is_duplicate_warning($msg)){ $log[]=['type'=>'warn','msg'=>resumo_sql($stmt).' | '.$msg]; $warn++; continue; } $log[]=['type'=>'error','msg'=>resumo_sql($stmt).' | '.$msg]; $err++; }
+    }
+    $log[]=['type'=>'info','msg'=>'Arquivo '.basename($file).": {$ok} OK, {$warn} avisos, {$err} erros."]; return $err===0;
 }
 
+function ensure_notificacoes_email_destinatario(PDO $pdo, &$log){
+    try{ $stmt=$pdo->query("SHOW COLUMNS FROM notificacoes LIKE 'email_destinatario'"); $exists=$stmt->fetch()!==false; $stmt->closeCursor(); if(!$exists){ $pdo->exec("ALTER TABLE notificacoes ADD COLUMN email_destinatario VARCHAR(255) NULL"); $log[]=['type'=>'ok','msg'=>'Adicionada coluna notificacoes.email_destinatario']; } else { $log[]=['type'=>'info','msg'=>'Coluna notificacoes.email_destinatario já existe.']; } return true; }
+    catch(PDOException $e){ $log[]=['type'=>'error','msg'=>'Falha ao ajustar notificacoes.email_destinatario: '.$e->getMessage()]; return false; }
+}
+function ensure_admin_user(PDO $pdo, &$log){
+    try{ $pdo->exec("CREATE TABLE IF NOT EXISTS usuarios_sistema (id INT AUTO_INCREMENT PRIMARY KEY, nome VARCHAR(120) NOT NULL, email VARCHAR(190) NOT NULL UNIQUE, senha VARCHAR(255) NOT NULL, tipo_usuario ENUM('admin','gestor','colaborador') NOT NULL DEFAULT 'admin', status ENUM('ativo','inativo') NOT NULL DEFAULT 'ativo', criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"); $stmt=$pdo->query("SELECT COUNT(*) FROM usuarios_sistema"); $count=(int)$stmt->fetchColumn(); $stmt->closeCursor(); if($count===0){ $pdo->prepare("INSERT INTO usuarios_sistema (nome,email,senha,tipo_usuario,status) VALUES (?,?,?,?,?)")->execute(['Administrador','admin@localhost', password_hash('admin', PASSWORD_DEFAULT),'admin','ativo']); $log[]=['type'=>'ok','msg'=>'Usuário admin criado (login: admin@localhost / senha: admin)']; } else { $log[]=['type'=>'info','msg'=>'Usuários já existem em usuarios_sistema ('.$count.')']; } return true; }
+    catch(PDOException $e){ $log[]=['type'=>'error','msg'=>'Falha ao garantir usuário admin: '.$e->getMessage()]; return false; }
+}
+
+$migrations = [
+    __DIR__ . '/../database/schema.sql',
+    __DIR__ . '/../database/migrations/migration_notificacoes.sql',
+    __DIR__ . '/../database/migrations/migration_agenda.sql',
+    __DIR__ . '/../database/migrations/migration_portal_colaborador.sql',
+    __DIR__ . '/../database/migrations/migration_frequencia.sql',
+    __DIR__ . '/../database/migrations/migration_campos_matriz.sql',
+    __DIR__ . '/../database/migration_treinamentos_update.sql',
+    __DIR__ . '/../database/fix_status_treinamentos.sql',
+];
+
+$log=[]; $ran=false;
+if ($_SERVER['REQUEST_METHOD']==='POST'){
+    $ran=true;
+    try{ $db=Database::getInstance(); $pdo=$db->getConnection(); $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION); if(defined('PDO::MYSQL_ATTR_USE_BUFFERED_QUERY')){ $pdo->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY,true);} foreach($migrations as $file){ if(!file_exists($file)){ $log[]=['type'=>'warn','msg'=>'Migration ausente: '.basename($file)]; continue;} execute_sql_file($pdo,$file,$log);} ensure_notificacoes_email_destinatario($pdo,$log); ensure_admin_user($pdo,$log); $log[]=['type'=>'ok','msg'=>'Instalação concluída.']; }
+    catch(Exception $e){ $log[]=['type'=>'error','msg'=>'Falha geral: '.$e->getMessage()]; }
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Instalação - <?php echo APP_NAME; ?></title>
+    <title>Instalador Unificado SGC</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-        }
-        h1 {
-            color: #333;
-            margin-bottom: 10px;
-        }
-        .subtitle {
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-        .step {
-            margin: 20px 0;
-            padding: 15px;
-            background: #f8f9fa;
-            border-left: 4px solid #667eea;
-            border-radius: 5px;
-        }
-        .step h3 {
-            color: #667eea;
-            margin-bottom: 10px;
-        }
-        .credentials {
-            background: #e9ecef;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 10px 0;
-            font-family: 'Courier New', monospace;
-        }
-        .credentials strong {
-            color: #667eea;
-        }
-        button {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            font-size: 16px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 20px;
-        }
-        button:hover {
-            background: #5568d3;
-        }
-        .success {
-            color: #28a745;
-            font-weight: bold;
-        }
-        .error {
-            color: #dc3545;
-            font-weight: bold;
-        }
-        pre {
-            background: #2d2d2d;
-            color: #f8f8f2;
-            padding: 15px;
-            border-radius: 5px;
-            overflow-x: auto;
-            font-size: 12px;
-        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: system-ui, Segoe UI, Roboto, Arial; background:#0b1b2b; color:#eef3f8; }
+        .container { max-width: 960px; margin: 32px auto; padding: 24px; background:#11263d; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.3); }
+        h1 { margin:0 0 8px; font-size:24px; }
+        .subtitle { color:#c7d3df; margin-bottom:16px; }
+        .credentials { background:#0e2035; border:1px solid #1c3a5a; border-radius:8px; padding:12px; margin:12px 0; font-family:monospace; }
+        .checks { display:grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap:8px; margin: 12px 0 20px; }
+        .check { background:#0e2035; padding:10px 12px; border-radius:8px; border:1px solid #1c3a5a; display:flex; align-items:center; gap:8px; }
+        .check.ok { border-color:#2e7d32; background:#113018; }
+        .check.fail { border-color:#c62828; background:#2b1315; }
+        .btns { display:flex; gap:12px; align-items:center; margin-top:16px; }
+        button { background:#1e88e5; color:#fff; border:none; padding:10px 16px; border-radius:8px; cursor:pointer; font-weight:600; }
+        button:hover { background:#1976d2; }
+        a { color:#7cc2ff; }
+        .log { margin-top:20px; background:#0e2035; border:1px solid #1c3a5a; border-radius:8px; padding:12px; max-height:420px; overflow:auto; }
+        .log-item { padding:6px 8px; border-bottom:1px dashed #1c3a5a; font-size:13px; }
+        .log-item.ok { color:#7bd88f; }
+        .log-item.warn { color:#ffd666; }
+        .log-item.error { color:#ff7b7b; }
+        .log-item.info { color:#9ec1e6; }
+        .next { margin-top:18px; background:#0e2035; border:1px solid #1c3a5a; border-radius:8px; padding:12px; }
+        .footer { margin-top:26px; font-size:12px; color:#9fb7cd; }
     </style>
-</head>
+    </head>
 <body>
     <div class="container">
-        <h1>🚀 Instalação do Sistema</h1>
-        <p class="subtitle"><?php echo APP_NAME; ?> - Versão <?php echo APP_VERSION; ?></p>
+        <h1>Instalador Unificado SGC</h1>
+        <p class="subtitle">Lê credenciais e BASE_URL dos arquivos de configuração. Não solicita inputs na instalação.</p>
+        <div class="credentials">
+            <div><strong>BASE_URL:</strong> <?php echo h(BASE_URL); ?></div>
+            <div><strong>Ambiente:</strong> <?php echo h(APP_ENV); ?></div>
+            <div><strong>Cookie Secure:</strong> <?php echo defined('COOKIE_SECURE') && COOKIE_SECURE ? 'Ativo' : 'Inativo'; ?></div>
+            <div><strong>DB Host:</strong> <?php echo h(DB_HOST); ?> | <strong>DB Name:</strong> <?php echo h(DB_NAME); ?> | <strong>DB User:</strong> <?php echo h(DB_USER); ?> | <strong>Charset:</strong> <?php echo h(DB_CHARSET); ?></div>
+            <div>Para alterar, edite <code>app/config/config.local.php</code> e <code>app/config/database.php</code>.</div>
+        </div>
 
-        <?php
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['install'])) {
-            echo "<div class='step'><h3>📦 Iniciando Instalação...</h3></div>";
+        <div class="checks">
+            <?php foreach ($env_checks as $label => $ok): ?>
+                <div class="check <?php echo $ok ? 'ok' : 'fail'; ?>"><span><?php echo $ok ? '✔' : '✖'; ?></span><span><?php echo h($label); ?></span></div>
+            <?php endforeach; ?>
+        </div>
 
-            try {
-                // Testa conexão
-                echo "<div class='step'><h3>🔌 Testando Conexão com Banco de Dados</h3>";
-                $db = Database::getInstance();
-                $conn = $db->getConnection();
-
-                if ($db->isConnected()) {
-                    showMessage("✅ Conexão estabelecida com sucesso!", 'success');
-                    echo "<div class='credentials'>";
-                    echo "<strong>Host:</strong> " . DB_HOST . "<br>";
-                    echo "<strong>Database:</strong> " . DB_NAME . "<br>";
-                    echo "<strong>Charset:</strong> " . DB_CHARSET;
-                    echo "</div></div>";
-                } else {
-                    throw new Exception("Não foi possível conectar ao banco de dados");
-                }
-
-                // Lê e executa o SQL
-                echo "<div class='step'><h3>📋 Executando Script SQL</h3>";
-                $sqlFile = __DIR__ . '/../database/schema.sql';
-
-                if (!file_exists($sqlFile)) {
-                    throw new Exception("Arquivo schema.sql não encontrado!");
-                }
-
-                $sql = file_get_contents($sqlFile);
-
-                // Remove comentários e divide em statements
-                $sql = preg_replace('/--.*$/m', '', $sql);
-                $statements = array_filter(
-                    array_map('trim', explode(';', $sql)),
-                    function($stmt) {
-                        return !empty($stmt) && $stmt !== '' && strpos($stmt, 'DELIMITER') === false;
-                    }
-                );
-
-                $executed = 0;
-                $errors = 0;
-
-                foreach ($statements as $statement) {
-                    if (trim($statement) !== '') {
-                        try {
-                            $conn->exec($statement);
-                            $executed++;
-                        } catch (PDOException $e) {
-                            // Ignora erros de "já existe"
-                            if (strpos($e->getMessage(), 'already exists') === false) {
-                                echo "<div style='color: orange; font-size: 12px; margin: 5px 0;'>";
-                                echo "⚠️ Aviso: " . substr($e->getMessage(), 0, 100) . "...";
-                                echo "</div>";
-                                $errors++;
-                            }
-                        }
-                    }
-                }
-
-                showMessage("✅ SQL executado com sucesso! {$executed} comandos processados.", 'success');
-                if ($errors > 0) {
-                    showMessage("⚠️ {$errors} avisos encontrados (provavelmente tabelas já existentes)", 'warning');
-                }
-                echo "</div>";
-
-                // Verifica tabelas criadas
-                echo "<div class='step'><h3>🔍 Verificando Tabelas Criadas</h3>";
-                $stmt = $conn->query("SHOW TABLES");
-                $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
-
-                if (count($tables) > 0) {
-                    showMessage("✅ " . count($tables) . " tabelas encontradas:", 'success');
-                    echo "<pre>";
-                    foreach ($tables as $table) {
-                        echo "• {$table}\n";
-                    }
-                    echo "</pre>";
-                } else {
-                    showMessage("⚠️ Nenhuma tabela encontrada. Verifique o script SQL.", 'warning');
-                }
-                echo "</div>";
-
-                // Verifica usuário admin
-                echo "<div class='step'><h3>👤 Verificando Usuário Administrador</h3>";
-                $stmt = $conn->query("SELECT COUNT(*) as total FROM usuarios_sistema WHERE nivel_acesso = 'admin'");
-                $result = $stmt->fetch();
-
-                if ($result['total'] > 0) {
-                    showMessage("✅ Usuário administrador encontrado!", 'success');
-                    echo "<div class='credentials'>";
-                    echo "<strong>Email:</strong> admin@sgc.com<br>";
-                    echo "<strong>Senha:</strong> admin123<br>";
-                    echo "<span style='color: #dc3545;'>⚠️ Altere a senha após o primeiro login!</span>";
-                    echo "</div>";
-                } else {
-                    showMessage("⚠️ Usuário administrador não encontrado. Execute o INSERT manual.", 'warning');
-                }
-                echo "</div>";
-
-                // Sucesso final
-                echo "<div class='step' style='background: #d4edda; border-left-color: #28a745;'>";
-                echo "<h3 style='color: #28a745;'>🎉 Instalação Concluída com Sucesso!</h3>";
-                echo "<p>O sistema está pronto para uso. Você pode acessar:</p>";
-                echo "<ul style='margin: 10px 0; padding-left: 20px;'>";
-                echo "<li><a href='index.php' style='color: #667eea;'>Página Inicial (Login)</a></li>";
-                echo "<li><a href='test_connection.php' style='color: #667eea;'>Testar Conexão</a></li>";
-                echo "</ul>";
-                echo "</div>";
-
-            } catch (Exception $e) {
-                showMessage("❌ Erro durante a instalação: " . $e->getMessage(), 'error');
-                echo "<pre>";
-                echo $e->getTraceAsString();
-                echo "</pre>";
-            }
-        } else {
-            // Formulário de instalação
-            ?>
-            <div class="step">
-                <h3>📋 Informações do Banco de Dados</h3>
-                <p>As seguintes credenciais serão utilizadas para a instalação:</p>
-                <div class="credentials">
-                    <strong>Host:</strong> <?php echo DB_HOST; ?><br>
-                    <strong>Database:</strong> <?php echo DB_NAME; ?><br>
-                    <strong>Username:</strong> <?php echo DB_USER; ?><br>
-                    <strong>Charset:</strong> <?php echo DB_CHARSET; ?>
-                </div>
+        <form method="post">
+            <div class="btns">
+                <button type="submit">Instalar</button>
+                <a href="<?php echo h(base_url('')); ?>">Voltar ao Sistema</a>
             </div>
+        </form>
 
-            <div class="step">
-                <h3>⚙️ O que será instalado?</h3>
-                <ul style="padding-left: 20px; line-height: 1.8;">
-                    <li>✅ 9 tabelas do sistema (colaboradores, treinamentos, etc.)</li>
-                    <li>✅ 3 views para relatórios</li>
-                    <li>✅ Índices para otimização de performance</li>
-                    <li>✅ Configurações padrão do sistema</li>
-                    <li>✅ Usuário administrador inicial</li>
-                </ul>
+        <?php if ($ran): ?>
+            <div class="log">
+                <?php foreach ($log as $e): ?>
+                    <div class="log-item <?php echo h($e['type']); ?>"><?php echo h($e['msg']); ?></div>
+                <?php endforeach; ?>
             </div>
-
-            <div class="step" style="background: #fff3cd; border-left-color: #ffc107;">
-                <h3 style="color: #856404;">⚠️ Atenção</h3>
-                <p>Este script criará as tabelas no banco de dados <strong><?php echo DB_NAME; ?></strong>.</p>
-                <p>Certifique-se de que está usando o banco correto antes de prosseguir.</p>
+            <div class="next">
+                <p>Instalação concluída. Acesse <a href="<?php echo h(base_url('index.php')); ?>">Login</a> ou <a href="<?php echo h(base_url('dashboard.php')); ?>">Dashboard</a>.</p>
             </div>
-
-            <form method="POST">
-                <button type="submit" name="install">🚀 Iniciar Instalação</button>
-            </form>
-            <?php
-        }
-        ?>
+        <?php endif; ?>
+        <div class="footer">PHP <?php echo h(PHP_VERSION); ?> — Ambiente: <?php echo h(APP_ENV); ?> — Base URL: <?php echo h(BASE_URL); ?></div>
     </div>
 </body>
 </html>
+<?php

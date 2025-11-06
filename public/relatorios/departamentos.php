@@ -163,9 +163,9 @@ include __DIR__ . '/../../app/views/layouts/header.php';
         <strong><?php echo count($departamentos); ?></strong> departamento(s) encontrado(s)
     </div>
     <div style="display: flex; gap: 10px;">
-        <a href="actions.php?action=exportar&tipo=departamentos" class="btn btn-success">
-            📥 Exportar CSV
-        </a>
+        <a href="actions.php?action=exportar&tipo=departamentos&formato=csv" class="btn btn-success">📥 Exportar CSV</a>
+        <a href="actions.php?action=exportar&tipo=departamentos&formato=xlsx" class="btn btn-success">📊 Exportar Excel</a>
+        <a href="actions.php?action=exportar&tipo=departamentos&formato=pdf" class="btn btn-success">📄 Exportar PDF</a>
         <a href="dashboard.php" class="btn btn-secondary">
             ← Voltar
         </a>

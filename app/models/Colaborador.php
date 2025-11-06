@@ -22,6 +22,9 @@ class Colaborador {
         $search = $params['search'] ?? '';
         $nivel = $params['nivel'] ?? '';
         $ativo = $params['ativo'] ?? '';
+        $cargo = $params['cargo'] ?? '';
+        $departamento = $params['departamento'] ?? '';
+        $setor = $params['setor'] ?? '';
 
         $offset = ($page - 1) * $perPage;
 
@@ -45,6 +48,22 @@ class Colaborador {
         if ($ativo !== '') {
             $where[] = 'ativo = ?';
             $bindings[] = $ativo;
+        }
+
+        if (!empty($cargo)) {
+            $where[] = 'cargo = ?';
+            $bindings[] = $cargo;
+        }
+
+        if (!empty($departamento)) {
+            $where[] = 'departamento = ?';
+            $bindings[] = $departamento;
+        }
+
+        // Adiciona filtro de setor somente se a coluna existir
+        if (!empty($setor) && $this->hasColumn('colaboradores', 'setor')) {
+            $where[] = 'setor = ?';
+            $bindings[] = $setor;
         }
 
         $whereClause = implode(' AND ', $where);
@@ -75,6 +94,19 @@ class Colaborador {
     }
 
     /**
+     * Verifica se uma coluna existe na tabela
+     */
+    private function hasColumn($table, $column) {
+        try {
+            $stmt = $this->pdo->prepare("SELECT COUNT(*) AS cnt FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?");
+            $stmt->execute([$table, $column]);
+            return ((int)($stmt->fetch()['cnt'] ?? 0)) > 0;
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+
+    /**
      * Busca colaborador por ID
      */
     public function buscarPorId($id) {
@@ -98,25 +130,48 @@ class Colaborador {
                 return ['success' => false, 'message' => 'CPF já cadastrado'];
             }
 
-            $sql = "INSERT INTO colaboradores
-                    (nome, email, cpf, nivel_hierarquico, cargo, departamento,
-                     salario, data_admissao, telefone, observacoes, ativo, origem)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'local')";
-
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute([
-                $dados['nome'],
-                $dados['email'],
-                $dados['cpf'] ?? null,
-                $dados['nivel_hierarquico'],
-                $dados['cargo'] ?? null,
-                $dados['departamento'] ?? null,
-                $dados['salario'] ?? null,
-                $dados['data_admissao'] ?? null,
-                $dados['telefone'] ?? null,
-                $dados['observacoes'] ?? null,
-                $dados['ativo'] ?? 1
-            ]);
+            // Inserção com coluna setor se existir
+            $setorExists = $this->hasColumn('colaboradores', 'setor');
+            if ($setorExists) {
+                $sql = "INSERT INTO colaboradores
+                        (nome, email, cpf, nivel_hierarquico, cargo, departamento, setor,
+                         salario, data_admissao, telefone, observacoes, ativo, origem)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'local')";
+                $stmt = $this->pdo->prepare($sql);
+                $stmt->execute([
+                    $dados['nome'],
+                    $dados['email'],
+                    $dados['cpf'] ?? null,
+                    $dados['nivel_hierarquico'],
+                    $dados['cargo'] ?? null,
+                    $dados['departamento'] ?? null,
+                    $dados['setor'] ?? null,
+                    $dados['salario'] ?? null,
+                    $dados['data_admissao'] ?? null,
+                    $dados['telefone'] ?? null,
+                    $dados['observacoes'] ?? null,
+                    $dados['ativo'] ?? 1
+                ]);
+            } else {
+                $sql = "INSERT INTO colaboradores
+                        (nome, email, cpf, nivel_hierarquico, cargo, departamento,
+                         salario, data_admissao, telefone, observacoes, ativo, origem)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'local')";
+                $stmt = $this->pdo->prepare($sql);
+                $stmt->execute([
+                    $dados['nome'],
+                    $dados['email'],
+                    $dados['cpf'] ?? null,
+                    $dados['nivel_hierarquico'],
+                    $dados['cargo'] ?? null,
+                    $dados['departamento'] ?? null,
+                    $dados['salario'] ?? null,
+                    $dados['data_admissao'] ?? null,
+                    $dados['telefone'] ?? null,
+                    $dados['observacoes'] ?? null,
+                    $dados['ativo'] ?? 1
+                ]);
+            }
 
             return [
                 'success' => true,
@@ -149,36 +204,71 @@ class Colaborador {
                 return ['success' => false, 'message' => 'CPF já cadastrado'];
             }
 
-            $sql = "UPDATE colaboradores SET
-                    nome = ?,
-                    email = ?,
-                    cpf = ?,
-                    nivel_hierarquico = ?,
-                    cargo = ?,
-                    departamento = ?,
-                    salario = ?,
-                    data_admissao = ?,
-                    telefone = ?,
-                    observacoes = ?,
-                    ativo = ?,
-                    updated_at = NOW()
-                    WHERE id = ?";
-
+            // Atualização com coluna setor se existir
+            $setorExists = $this->hasColumn('colaboradores', 'setor');
+            if ($setorExists) {
+                $sql = "UPDATE colaboradores SET
+                        nome = ?,
+                        email = ?,
+                        cpf = ?,
+                        nivel_hierarquico = ?,
+                        cargo = ?,
+                        departamento = ?,
+                        setor = ?,
+                        salario = ?,
+                        data_admissao = ?,
+                        telefone = ?,
+                        observacoes = ?,
+                        ativo = ?,
+                        updated_at = NOW()
+                        WHERE id = ?";
+                $params = [
+                    $dados['nome'],
+                    $dados['email'],
+                    $dados['cpf'] ?? null,
+                    $dados['nivel_hierarquico'],
+                    $dados['cargo'] ?? null,
+                    $dados['departamento'] ?? null,
+                    $dados['setor'] ?? null,
+                    $dados['salario'] ?? null,
+                    $dados['data_admissao'] ?? null,
+                    $dados['telefone'] ?? null,
+                    $dados['observacoes'] ?? null,
+                    $dados['ativo'] ?? 1,
+                    $id
+                ];
+            } else {
+                $sql = "UPDATE colaboradores SET
+                        nome = ?,
+                        email = ?,
+                        cpf = ?,
+                        nivel_hierarquico = ?,
+                        cargo = ?,
+                        departamento = ?,
+                        salario = ?,
+                        data_admissao = ?,
+                        telefone = ?,
+                        observacoes = ?,
+                        ativo = ?,
+                        updated_at = NOW()
+                        WHERE id = ?";
+                $params = [
+                    $dados['nome'],
+                    $dados['email'],
+                    $dados['cpf'] ?? null,
+                    $dados['nivel_hierarquico'],
+                    $dados['cargo'] ?? null,
+                    $dados['departamento'] ?? null,
+                    $dados['salario'] ?? null,
+                    $dados['data_admissao'] ?? null,
+                    $dados['telefone'] ?? null,
+                    $dados['observacoes'] ?? null,
+                    $dados['ativo'] ?? 1,
+                    $id
+                ];
+            }
             $stmt = $this->pdo->prepare($sql);
-            $stmt->execute([
-                $dados['nome'],
-                $dados['email'],
-                $dados['cpf'] ?? null,
-                $dados['nivel_hierarquico'],
-                $dados['cargo'] ?? null,
-                $dados['departamento'] ?? null,
-                $dados['salario'] ?? null,
-                $dados['data_admissao'] ?? null,
-                $dados['telefone'] ?? null,
-                $dados['observacoes'] ?? null,
-                $dados['ativo'] ?? 1,
-                $id
-            ]);
+            $stmt->execute($params);
 
             return ['success' => true, 'message' => 'Colaborador atualizado com sucesso'];
 

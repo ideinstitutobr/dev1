@@ -19,7 +19,10 @@ class ColaboradorController {
             'page' => $_GET['page'] ?? 1,
             'search' => $_GET['search'] ?? '',
             'nivel' => $_GET['nivel'] ?? '',
-            'ativo' => $_GET['ativo'] ?? ''
+            'ativo' => $_GET['ativo'] ?? '',
+            'cargo' => $_GET['cargo'] ?? '',
+            'departamento' => $_GET['departamento'] ?? '',
+            'setor' => $_GET['setor'] ?? ''
         ];
 
         return $this->model->listar($params);
@@ -149,8 +152,13 @@ class ColaboradorController {
         }
 
         // Salário numérico (se fornecido)
-        if (!empty($dados['salario']) && !is_numeric(str_replace(',', '.', $dados['salario']))) {
-            $erros[] = 'Salário inválido';
+        if (!empty($dados['salario'])) {
+            // Remove separadores de milhares e converte vírgula decimal para ponto
+            $salarioSan = str_replace('.', '', $dados['salario']);
+            $salarioSan = str_replace(',', '.', $salarioSan);
+            if (!is_numeric($salarioSan)) {
+                $erros[] = 'Salário inválido';
+            }
         }
 
         return $erros;
@@ -167,7 +175,11 @@ class ColaboradorController {
             'nivel_hierarquico' => $dados['nivel_hierarquico'],
             'cargo' => trim($dados['cargo'] ?? ''),
             'departamento' => trim($dados['departamento'] ?? ''),
-            'salario' => !empty($dados['salario']) ? floatval(str_replace(',', '.', $dados['salario'])) : null,
+            'setor' => trim($dados['setor'] ?? ''),
+            // Remove milhares e converte vírgula para ponto antes do floatval
+            'salario' => !empty($dados['salario'])
+                ? floatval(str_replace(',', '.', str_replace('.', '', $dados['salario'])))
+                : null,
             'data_admissao' => $dados['data_admissao'] ?? null,
             'telefone' => trim($dados['telefone'] ?? ''),
             'observacoes' => trim($dados['observacoes'] ?? ''),

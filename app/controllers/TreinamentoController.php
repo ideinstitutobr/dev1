@@ -177,6 +177,12 @@ class TreinamentoController {
         return [
             'nome' => trim($dados['nome']),
             'tipo' => $dados['tipo'],
+            'modalidade' => $dados['modalidade'] ?? 'Presencial',
+            'componente_pe' => $dados['componente_pe'] ?? null,
+            'programa' => $dados['programa'] ?? null,
+            'objetivo' => trim($dados['objetivo'] ?? ''),
+            'resultados_esperados' => trim($dados['resultados_esperados'] ?? ''),
+            'justificativa' => trim($dados['justificativa'] ?? ''),
             'fornecedor' => trim($dados['fornecedor'] ?? ''),
             'instrutor' => trim($dados['instrutor'] ?? ''),
             'carga_horaria' => !empty($dados['carga_horaria']) ? floatval($dados['carga_horaria']) : null,

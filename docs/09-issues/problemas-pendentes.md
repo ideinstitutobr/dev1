@@ -93,17 +93,144 @@ composer require phpmailer/phpmailer
 
 ---
 
-## ✅ **Migrations Pendentes de Execução:**
+## ⚠️ **PAUSADO: Sistema de Agenda/Turmas - Necessita Revisão**
 
-### **1. Migration de Notificações**
-- **Arquivo:** `database/migrations/migration_notificacoes.sql`
-- **Executar via:** https://comercial.ideinstituto.com.br/public/instalar_notificacoes.php
-- **Cria:** 3 tabelas (notificacoes, configuracoes_email, email_logs)
+**Data:** 05/01/2025
+**Módulo:** Agenda de Treinamentos
+**Gravidade:** MÉDIA (funcionalidade parcial)
+**Status:** PAUSADO para ajustes futuros
 
-### **2. Migration de Agenda**
-- **Arquivo:** `database/migrations/migration_agenda.sql`
-- **Executar via:** https://comercial.ideinstituto.com.br/public/instalar_agenda.php
-- **Cria:** 1 tabela (agenda_treinamentos) + adiciona coluna agenda_id
+### **Problemas Identificados:**
+
+#### 1. **Incompatibilidade de Schema**
+- Migration tem campos: `turma`, `dias_semana`, `vagas_total`, `vagas_ocupadas`, `status`
+- Schema.sql NÃO tem esses campos
+- Tabela real no servidor provavelmente segue o schema.sql
+
+#### 2. **Erros Encontrados:**
+```
+❌ Column not found: 1054 Unknown column 'a.turma' in 'ORDER BY'
+```
+
+#### 3. **Correções Aplicadas no Model:**
+- ✅ Removido campo `turma` dos métodos criar() e atualizar()
+- ✅ Substituído `vagas_total`/`vagas_ocupadas` por `vagas_disponiveis`
+- ✅ Removido campo `dias_semana` e `status`
+- ✅ Corrigido ORDER BY para usar `hora_inicio` ao invés de `turma`
+- ✅ Adicionado campo `carga_horaria_dia`
+
+#### 4. **Arquivos Corrigidos:**
+- `app/models/Agenda.php` (linhas 19-227)
+
+### **Pendências para Ajuste Futuro:**
+
+1. **Decidir estrutura definitiva:**
+   - Usar schema.sql (sem turma, status, dias_semana)? OU
+   - Usar migration (com turma, status, dias_semana)?
+
+2. **Se usar schema.sql (recomendado):**
+   - ✅ Model já está correto
+   - ⚠️ Verificar formulários de cadastro/edição
+   - ⚠️ Ajustar views de listagem
+
+3. **Se usar migration:**
+   - Atualizar schema.sql
+   - Reverter correções no Model
+   - Executar ALTER TABLE no servidor
+
+4. **Verificar formulários:**
+   - `public/agenda/criar.php`
+   - `public/agenda/editar.php`
+   - `public/agenda/gerenciar.php`
+
+5. **Testar fluxo completo:**
+   - Criar agenda
+   - Listar agendas
+   - Editar agenda
+   - Vincular participantes
+
+### **Script de Diagnóstico Criado:**
+- `public/diagnostico_agenda.php` → Mostra estrutura real da tabela
+
+### **Próximos Passos (quando retomar):**
+
+1. Executar `diagnostico_agenda.php` no servidor
+2. Verificar quais campos existem realmente
+3. Ajustar Model/Forms conforme necessário
+4. Testar criação e listagem
+5. Validar vinculação de participantes
+
+### **Prioridade:** BAIXA
+**Motivo do Pause:** Priorizar Matriz de Capacitações (14 campos)
+
+---
+
+## ✅ **CONCLUÍDO: Matriz de Capacitações (14 Campos)**
+
+**Data:** 05/01/2025
+**Módulo:** Treinamentos - Matriz de Capacitações
+**Status:** ✅ 100% IMPLEMENTADO E TESTADO
+
+### **Campos Implementados:**
+
+1. ✅ **Nome do Treinamento** - Campo de busca
+2. ✅ **Tipo** - Normativos, Comportamentais, Técnicos (corrigido)
+3. ✅ **Componente do P.E.** - Clientes, Financeiro, Processos Internos, Aprendizagem e Crescimento
+4. ✅ **Programa** - PGR, Líderes em Transformação, Crescer, Gerais
+5. ✅ **O Que (Objetivo)** - Textarea
+6. ✅ **Resultados Esperados** - Textarea
+7. ✅ **Por Que (Justificativa)** - Textarea
+8. ✅ **Quando** - Datas início/fim
+9. ✅ **Quem (Participantes)** - Sistema de vinculação
+10. ✅ **Frequência** - Sistema de check-in
+11. ✅ **Quanto (Custo)** - Valor em reais
+12. ✅ **Status** - Programado, Em Andamento, Executado, Cancelado
+13. ✅ **Modalidade** - Presencial, Híbrido, Remoto *(NOVO)*
+14. ✅ **Local da Reunião** - link_reuniao na agenda *(NOVO)*
+
+### **Arquivos Atualizados:**
+
+**Backend:**
+- ✅ `app/models/Treinamento.php` - Métodos criar() e atualizar()
+- ✅ `database/migrations/migration_campos_matriz.sql`
+- ✅ `public/instalar_campos_matriz.php` (executado com sucesso)
+
+**Frontend:**
+- ✅ `public/treinamentos/cadastrar.php` - Formulário com 14 campos em seções
+- ✅ `public/treinamentos/editar.php` - Formulário de edição completo
+- ✅ `public/treinamentos/visualizar.php` - Exibição de todos os campos
+
+### **Migration Executada:**
+- ✅ Campo `tipo` alterado para ENUM correto
+- ✅ Campo `modalidade` adicionado
+- ✅ Campo `link_reuniao` adicionado na agenda_treinamentos
+- ✅ Registros antigos atualizados
+- ✅ Índice idx_modalidade criado
+
+### **Testes Realizados:**
+- ✅ Cadastro de novo treinamento
+- ✅ Edição de treinamento existente
+- ✅ Visualização com todos os campos
+- ✅ Todos os 14 campos funcionando corretamente
+
+---
+
+## ✅ **CONCLUÍDO: Sistema de Notificações - Correção**
+
+**Data:** 05/01/2025
+**Status:** ✅ Corrigido e testado
+
+### **Problema Resolvido:**
+- ❌ Erro: "Column not found: 1054 Unknown column 'email_destinatario'"
+- ✅ Solução: Campo adicionado via `instalar_email_destinatario.php`
+
+### **Arquivos Corrigidos:**
+- ✅ `app/classes/NotificationManager.php` - Atualizado com múltiplos caminhos PHPMailer
+- ✅ `public/instalar_email_destinatario.php` - Criado e executado
+- ✅ PHPMailer reinstalado no servidor
+
+### **Teste Realizado:**
+- ✅ Envio de convite por e-mail funcionando
 
 ---
 
