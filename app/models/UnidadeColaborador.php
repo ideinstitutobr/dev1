@@ -519,4 +519,114 @@ class UnidadeColaborador {
         $stmt->execute([$colaboradorId, $unidadeIdAtual]);
         return $stmt->fetch();
     }
+
+    /**
+     * Busca colaboradores disponíveis para vincular a uma unidade
+     * Regra de negócio:
+     * - Colaboradores regulares só podem estar em 1 unidade
+     * - Diretores de Varejo podem estar em múltiplas unidades
+     */
+    public function buscarColaboradoresDisponiveis($unidadeId, $filtros = []) {
+        $where = ['c.ativo = 1'];
+        $bindings = [];
+
+        // Filtro de busca
+        if (!empty($filtros['search'])) {
+            $where[] = '(c.nome LIKE ? OR c.email LIKE ? OR c.cargo LIKE ?)';
+            $searchTerm = "%{$filtros['search']}%";
+            $bindings[] = $searchTerm;
+            $bindings[] = $searchTerm;
+            $bindings[] = $searchTerm;
+        }
+
+        // Filtro de cargo
+        if (!empty($filtros['cargo'])) {
+            $where[] = 'c.cargo LIKE ?';
+            $bindings[] = "%{$filtros['cargo']}%";
+        }
+
+        // Filtro de departamento
+        if (!empty($filtros['departamento'])) {
+            $where[] = 'c.departamento LIKE ?';
+            $bindings[] = "%{$filtros['departamento']}%";
+        }
+
+        // Filtro de nível hierárquico
+        if (!empty($filtros['nivel'])) {
+            $where[] = 'c.nivel_hierarquico = ?';
+            $bindings[] = $filtros['nivel'];
+        }
+
+        // Filtro de unidade atual
+        if (!empty($filtros['unidade_atual'])) {
+            $where[] = 'c.unidade_principal_id = ?';
+            $bindings[] = $filtros['unidade_atual'];
+        }
+
+        $whereClause = implode(' AND ', $where);
+
+        $sql = "SELECT
+                    c.*,
+                    (SELECT COUNT(*)
+                     FROM unidade_lideranca ul
+                     WHERE ul.colaborador_id = c.id
+                       AND ul.cargo_lideranca = 'diretor_varejo'
+                       AND ul.ativo = 1
+                    ) as is_diretor_varejo,
+                    (SELECT COUNT(*)
+                     FROM unidade_colaboradores uc
+                     WHERE uc.colaborador_id = c.id
+                       AND uc.unidade_id = ?
+                       AND uc.ativo = 1
+                    ) as ja_vinculado_nesta_unidade,
+                    (SELECT GROUP_CONCAT(u.nome SEPARATOR ', ')
+                     FROM unidade_colaboradores uc
+                     INNER JOIN unidades u ON uc.unidade_id = u.id
+                     WHERE uc.colaborador_id = c.id
+                       AND uc.ativo = 1
+                    ) as unidades_vinculadas
+                FROM colaboradores c
+                WHERE {$whereClause}
+                  -- Exclui colaboradores já vinculados a ESTA unidade
+                  AND c.id NOT IN (
+                      SELECT colaborador_id
+                      FROM unidade_colaboradores
+                      WHERE unidade_id = ?
+                        AND ativo = 1
+                  )
+                  -- Exclui colaboradores regulares já vinculados a OUTRAS unidades
+                  AND (
+                      -- É diretor de varejo (pode estar em múltiplas unidades)
+                      c.id IN (
+                          SELECT colaborador_id
+                          FROM unidade_lideranca
+                          WHERE cargo_lideranca = 'diretor_varejo'
+                            AND ativo = 1
+                      )
+                      OR
+                      -- Não está vinculado a nenhuma unidade
+                      c.id NOT IN (
+                          SELECT colaborador_id
+                          FROM unidade_colaboradores
+                          WHERE ativo = 1
+                      )
+                  )
+                ORDER BY c.nome ASC";
+
+        // Adiciona unidadeId duas vezes (para os dois subconsultas e para o NOT IN)
+        array_unshift($bindings, $unidadeId);
+        $bindings[] = $unidadeId;
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($bindings);
+        $colaboradores = $stmt->fetchAll();
+
+        // Formata dados
+        foreach ($colaboradores as &$col) {
+            $col['is_diretor_varejo'] = (bool)$col['is_diretor_varejo'];
+            $col['ja_vinculado_nesta_unidade'] = (bool)$col['ja_vinculado_nesta_unidade'];
+        }
+
+        return $colaboradores;
+    }
 }

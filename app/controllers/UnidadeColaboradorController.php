@@ -250,4 +250,11 @@ class UnidadeColaboradorController {
     public function getVinculoPrincipal($colaboradorId) {
         return $this->model->getVinculoPrincipal($colaboradorId);
     }
+
+    /**
+     * Busca colaboradores disponíveis para vincular a uma unidade
+     */
+    public function buscarColaboradoresDisponiveis($unidadeId, $filtros = []) {
+        return $this->model->buscarColaboradoresDisponiveis($unidadeId, $filtros);
+    }
 }
