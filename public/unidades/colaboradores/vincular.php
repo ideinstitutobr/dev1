@@ -6,6 +6,7 @@ require_once __DIR__ . '/../../../app/classes/Auth.php';
 require_once __DIR__ . '/../../../app/models/Unidade.php';
 require_once __DIR__ . '/../../../app/models/UnidadeSetor.php';
 require_once __DIR__ . '/../../../app/models/UnidadeColaborador.php';
+require_once __DIR__ . '/../../../app/models/Colaborador.php';
 require_once __DIR__ . '/../../../app/controllers/UnidadeController.php';
 require_once __DIR__ . '/../../../app/controllers/UnidadeSetorController.php';
 require_once __DIR__ . '/../../../app/controllers/UnidadeColaboradorController.php';
