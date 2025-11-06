@@ -27,7 +27,7 @@ if (file_exists(APP_PATH . 'config/config.local.php')) {
 
 // Configurações de URL (fallback)
 if (!defined('BASE_URL')) {
-    define('BASE_URL', 'http://localhost/sgc/public/');
+    define('BASE_URL', 'https://dev1.ideinstituto.com.br/public/');
 }
 define('ASSETS_URL', BASE_URL . 'assets/');
 define('UPLOAD_URL', BASE_URL . 'uploads/');

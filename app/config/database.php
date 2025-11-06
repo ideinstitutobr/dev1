@@ -6,9 +6,9 @@
 
 // Configurações para ambiente local (XAMPP)
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'comercial_sgc');
-define('DB_USER', 'root');
-define('DB_PASS', '');
+define('DB_NAME', 'u411458227_comercial255');
+define('DB_USER', 'u411458227_comercial255');
+define('DB_PASS', '#Ide@2k25');
 define('DB_CHARSET', 'utf8mb4');
 define('DB_COLLATE', 'utf8mb4_unicode_ci');
 
