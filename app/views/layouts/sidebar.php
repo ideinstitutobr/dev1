@@ -203,6 +203,7 @@
                 <li><a href="<?php echo BASE_URL; ?>unidades/cadastrar.php">➕ Nova Unidade</a></li>
                 <li><a href="<?php echo BASE_URL; ?>unidades/dashboard.php">📊 Dashboard</a></li>
                 <?php if (Auth::isAdmin()): ?>
+                <li><a href="<?php echo BASE_URL; ?>unidades/setores_globais/listar.php">🏭 Setores Globais</a></li>
                 <li><a href="<?php echo BASE_URL; ?>unidades/categorias_local/listar.php">⚙️ Categorias de Local</a></li>
                 <?php endif; ?>
             </ul>
