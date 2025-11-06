@@ -119,3 +119,8 @@ function csrf_token() {
 function csrf_validate($token) {
     return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
 }
+
+// Função para gerar campo HTML com token CSRF
+function csrf_field() {
+    return '<input type="hidden" name="csrf_token" value="' . e(csrf_token()) . '">';
+}
