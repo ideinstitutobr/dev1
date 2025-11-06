@@ -51,29 +51,24 @@ try {
         foreach ($matches[1] as $v) { $nivelOptions[] = str_replace("\\'", "'", $v); }
     }
 } catch (Exception $e) { /* ignora erro */ }
-// Opções dinâmicas para Cargo, Departamento e Setor
-function hasColumn($pdo, $table, $column) {
-    $stmt = $pdo->prepare("SELECT COUNT(*) AS cnt FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?");
-    $stmt->execute([$table, $column]);
-    return ((int)($stmt->fetch()['cnt'] ?? 0)) > 0;
+// Opções dinâmicas para Cargo e Setor (Departamento)
+function getCategoriesFromDB($pdo, $tipo) {
+    try {
+        $stmt = $pdo->prepare("SELECT valor FROM field_categories WHERE tipo = ? AND ativo = 1 ORDER BY valor ASC");
+        $stmt->execute([$tipo]);
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    } catch (Exception $e) {
+        // Fallback: se a tabela não existir, retorna array vazio
+        return [];
+    }
 }
-function mergeUniqueSorted($dbList, $catalogList) {
+function mergeUniqueSorted($dbList, $categoriesList) {
     $map = [];
     foreach ((array)$dbList as $v) { if ($v !== null && $v !== '') { $map[strtolower($v)] = $v; } }
-    foreach ((array)$catalogList as $v) { if ($v !== null && $v !== '') { $map[strtolower($v)] = $v; } }
+    foreach ((array)$categoriesList as $v) { if ($v !== null && $v !== '') { $map[strtolower($v)] = $v; } }
     $vals = array_values($map);
     natcasesort($vals);
     return array_values($vals);
-}
-$catalogPath = __DIR__ . '/../../app/config/field_catalog.json';
-$catalog = ['cargos'=>[], 'departamentos'=>[], 'setores'=>[]];
-if (file_exists($catalogPath)) {
-    $j = json_decode(@file_get_contents($catalogPath), true);
-    if (is_array($j)) {
-        $catalog['cargos'] = isset($j['cargos']) && is_array($j['cargos']) ? $j['cargos'] : [];
-        $catalog['departamentos'] = isset($j['departamentos']) && is_array($j['departamentos']) ? $j['departamentos'] : [];
-        $catalog['setores'] = isset($j['setores']) && is_array($j['setores']) ? $j['setores'] : [];
-    }
 }
 $cargosDB = [];
 $departamentosDB = [];
@@ -81,16 +76,13 @@ try {
     $cargosDB = $pdo->query("SELECT DISTINCT cargo FROM colaboradores WHERE cargo IS NOT NULL AND cargo <> '' ORDER BY cargo ASC")->fetchAll(PDO::FETCH_COLUMN);
     $departamentosDB = $pdo->query("SELECT DISTINCT departamento FROM colaboradores WHERE departamento IS NOT NULL AND departamento <> '' ORDER BY departamento ASC")->fetchAll(PDO::FETCH_COLUMN);
 } catch (Exception $e) { /* ignore */ }
-$cargoOptions = mergeUniqueSorted($cargosDB, $catalog['cargos']);
-$departamentoOptions = mergeUniqueSorted($departamentosDB, $catalog['departamentos']);
-$setorExists = hasColumn($pdo, 'colaboradores', 'setor');
-$setorOptions = [];
-if ($setorExists) {
-    try {
-        $setoresDB = $pdo->query("SELECT DISTINCT setor FROM colaboradores WHERE setor IS NOT NULL AND setor <> '' ORDER BY setor ASC")->fetchAll(PDO::FETCH_COLUMN);
-    } catch (Exception $e) { $setoresDB = []; }
-    $setorOptions = mergeUniqueSorted($setoresDB, $catalog['setores']);
-}
+
+// Lê categorias do banco de dados
+$cargosCategories = getCategoriesFromDB($pdo, 'cargo');
+$departamentosCategories = getCategoriesFromDB($pdo, 'departamento');
+
+$cargoOptions = mergeUniqueSorted($cargosDB, $cargosCategories);
+$departamentoOptions = mergeUniqueSorted($departamentosDB, $departamentosCategories);
 ?>
 
 <style>
@@ -322,7 +314,7 @@ if ($setorExists) {
                    value="<?php echo e($_GET['search'] ?? ''); ?>">
 
             <select name="nivel">
-                <option value="">Todos os Níveis</option>
+                <option value="">Todos os Níveis Hierárquicos</option>
                 <?php foreach ($nivelOptions as $opt): ?>
                     <option value="<?php echo e($opt); ?>" <?php echo ($_GET['nivel'] ?? '') === $opt ? 'selected' : ''; ?>><?php echo e($opt); ?></option>
                 <?php endforeach; ?>
@@ -336,20 +328,11 @@ if ($setorExists) {
             </select>
 
             <select name="departamento">
-                <option value="">Todos os Departamentos</option>
+                <option value="">Todos os Setores</option>
                 <?php foreach ($departamentoOptions as $opt): ?>
                     <option value="<?php echo e($opt); ?>" <?php echo ($_GET['departamento'] ?? '') === $opt ? 'selected' : ''; ?>><?php echo e($opt); ?></option>
                 <?php endforeach; ?>
             </select>
-
-            <?php if ($setorExists): ?>
-            <select name="setor">
-                <option value="">Todos os Setores</option>
-                <?php foreach ($setorOptions as $opt): ?>
-                    <option value="<?php echo e($opt); ?>" <?php echo ($_GET['setor'] ?? '') === $opt ? 'selected' : ''; ?>><?php echo e($opt); ?></option>
-                <?php endforeach; ?>
-            </select>
-            <?php endif; ?>
 
             <!-- Removido filtro de Status por solicitação -->
         </div>
@@ -375,9 +358,8 @@ if ($setorExists) {
                     <th>ID</th>
                     <th>Nome</th>
                     <th>E-mail</th>
-                    <th>Nível</th>
+                    <th>Nível Hierárquico</th>
                     <th>Cargo</th>
-                    <th>Departamento</th>
                     <th>Setor</th>
                     <!-- Removidos Status e Origem -->
                     <th>Ações</th>
@@ -395,8 +377,7 @@ if ($setorExists) {
                     </td>
                     <td><?php echo e($col['cargo'] ?? '-'); ?></td>
                     <td><?php echo e($col['departamento'] ?? '-'); ?></td>
-                    <td><?php echo isset($col['setor']) ? e($col['setor']) : '-'; ?></td>
-                    <!-- Colunas Status e Origem removidas -->
+                    <!-- Coluna Setor removida -->
                     <td>
                         <div style="display: flex; gap: 5px;">
                             <a href="visualizar.php?id=<?php echo $col['id']; ?>" class="btn btn-sm btn-primary" title="Visualizar">
