@@ -58,10 +58,11 @@ $sidebarText = $configs['sidebar_text'] ?? '#ecf0f1';
 $sidebarHover = $configs['sidebar_hover'] ?? '#34495e';
 $sidebarActive = $configs['sidebar_active'] ?? '#667eea';
 $sidebarActiveBorder = $configs['sidebar_active_border'] ?? '#ffffff';
-$sidebarHeaderBorder = $configs['sidebar_header_border'] ?? 'rgba(255,255,255,0.1)';
-$sidebarSubmenuBg = $configs['sidebar_submenu_bg'] ?? 'rgba(0,0,0,0.15)';
+$sidebarHeaderBorder = $configs['sidebar_header_border'] ?? '#e0e0e0';
+$sidebarSubmenuBg = $configs['sidebar_submenu_bg'] ?? '#1a252f';
 $sidebarToggleBg = $configs['sidebar_toggle_bg'] ?? '#ffffff';
 $sidebarToggleColor = $configs['sidebar_toggle_color'] ?? '#333333';
+$sidebarUseGradient = ($configs['sidebar_use_gradient'] ?? '0') === '1';
 
 // Gradientes
 $gradStart = $configs['gradient_start'] ?? '#667eea';
@@ -513,6 +514,18 @@ include __DIR__ . '/../../app/views/layouts/header.php';
                     </div>
                     <span class="hint">Cor do texto e ícones</span>
                 </div>
+            </div>
+        </div>
+
+        <div class="config-card">
+            <h3>Estilo do Fundo</h3>
+            <p class="hint">Escolha entre cor sólida ou gradiente para o fundo do sidebar</p>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" name="sidebar_use_gradient" value="1" <?php echo $sidebarUseGradient ? 'checked' : ''; ?>>
+                    Usar gradiente no fundo do sidebar
+                </label>
+                <span class="hint">Quando ativado, usa as cores de gradiente definidas na aba "Cores Principais". Caso contrário, usa a cor de fundo do sidebar definida acima.</span>
             </div>
         </div>
 
