@@ -426,13 +426,21 @@ include __DIR__ . '/../../app/views/layouts/header.php';
                 <div class="list-header">
                     <div>Nome</div>
                     <div style="text-align:center;">Vinculados</div>
-                    <div style="text-align:right;">Ação</div>
+                    <div style="text-align:right;">Ações</div>
                 </div>
                 <?php foreach ($nivelItems as $nome => $total): ?>
                     <div class="list-item">
                         <span class="name"><?php echo e($nome); ?></span>
                         <span class="pill-count"><?php echo $total; ?> vínculo(s)</span>
                         <div class="actions">
+                            <button type="button" class="icon-btn icon-primary" title="Renomear" data-toggle="rename" data-target="rename-nivel-<?php echo md5($nome); ?>">✏️</button>
+                            <form method="POST" action="" class="inline-form" id="rename-nivel-<?php echo md5($nome); ?>">
+                                <input type="hidden" name="action" value="rename_item">
+                                <input type="hidden" name="type" value="nivel">
+                                <input type="hidden" name="value" value="<?php echo e($nome); ?>">
+                                <input type="text" name="new_value" placeholder="Novo nome" value="">
+                                <button>Salvar</button>
+                            </form>
                             <form method="POST" action="" onsubmit="return confirm('Remover este nível? Só é possível remover se não houver colaboradores vinculados.');">
                                 <input type="hidden" name="action" value="remove_item">
                                 <input type="hidden" name="type" value="nivel">
@@ -463,13 +471,21 @@ include __DIR__ . '/../../app/views/layouts/header.php';
                 <div class="list-header">
                     <div>Nome</div>
                     <div style="text-align:center;">Vinculados</div>
-                    <div style="text-align:right;">Ação</div>
+                    <div style="text-align:right;">Ações</div>
                 </div>
                 <?php foreach ($cargos as $nome => $total): ?>
                     <div class="list-item">
                         <span class="name"><?php echo e($nome); ?></span>
                         <span class="pill-count"><?php echo $total; ?> vínculo(s)</span>
                         <div class="actions">
+                            <button type="button" class="icon-btn icon-primary" title="Renomear" data-toggle="rename" data-target="rename-cargo-<?php echo md5($nome); ?>">✏️</button>
+                            <form method="POST" action="" class="inline-form" id="rename-cargo-<?php echo md5($nome); ?>">
+                                <input type="hidden" name="action" value="rename_item">
+                                <input type="hidden" name="type" value="cargo">
+                                <input type="hidden" name="value" value="<?php echo e($nome); ?>">
+                                <input type="text" name="new_value" placeholder="Novo nome" value="">
+                                <button>Salvar</button>
+                            </form>
                             <form method="POST" action="" onsubmit="return confirm('Remover este item? Colaboradores vinculados terão o campo limpo.');">
                                 <input type="hidden" name="action" value="remove_item">
                                 <input type="hidden" name="type" value="cargo">
@@ -501,13 +517,21 @@ include __DIR__ . '/../../app/views/layouts/header.php';
                 <div class="list-header">
                     <div>Nome</div>
                     <div style="text-align:center;">Vinculados</div>
-                    <div style="text-align:right;">Ação</div>
+                    <div style="text-align:right;">Ações</div>
                 </div>
                 <?php foreach ($departamentos as $nome => $total): ?>
                     <div class="list-item">
                         <span class="name"><?php echo e($nome); ?></span>
                         <span class="pill-count"><?php echo $total; ?> vínculo(s)</span>
                         <div class="actions">
+                            <button type="button" class="icon-btn icon-primary" title="Renomear" data-toggle="rename" data-target="rename-dep-<?php echo md5($nome); ?>">✏️</button>
+                            <form method="POST" action="" class="inline-form" id="rename-dep-<?php echo md5($nome); ?>">
+                                <input type="hidden" name="action" value="rename_item">
+                                <input type="hidden" name="type" value="departamento">
+                                <input type="hidden" name="value" value="<?php echo e($nome); ?>">
+                                <input type="text" name="new_value" placeholder="Novo nome" value="">
+                                <button>Salvar</button>
+                            </form>
                             <form method="POST" action="" onsubmit="return confirm('Remover este item? Colaboradores vinculados terão o campo limpo.');">
                                 <input type="hidden" name="action" value="remove_item">
                                 <input type="hidden" name="type" value="departamento">
@@ -521,7 +545,7 @@ include __DIR__ . '/../../app/views/layouts/header.php';
         </section>
     </div>
 
-    <div class="hint" style="margin-top: 16px;">Dica: Remover um item limpa o campo dos colaboradores vinculados.</div>
+    <div class="hint" style="margin-top: 16px;">Dica: Use renomear para corrigir grafias e padronizar itens; remover limpa o campo dos colaboradores vinculados.</div>
 </div>
 
 <script>
