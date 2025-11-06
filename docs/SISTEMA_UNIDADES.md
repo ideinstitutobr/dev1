@@ -699,12 +699,189 @@ Para dúvidas ou problemas:
 
 ---
 
+## 🌐 Sistema de Setores Globais
+
+### Visão Geral
+
+O Sistema de Setores Globais centraliza a gestão de setores/departamentos em uma estrutura hierárquica:
+
+```
+Setores Globais (Catálogo)
+    ↓
+Unidades (selecionam quais setores ativar)
+    ↓
+Colaboradores (escolhem setor da sua unidade)
+```
+
+### Estrutura
+
+#### 1. Setores Globais
+- **Local:** `/unidades/setores_globais/`
+- **Tabela:** `field_categories` (tipo='setor')
+- **Funcionalidades:**
+  - Criar setores no catálogo global
+  - Editar setores (atualização em cascata)
+  - Excluir setores não utilizados
+  - Ver estatísticas de uso
+
+#### 2. Ativação por Unidade
+- **Local:** Cadastro/Edição de Unidades
+- **Tabela:** `unidade_setores`
+- **Funcionalidades:**
+  - Selecionar setores disponíveis na unidade
+  - Ativar/Desativar setores
+  - Definir responsável por setor
+  - Gerenciar setores específicos
+
+#### 3. Vinculação de Colaboradores
+- **Local:** Cadastro de Colaboradores
+- **Campos:** `unidade_principal_id`, `setor_principal`
+- **Funcionalidades:**
+  - Selecionar unidade de lotação
+  - Escolher setor (carregamento dinâmico via AJAX)
+  - Apenas setores ativos da unidade aparecem
+
+### Páginas Implementadas
+
+#### Setores Globais
+
+**1. listar.php**
+- Lista todos os setores do catálogo
+- Mostra quantas unidades usam cada setor
+- Mostra quantos colaboradores estão vinculados
+- Permite editar e excluir (se não estiver em uso)
+- Busca por nome
+
+**2. cadastrar.php**
+- Formulário para criar novo setor global
+- Campos: nome (obrigatório), descrição
+- Exemplos de setores comuns
+- Validação de duplicidade
+
+**3. editar.php**
+- Atualização de setor existente
+- Mostra estatísticas de uso
+- Atualização em cascata (renomeia em todas as referências)
+- Alertas quando setor está em uso
+
+### Migração de Dados
+
+**Script:** `/database/migrations/migrar_setores_para_unidades.php`
+
+**Funcionalidades:**
+1. Migra setores de `departamento` para `setor` no field_categories
+2. Adiciona campos `unidade_principal_id` e `setor_principal` em colaboradores
+3. Migra dados de `departamento` → `setor_principal`
+4. Popula `unidade_setores` com setores usados
+
+**Execução:**
+- Via web: Acessar URL diretamente
+- Via CLI: `php database/migrations/migrar_setores_para_unidades.php`
+- Interface com logs detalhados
+- Verificações de segurança
+- Rollback automático em caso de erro
+
+### Integração com Colaboradores
+
+#### Antes da Migração
+- Campo `departamento` (texto livre)
+- Gerenciado em `config_campos.php`
+- Sem relação com unidades
+
+#### Depois da Migração
+- Campo `unidade_principal_id` (FK para unidades)
+- Campo `setor_principal` (vinculado à unidade)
+- Carregamento dinâmico via AJAX
+- Apenas setores ativos da unidade selecionada
+
+#### Código JavaScript (cadastrar.php)
+```javascript
+function carregarSetores(unidadeId) {
+    fetch('../api/unidades/get_setores.php?unidade_id=' + unidadeId)
+        .then(response => response.json())
+        .then(data => {
+            // Popula dropdown de setores
+            data.setores.forEach(setor => {
+                const option = document.createElement('option');
+                option.value = setor.setor;
+                option.textContent = setor.setor;
+                setorSelect.appendChild(option);
+            });
+        });
+}
+```
+
+### Fluxo de Trabalho Recomendado
+
+**1. Configuração Inicial**
+```
+1. Executar migração (se houver dados antigos)
+2. Acessar Unidades → Setores Globais
+3. Criar setores do catálogo (ou verificar migrados)
+```
+
+**2. Configuração de Unidades**
+```
+1. Cadastrar/Editar cada unidade
+2. Ativar os setores necessários naquela unidade
+3. Definir responsáveis por setor (opcional)
+```
+
+**3. Cadastro de Colaboradores**
+```
+1. Selecionar Unidade Principal (obrigatório)
+2. Setores da unidade são carregados automaticamente
+3. Selecionar Setor (opcional)
+```
+
+### Backward Compatibility
+
+O sistema mantém compatibilidade com o modelo antigo:
+- Se campos novos não existirem, usa campo `departamento`
+- Aviso para executar migração
+- Modo legado funcional até migração
+
+### Vantagens do Novo Sistema
+
+✅ **Centralização:** Um único local para gerenciar setores
+✅ **Consistência:** Mesmos setores em todas as unidades
+✅ **Flexibilidade:** Cada unidade ativa apenas seus setores
+✅ **Rastreabilidade:** Sabe exatamente onde cada setor é usado
+✅ **Escalabilidade:** Fácil adicionar novos setores
+✅ **Integridade:** FKs garantem dados consistentes
+
+### APIs Relacionadas
+
+**GET /api/unidades/get_setores.php**
+- Parâmetro: `unidade_id`
+- Retorna: Array de setores ativos da unidade
+- Usado para carregamento dinâmico em formulários
+
+---
+
+## ✅ Checklist de Implementação
+
+- ✅ Implementação completa do sistema
+- ✅ 5 tabelas criadas
+- ✅ 16 páginas implementadas (+3 de setores globais)
+- ✅ 3 APIs REST criadas
+- ✅ Sistema de Setores Globais completo
+- ✅ Migração de dados implementada
+- ✅ Integração com colaboradores
+- ✅ Backward compatibility
+- ✅ Dashboard estatístico
+- ✅ Segurança completa
+- ✅ Documentação completa
+- ✅ 7 correções de bugs pós-implementação
+
+---
+
 ## 🎉 Conclusão
 
-O **Sistema de Gestão de Unidades** está 100% implementado, testado e documentado.
+O **Sistema de Gestão de Unidades** está 100% implementado, testado e documentado, incluindo o novo **Sistema de Setores Globais** hierárquico.
 
 Todas as funcionalidades planejadas foram entregues com qualidade, segurança e boas práticas de desenvolvimento.
 
 **Status:** ✅ Pronto para Produção
 
-**Última atualização:** 06/11/2025
+**Última atualização:** 06/11/2025 - v2.0 (Sistema de Setores Globais integrado)
