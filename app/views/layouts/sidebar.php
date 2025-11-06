@@ -194,6 +194,21 @@
         </li>
 
         <li>
+            <a href="#" onclick="toggleSubmenu('unidades'); return false;">
+                <span class="icon">🏢</span>
+                <span class="text">Unidades</span>
+            </a>
+            <ul class="submenu" id="submenu-unidades">
+                <li><a href="<?php echo BASE_URL; ?>unidades/listar.php">📋 Listar Unidades</a></li>
+                <li><a href="<?php echo BASE_URL; ?>unidades/cadastrar.php">➕ Nova Unidade</a></li>
+                <li><a href="<?php echo BASE_URL; ?>unidades/dashboard.php">📊 Dashboard</a></li>
+                <?php if (Auth::isAdmin()): ?>
+                <li><a href="<?php echo BASE_URL; ?>unidades/categorias_local/listar.php">⚙️ Categorias de Local</a></li>
+                <?php endif; ?>
+            </ul>
+        </li>
+
+        <li>
             <a href="#" onclick="toggleSubmenu('treinamentos'); return false;">
                 <span class="icon">📚</span>
                 <span class="text">Treinamentos</span>
