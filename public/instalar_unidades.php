@@ -265,6 +265,40 @@ $pageTitle = 'Instalação - Sistema de Unidades';
                     $db = Database::getInstance();
                     $pdo = $db->getConnection();
 
+                    // Desabilita autocommit para controlar transações manualmente
+                    $pdo->setAttribute(PDO::ATTR_AUTOCOMMIT, 1);
+                    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+                    // Mostra informações da conexão
+                    $dbName = $pdo->query("SELECT DATABASE()")->fetchColumn();
+                    echo '<div class="alert alert-info">';
+                    echo '<span style="font-size: 20px;">🔍</span>';
+                    echo '<div><strong>Banco de Dados:</strong> ' . htmlspecialchars($dbName) . '</div>';
+                    echo '</div>';
+
+                    // Teste de persistência: Cria uma tabela de teste para verificar se funciona
+                    echo '<div class="alert alert-info">';
+                    echo '<span style="font-size: 20px;">🧪</span>';
+                    echo '<div><strong>Teste de Persistência:</strong> ';
+                    try {
+                        // Remove tabela de teste se existir
+                        $pdo->exec("DROP TABLE IF EXISTS _test_persistence");
+                        // Cria tabela de teste
+                        $pdo->exec("CREATE TABLE _test_persistence (id INT PRIMARY KEY)");
+                        // Verifica se foi criada
+                        $testCheck = $pdo->query("SHOW TABLES LIKE '_test_persistence'")->fetch();
+                        if ($testCheck) {
+                            echo '<span style="color: #155724;">✅ Tabelas podem ser criadas e persistem</span>';
+                            // Remove tabela de teste
+                            $pdo->exec("DROP TABLE _test_persistence");
+                        } else {
+                            echo '<span style="color: #721c24;">❌ PROBLEMA: Tabela criada mas não persiste!</span>';
+                        }
+                    } catch (PDOException $e) {
+                        echo '<span style="color: #721c24;">❌ Erro ao testar: ' . htmlspecialchars($e->getMessage()) . '</span>';
+                    }
+                    echo '</div></div>';
+
                     // Lista de migrations
                     $migrations = [
                         '001_create_categorias_local_unidade.sql' => 'Criando tabela categorias_local_unidade',
@@ -397,16 +431,26 @@ $pageTitle = 'Instalação - Sistema de Unidades';
                             foreach ($statements as $statement) {
                                 try {
                                     $result = $pdo->exec($statement);
+
+                                    // Para DDL (CREATE/ALTER/DROP), força commit imediato
+                                    if (preg_match('/^(CREATE|ALTER|DROP)\s+/i', trim($statement))) {
+                                        // MySQL faz autocommit em DDL, mas vamos garantir
+                                        usleep(100000); // Aguarda 0.1 segundo
+                                    }
+
                                     // Para CREATE TABLE, verifica se foi criada
                                     if (stripos($statement, 'CREATE TABLE') !== false) {
                                         // Extrai nome da tabela
                                         if (preg_match('/CREATE TABLE\s+(?:IF NOT EXISTS\s+)?`?(\w+)`?/i', $statement, $matches)) {
                                             $tableName = $matches[1];
+                                            usleep(200000); // Aguarda 0.2 segundo para garantir commit
                                             $check = $pdo->query("SHOW TABLES LIKE '$tableName'")->fetch();
                                             if (!$check) {
                                                 $erro = true;
-                                                $avisos[] = "Tabela $tableName não foi criada!";
+                                                $avisos[] = "Tabela $tableName não foi criada! Possível problema de transação.";
                                                 break;
+                                            } else {
+                                                $avisos[] = "Tabela $tableName criada";
                                             }
                                         }
                                     }
@@ -455,11 +499,31 @@ $pageTitle = 'Instalação - Sistema de Unidades';
 
                     echo '</div>';
 
-                    // Verifica tabelas criadas
+                    // Verifica tabelas criadas (usando nova conexão para evitar cache)
                     echo '<h3>✅ Verificando Tabelas:</h3>';
+
+                    // Mostra todas as tabelas no banco atual
+                    $currentDb = $pdo->query("SELECT DATABASE()")->fetchColumn();
+                    $allDbTables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
+                    echo '<div class="alert alert-info">';
+                    echo '<span style="font-size: 20px;">📊</span>';
+                    echo '<div>';
+                    echo '<strong>Banco de Dados:</strong> ' . htmlspecialchars($currentDb) . '<br>';
+                    echo '<strong>Total de Tabelas:</strong> ' . count($allDbTables) . '<br>';
+                    echo '<small>Tabelas relacionadas a Unidades: ';
+                    $unitTables = array_filter($allDbTables, function($t) {
+                        return strpos($t, 'unidade') !== false || strpos($t, 'categorias_local') !== false;
+                    });
+                    echo implode(', ', $unitTables) ?: 'Nenhuma';
+                    echo '</small>';
+                    echo '</div></div>';
+
                     echo '<div class="table-check"><table>';
                     echo '<thead><tr><th>Tabela</th><th>Status</th><th>Registros</th></tr></thead>';
                     echo '<tbody>';
+
+                    // Cria nova conexão para verificação
+                    $pdoCheck = Database::getInstance()->getConnection();
 
                     $tables = [
                         'categorias_local_unidade' => 'Categorias de Local',
@@ -471,13 +535,21 @@ $pageTitle = 'Instalação - Sistema de Unidades';
 
                     foreach ($tables as $table => $nome) {
                         echo '<tr>';
-                        echo '<td><strong>' . $nome . '</strong></td>';
+                        echo '<td><strong>' . $nome . '</strong> <small style="color: #718096;">(' . $table . ')</small></td>';
 
-                        $result = $pdo->query("SHOW TABLES LIKE '$table'")->fetch();
-                        if ($result) {
-                            $count = $pdo->query("SELECT COUNT(*) FROM $table")->fetchColumn();
-                            echo '<td><span class="status status-success">✅ Existe</span></td>';
-                            echo '<td>' . $count . '</td>';
+                        // Força refresh do cache de tabelas
+                        $allTables = $pdoCheck->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
+                        $tableExists = in_array($table, $allTables);
+
+                        if ($tableExists) {
+                            try {
+                                $count = $pdoCheck->query("SELECT COUNT(*) FROM `$table`")->fetchColumn();
+                                echo '<td><span class="status status-success">✅ Existe</span></td>';
+                                echo '<td>' . $count . '</td>';
+                            } catch (PDOException $e) {
+                                echo '<td><span class="status status-error">❌ Erro ao contar</span></td>';
+                                echo '<td>-</td>';
+                            }
                         } else {
                             echo '<td><span class="status status-error">❌ Não encontrada</span></td>';
                             echo '<td>-</td>';
