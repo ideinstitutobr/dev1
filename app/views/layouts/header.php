@@ -33,6 +33,7 @@ $cfgFavicon = SystemConfig::get('favicon_path');
 
     <!-- CSS do Sistema -->
     <link rel="stylesheet" href="<?php echo ASSETS_URL; ?>css/theme-variables.php">
+    <link rel="stylesheet" href="<?php echo ASSETS_URL; ?>css/global.css">
     <link rel="stylesheet" href="<?php echo ASSETS_URL; ?>css/main.css">
     <link rel="stylesheet" href="<?php echo ASSETS_URL; ?>css/dashboard.css">
 
