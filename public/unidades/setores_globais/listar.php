@@ -27,7 +27,7 @@ if (isset($_GET['acao']) && $_GET['acao'] === 'excluir' && isset($_GET['id'])) {
             $stmt = $pdo->prepare("
                 SELECT COUNT(*) as total
                 FROM unidade_setores
-                WHERE setor = (SELECT valor FROM field_categories WHERE id = ?)
+                WHERE setor COLLATE utf8mb4_unicode_ci = (SELECT valor FROM field_categories WHERE id = ?)
             ");
             $stmt->execute([$id]);
             $uso = $stmt->fetch();
@@ -55,11 +55,11 @@ $sql = "SELECT
             fc.valor as nome,
             fc.descricao,
             fc.created_at,
-            (SELECT COUNT(*) FROM unidade_setores us WHERE us.setor = fc.valor AND us.ativo = 1) as unidades_ativas,
+            (SELECT COUNT(*) FROM unidade_setores us WHERE us.setor COLLATE utf8mb4_unicode_ci = fc.valor AND us.ativo = 1) as unidades_ativas,
             (SELECT COUNT(DISTINCT uc.colaborador_id)
              FROM unidade_colaboradores uc
              INNER JOIN unidade_setores us ON uc.unidade_setor_id = us.id
-             WHERE us.setor = fc.valor AND uc.ativo = 1) as colaboradores_vinculados
+             WHERE us.setor COLLATE utf8mb4_unicode_ci = fc.valor AND uc.ativo = 1) as colaboradores_vinculados
         FROM field_categories fc
         WHERE fc.tipo = 'setor' AND fc.ativo = 1";
 
