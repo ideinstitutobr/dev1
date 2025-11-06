@@ -25,32 +25,57 @@ $breadcrumb = '<a href="' . BASE_URL . 'dashboard.php">Dashboard</a> > '
             . '<a href="' . BASE_URL . 'colaboradores/listar.php">Colaboradores</a> > '
             . 'Configurar Campos';
 
-// Catálogo (JSON) para sugerir itens adicionais
-$catalogPath = __DIR__ . '/../../app/config/field_catalog.json';
-if (!file_exists($catalogPath)) {
-    file_put_contents($catalogPath, json_encode([
-        'niveis' => [],
-        'cargos' => [],
-        'departamentos' => [],
-        'setores' => []
-    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+// Funções para gerenciar categorias no banco de dados
+function getCategoriesFromDB($pdo, $tipo) {
+    try {
+        $stmt = $pdo->prepare("SELECT valor FROM field_categories WHERE tipo = ? AND ativo = 1 ORDER BY valor ASC");
+        $stmt->execute([$tipo]);
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    } catch (Exception $e) {
+        // Fallback: se a tabela não existir, retorna array vazio
+        return [];
+    }
 }
 
-function readCatalog($path) {
-    $json = @file_get_contents($path);
-    $data = json_decode($json, true);
-    if (!is_array($data)) {
-        $data = ['niveis' => [], 'cargos' => [], 'departamentos' => [], 'setores' => []];
+function addCategoryToDB($pdo, $tipo, $valor) {
+    try {
+        $stmt = $pdo->prepare("INSERT INTO field_categories (tipo, valor) VALUES (?, ?)");
+        return $stmt->execute([$tipo, $valor]);
+    } catch (Exception $e) {
+        // Se der erro de duplicata, é porque já existe
+        if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
+            return false; // Já existe
+        }
+        throw $e;
     }
-    foreach (['niveis','cargos','departamentos','setores'] as $k) {
-        if (!isset($data[$k]) || !is_array($data[$k])) $data[$k] = [];
-    }
-    return $data;
 }
 
-function writeCatalog($path, $data) {
-    // Escrita atômica para evitar corrupção em concorrência
-    file_put_contents($path, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
+function renameCategoryInDB($pdo, $tipo, $valorAntigo, $valorNovo) {
+    try {
+        $stmt = $pdo->prepare("UPDATE field_categories SET valor = ? WHERE tipo = ? AND valor = ?");
+        return $stmt->execute([$valorNovo, $tipo, $valorAntigo]);
+    } catch (Exception $e) {
+        throw $e;
+    }
+}
+
+function removeCategoryFromDB($pdo, $tipo, $valor) {
+    try {
+        $stmt = $pdo->prepare("DELETE FROM field_categories WHERE tipo = ? AND valor = ?");
+        return $stmt->execute([$tipo, $valor]);
+    } catch (Exception $e) {
+        throw $e;
+    }
+}
+
+function categoryExistsInDB($pdo, $tipo, $valor) {
+    try {
+        $stmt = $pdo->prepare("SELECT COUNT(*) as cnt FROM field_categories WHERE tipo = ? AND valor = ?");
+        $stmt->execute([$tipo, $valor]);
+        return ($stmt->fetch()['cnt'] ?? 0) > 0;
+    } catch (Exception $e) {
+        return false;
+    }
 }
 
 function hasColumn($pdo, $table, $column) {
@@ -113,30 +138,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $value = trim($_POST['value'] ?? '');
     $newValue = trim($_POST['new_value'] ?? '');
 
-    $catalog = readCatalog($catalogPath);
-
     try {
         switch ($action) {
             case 'add_item':
-                if (!in_array($type, ['nivel', 'cargo', 'departamento', 'setor'])) {
+                if (!in_array($type, ['nivel', 'cargo', 'departamento'])) {
                     throw new Exception('Tipo inválido');
                 }
                 if ($value === '') {
                     throw new Exception('Informe um valor');
                 }
-                // Mapa de pluralização para chaves do catálogo
-                $pluralMap = [
-                    'nivel' => 'niveis',
-                    'cargo' => 'cargos',
-                    'departamento' => 'departamentos',
-                    'setor' => 'setores'
-                ];
-                $key = $pluralMap[$type] ?? ($type . 's');
-                if (!isset($catalog[$key]) || !is_array($catalog[$key])) {
-                    $catalog[$key] = [];
-                }
-                // Evita duplicados case-insensíveis
-                $existsLower = in_array(strtolower($value), array_map('strtolower', $catalog[$key]));
+
                 if ($type === 'nivel') {
                     // Adiciona novo valor ao ENUM da coluna nivel_hierarquico
                     $current = getEnumValues($pdo, 'colaboradores', 'nivel_hierarquico');
@@ -148,26 +159,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $quoted = array_map(function($v) use ($pdo) { return $pdo->quote($v); }, $new);
                         $sql = "ALTER TABLE colaboradores MODIFY COLUMN nivel_hierarquico ENUM(" . implode(',', $quoted) . ") NOT NULL";
                         $pdo->exec($sql);
-                        // Também salva no catálogo para sugestões
-                        if (!$existsLower) {
-                            $catalog[$key][] = $value;
-                            writeCatalog($catalogPath, $catalog);
-                        }
                         $message = 'Nível adicionado ao campo (ENUM)';
                     }
                 } else {
-                    if (!$existsLower) {
-                        $catalog[$key][] = $value;
-                        writeCatalog($catalogPath, $catalog);
-                        $message = 'Item adicionado ao catálogo';
+                    // Adiciona ao banco de dados
+                    if (categoryExistsInDB($pdo, $type, $value)) {
+                        $message = 'Item já existe no banco de dados';
                     } else {
-                        $message = 'Item já existe no catálogo';
+                        if (addCategoryToDB($pdo, $type, $value)) {
+                            $message = 'Item adicionado ao banco de dados com sucesso';
+                        } else {
+                            $message = 'Item já existe no banco de dados';
+                        }
                     }
                 }
                 break;
 
             case 'rename_item':
-                if (!in_array($type, ['nivel', 'cargo', 'departamento', 'setor'])) {
+                if (!in_array($type, ['nivel', 'cargo', 'departamento'])) {
                     throw new Exception('Tipo inválido');
                 }
                 if ($value === '' || $newValue === '') {
@@ -190,40 +199,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $finalList = array_values(array_unique(array_map(function($v) use ($value, $newValue) { return $v === $value ? $newValue : $v; }, $current)));
                     $quotedFinal = array_map(fn($v) => $pdo->quote($v), $finalList);
                     $pdo->exec("ALTER TABLE colaboradores MODIFY COLUMN nivel_hierarquico ENUM(" . implode(',', $quotedFinal) . ") NOT NULL");
-                    // Atualiza catálogo
-                    if (!isset($catalog['niveis']) || !is_array($catalog['niveis'])) { $catalog['niveis'] = []; }
-                    $catalog['niveis'] = array_values(array_unique(array_map(function($v) use ($value, $newValue) { return $v === $value ? $newValue : $v; }, $catalog['niveis'])));
-                    writeCatalog($catalogPath, $catalog);
                     $message = 'Nível renomeado com sucesso';
                 } else {
                     // Atualiza colaboradores
                     $column = $type;
-                    if ($type === 'setor' && !hasColumn($pdo, 'colaboradores', 'setor')) {
-                        throw new Exception('Campo Setor não existe na base. Execute a migration.');
-                    }
                     $stmt = $pdo->prepare("UPDATE colaboradores SET {$column} = ? WHERE {$column} = ?");
                     $stmt->execute([$newValue, $value]);
 
-                    // Atualiza catálogo
-                    $pluralMap = [
-                        'cargo' => 'cargos',
-                        'departamento' => 'departamentos',
-                        'setor' => 'setores'
-                    ];
-                    $key = $pluralMap[$type] ?? ($type . 's');
-                    if (!isset($catalog[$key]) || !is_array($catalog[$key])) {
-                        $catalog[$key] = [];
-                    }
-                    $catalog[$key] = array_values(array_unique(array_map(function($v) use ($value, $newValue) {
-                        return $v === $value ? $newValue : $v;
-                    }, $catalog[$key])));
-                    writeCatalog($catalogPath, $catalog);
-                    $message = 'Item renomeado com sucesso';
+                    // Atualiza banco de dados (tabela de categorias)
+                    renameCategoryInDB($pdo, $type, $value, $newValue);
+                    $message = 'Item renomeado com sucesso no banco de dados';
                 }
                 break;
 
             case 'remove_item':
-                if (!in_array($type, ['nivel', 'cargo', 'departamento', 'setor'])) {
+                if (!in_array($type, ['nivel', 'cargo', 'departamento'])) {
                     throw new Exception('Tipo inválido');
                 }
                 if ($value === '') {
@@ -242,33 +232,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (empty($newList)) { throw new Exception('Ao menos um nível deve permanecer'); }
                     $quoted = array_map(fn($v) => $pdo->quote($v), $newList);
                     $pdo->exec("ALTER TABLE colaboradores MODIFY COLUMN nivel_hierarquico ENUM(" . implode(',', $quoted) . ") NOT NULL");
-                    // Atualiza catálogo
-                    if (!isset($catalog['niveis']) || !is_array($catalog['niveis'])) { $catalog['niveis'] = []; }
-                    $catalog['niveis'] = array_values(array_filter($catalog['niveis'], fn($v) => $v !== $value));
-                    writeCatalog($catalogPath, $catalog);
                     $message = 'Nível removido do ENUM';
                 } else {
                     // Estratégia simples: limpar campo nos colaboradores (setar NULL)
                     $column = $type;
-                    if ($type !== 'setor' || hasColumn($pdo, 'colaboradores', 'setor')) {
-                        $stmt = $pdo->prepare("UPDATE colaboradores SET {$column} = NULL WHERE {$column} = ?");
-                        $stmt->execute([$value]);
-                    }
-                    // Remove do catálogo
-                    $pluralMap = [
-                        'cargo' => 'cargos',
-                        'departamento' => 'departamentos',
-                        'setor' => 'setores'
-                    ];
-                    $key = $pluralMap[$type] ?? ($type . 's');
-                    if (!isset($catalog[$key]) || !is_array($catalog[$key])) {
-                        $catalog[$key] = [];
-                    }
-                    $catalog[$key] = array_values(array_filter($catalog[$key], function($v) use ($value) {
-                        return $v !== $value;
-                    }));
-                    writeCatalog($catalogPath, $catalog);
-                    $message = 'Item removido';
+                    $stmt = $pdo->prepare("UPDATE colaboradores SET {$column} = NULL WHERE {$column} = ?");
+                    $stmt->execute([$value]);
+
+                    // Remove do banco de dados (tabela de categorias)
+                    removeCategoryFromDB($pdo, $type, $value);
+                    $message = 'Item removido do banco de dados';
                 }
                 break;
 
@@ -297,28 +270,31 @@ if (!tableExists($pdo, 'colaboradores')) {
     }
 }
 
-$catalog = readCatalog($catalogPath);
-
 // Filtro de visualização de colaboradores por item (querystring)
 $view = $_GET['view'] ?? '';
 $itemVal = isset($_GET['item']) ? trim($_GET['item']) : '';
 
-// Mesclar listas do catálogo com as do banco (para mostrar itens adicionados mesmo sem vínculos)
-function mergeItems($dbList, $catalogList) {
+// Mesclar listas das categorias do banco com contagem de vínculos dos colaboradores
+function mergeItems($dbList, $categoriesFromDB) {
     $items = [];
+    // Adiciona contagem dos colaboradores
     foreach ($dbList as $row) {
         $items[$row['item']] = $row['total'];
     }
-    foreach ($catalogList as $v) {
+    // Adiciona categorias do banco que ainda não têm vínculos
+    foreach ($categoriesFromDB as $v) {
         if (!isset($items[$v])) { $items[$v] = 0; }
     }
     ksort($items, SORT_NATURAL | SORT_FLAG_CASE);
     return $items;
 }
 
-$cargos = mergeItems($cargosDB, $catalog['cargos']);
-$departamentos = mergeItems($departamentosDB, $catalog['departamentos']);
-$setores = $setorExists ? mergeItems($setoresDB, $catalog['setores']) : [];
+// Lê categorias do banco de dados
+$cargosCategories = getCategoriesFromDB($pdo, 'cargo');
+$departamentosCategories = getCategoriesFromDB($pdo, 'departamento');
+
+$cargos = mergeItems($cargosDB, $cargosCategories);
+$departamentos = mergeItems($departamentosDB, $departamentosCategories);
 // Níveis: usar ENUM definido + contagem dos existentes
 $nivelEnum = getEnumValues($pdo, 'colaboradores', 'nivel_hierarquico');
 $nivelCountMap = [];
