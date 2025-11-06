@@ -26,10 +26,9 @@ $message = '';
 $success = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $transactionStarted = false;
     try {
-        $pdo->beginTransaction();
-
-        // 1. Cria tabela de categorias
+        // 1. Cria tabela de categorias (não precisa de transação)
         $sql = "CREATE TABLE IF NOT EXISTS field_categories (
             id INT AUTO_INCREMENT PRIMARY KEY,
             tipo ENUM('cargo', 'departamento') NOT NULL COMMENT 'Tipo de categoria',
@@ -46,6 +45,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->exec($sql);
 
         $message .= "✅ Tabela 'field_categories' criada com sucesso!\n\n";
+
+        // Inicia transação para as operações de INSERT
+        $pdo->beginTransaction();
+        $transactionStarted = true;
 
         // 2. Migra dados do JSON para o banco (se existir)
         $catalogPath = __DIR__ . '/../app/config/field_catalog.json';
@@ -99,6 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $message .= "✅ Migrados {$cargosMigrados} cargos e {$depsMigrados} departamentos dos colaboradores!\n\n";
 
         $pdo->commit();
+        $transactionStarted = false;
 
         $message .= "🎉 Instalação concluída com sucesso!\n\n";
         $message .= "Agora os dados das categorias estão salvos no banco de dados e não serão perdidos em deploys.\n";
@@ -106,7 +110,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $success = true;
 
     } catch (Exception $e) {
-        $pdo->rollBack();
+        if ($transactionStarted) {
+            try {
+                $pdo->rollBack();
+            } catch (Exception $rollbackEx) {
+                // Ignora erro de rollback se não houver transação ativa
+            }
+        }
         $message = "❌ Erro: " . $e->getMessage();
     }
 }
