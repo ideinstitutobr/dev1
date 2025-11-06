@@ -36,7 +36,7 @@ if (!$setor) {
 }
 
 // Busca estatísticas de uso
-$stmt = $pdo->prepare("SELECT COUNT(*) as total FROM unidade_setores WHERE setor = ? AND ativo = 1");
+$stmt = $pdo->prepare("SELECT COUNT(*) as total FROM unidade_setores WHERE setor COLLATE utf8mb4_unicode_ci = ? AND ativo = 1");
 $stmt->execute([$setor['valor']]);
 $unidades_usando = $stmt->fetch()['total'];
 
@@ -72,14 +72,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $stmt->execute([$nome, $descricao, $id]);
 
                             // Atualiza unidade_setores
-                            $stmt = $pdo->prepare("UPDATE unidade_setores SET setor = ? WHERE setor = ?");
+                            $stmt = $pdo->prepare("UPDATE unidade_setores SET setor = ? WHERE setor COLLATE utf8mb4_unicode_ci = ?");
                             $stmt->execute([$nome, $setor['valor']]);
 
                             // Atualiza colaboradores.setor_principal (se existir)
                             $stmt = $pdo->prepare("SHOW COLUMNS FROM colaboradores LIKE 'setor_principal'");
                             $stmt->execute();
                             if ($stmt->rowCount() > 0) {
-                                $stmt = $pdo->prepare("UPDATE colaboradores SET setor_principal = ? WHERE setor_principal = ?");
+                                $stmt = $pdo->prepare("UPDATE colaboradores SET setor_principal = ? WHERE setor_principal COLLATE utf8mb4_unicode_ci = ?");
                                 $stmt->execute([$nome, $setor['valor']]);
                             }
 
