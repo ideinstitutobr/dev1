@@ -166,17 +166,24 @@ include __DIR__ . '/../../app/views/layouts/header.php';
     }
 </style>
 
-<div class="page-actions">
-    <div>
-        <h1 style="margin: 0; color: #2d3748;">Unidades</h1>
-        <p style="margin: 5px 0 0 0; color: #718096;">Gerencie as unidades/lojas da empresa</p>
-    </div>
-    <div>
-        <a href="cadastrar.php" class="btn btn-primary">
-            ➕ Nova Unidade
-        </a>
-    </div>
-</div>
+<div class="main-content">
+    <div class="content-wrapper">
+        <div class="page-header">
+            <h1>🏢 <?php echo $pageTitle; ?></h1>
+            <p class="breadcrumb"><?php echo $breadcrumb; ?></p>
+        </div>
+
+        <div class="page-actions">
+            <div>
+                <h2 style="margin: 0; color: #2d3748;">Gerencie as Unidades</h2>
+                <p style="margin: 5px 0 0 0; color: #718096;">Visualize e gerencie todas as unidades/lojas da empresa</p>
+            </div>
+            <div>
+                <a href="cadastrar.php" class="btn btn-primary">
+                    ➕ Nova Unidade
+                </a>
+            </div>
+        </div>
 
 <!-- Filtros -->
 <div class="search-filters">
@@ -292,6 +299,9 @@ include __DIR__ . '/../../app/views/layouts/header.php';
             Total: <?php echo $pagination['total']; ?> unidade(s)
         </p>
     <?php endif; ?>
+</div>
+
+    </div>
 </div>
 
 <?php include __DIR__ . '/../../app/views/layouts/footer.php'; ?>

@@ -137,12 +137,18 @@ include __DIR__ . '/../../app/views/layouts/header.php';
     }
 </style>
 
-<div class="form-container">
-    <h2>Nova Unidade</h2>
+<div class="main-content">
+    <div class="content-wrapper">
+        <div class="page-header">
+            <h1>➕ <?php echo $pageTitle; ?></h1>
+            <p class="breadcrumb"><?php echo $breadcrumb; ?></p>
+        </div>
 
-    <?php if ($erro): ?>
-        <div class="alert alert-danger"><?php echo $erro; ?></div>
-    <?php endif; ?>
+        <?php if ($erro): ?>
+            <div class="alert alert-danger"><?php echo $erro; ?></div>
+        <?php endif; ?>
+
+        <div class="form-container">
 
     <form method="POST" action="">
         <input type="hidden" name="csrf_token" value="<?php echo csrf_token(); ?>">
@@ -276,6 +282,8 @@ include __DIR__ . '/../../app/views/layouts/header.php';
             <button type="submit" class="btn btn-primary">Cadastrar Unidade</button>
         </div>
     </form>
+        </div>
+    </div>
 </div>
 
 <?php include __DIR__ . '/../../app/views/layouts/footer.php'; ?>
