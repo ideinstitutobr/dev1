@@ -273,7 +273,7 @@ if ($setorExists) {
 
         <div class="section-title">💼 Dados Profissionais</div>
         <div style="margin-bottom: 15px;">
-            <a href="config_campos.php" class="btn btn-secondary">⚙️ Configurar Campos (Cargo, Departamento, Setor)</a>
+            <a href="config_campos.php" class="btn btn-secondary">⚙️ Configurar Campos (Cargo e Setor)</a>
         </div>
 
         <div class="form-row">
@@ -301,34 +301,15 @@ if ($setorExists) {
 
         <div class="form-row">
             <div class="form-group">
-                <label>Departamento</label>
+                <label>Setor</label>
                 <select name="departamento">
                     <option value="">Selecione...</option>
                     <?php foreach ($departamentosOptions as $opt): ?>
                         <option value="<?php echo e($opt); ?>" <?php echo (($_POST['departamento'] ?? '') === $opt) ? 'selected' : ''; ?>><?php echo e($opt); ?></option>
                     <?php endforeach; ?>
                 </select>
-                <small>Gerencie opções em “Configurar Campos”.</small>
+                <small>Gerencie opções em "Configurar Campos".</small>
             </div>
-
-            <?php if ($setorExists): ?>
-            <div class="form-group">
-                <label>Setor</label>
-                <select name="setor">
-                    <option value="">Selecione...</option>
-                    <?php foreach ($setoresOptions as $opt): ?>
-                        <option value="<?php echo e($opt); ?>" <?php echo (($_POST['setor'] ?? '') === $opt) ? 'selected' : ''; ?>><?php echo e($opt); ?></option>
-                    <?php endforeach; ?>
-                </select>
-                <small>Gerencie opções em “Configurar Campos”.</small>
-            </div>
-            <?php else: ?>
-            <div class="form-group">
-                <label>Setor</label>
-                <input type="text" name="setor" placeholder="Instale o campo Setor para habilitar seleção" disabled>
-                <small>Use “Instalar Setor” para criar a coluna no banco.</small>
-            </div>
-            <?php endif; ?>
 
             <div class="form-group">
                 <label>Data de Admissão</label>

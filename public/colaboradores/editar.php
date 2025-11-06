@@ -327,14 +327,14 @@ if ($setorExists) {
 
         <div class="form-row">
             <div class="form-group">
-                <label>Departamento</label>
+                <label>Setor</label>
                 <select name="departamento">
                     <option value="">Selecione...</option>
                     <?php foreach ($departamentosOptions as $opt): ?>
                         <option value="<?php echo e($opt); ?>" <?php echo ($colaborador['departamento'] ?? '') === $opt ? 'selected' : ''; ?>><?php echo e($opt); ?></option>
                     <?php endforeach; ?>
                 </select>
-                <small>Gerencie opções em “Configurar Campos”.</small>
+                <small>Gerencie opções em "Configurar Campos".</small>
             </div>
 
             <div class="form-group">
@@ -343,29 +343,6 @@ if ($setorExists) {
                        value="<?php echo e($colaborador['data_admissao']); ?>">
             </div>
         </div>
-
-        <?php if ($setorExists): ?>
-        <div class="form-row">
-            <div class="form-group">
-                <label>Setor</label>
-                <select name="setor">
-                    <option value="">Selecione...</option>
-                    <?php foreach ($setoresOptions as $opt): ?>
-                        <option value="<?php echo e($opt); ?>" <?php echo ($colaborador['setor'] ?? '') === $opt ? 'selected' : ''; ?>><?php echo e($opt); ?></option>
-                    <?php endforeach; ?>
-                </select>
-                <small>Gerencie opções em “Configurar Campos”.</small>
-            </div>
-        </div>
-        <?php else: ?>
-        <div class="form-row">
-            <div class="form-group">
-                <label>Setor</label>
-                <input type="text" name="setor" placeholder="Instale o campo Setor para habilitar seleção" disabled>
-                <small>Use “Instalar Setor” para criar a coluna no banco.</small>
-            </div>
-        </div>
-        <?php endif; ?>
 
         <div class="form-group">
             <label>Salário Mensal (R$)</label>
