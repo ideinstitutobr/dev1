@@ -94,14 +94,16 @@ $departamentosCategories = getCategoriesFromDB($pdo, 'departamento');
 $cargosOptions = mergeUniqueSorted($cargosDB, $cargosCategories);
 $departamentosOptions = mergeUniqueSorted($departamentosDB, $departamentosCategories);
 
-$setorExists = hasColumn($pdo, 'colaboradores', 'setor');
-$setoresOptions = [];
-if ($setorExists) {
-    try {
-        $setoresDB = $pdo->query("SELECT DISTINCT setor FROM colaboradores WHERE setor IS NOT NULL AND setor <> '' ORDER BY setor ASC")->fetchAll(PDO::FETCH_COLUMN);
-    } catch (Exception $e) { $setoresDB = []; }
-    $setoresOptions = mergeUniqueSorted($setoresDB, $catalog['setores']);
-}
+// Busca unidades ativas
+$unidades = [];
+try {
+    $stmt = $pdo->query("SELECT id, nome, codigo FROM unidades WHERE ativo = 1 ORDER BY nome ASC");
+    $unidades = $stmt->fetchAll();
+} catch (Exception $e) { /* ignore */ }
+
+// Verifica se campos novos existem
+$temUnidadePrincipal = hasColumn($pdo, 'colaboradores', 'unidade_principal_id');
+$temSetorPrincipal = hasColumn($pdo, 'colaboradores', 'setor_principal');
 ?>
 
 <style>
@@ -279,7 +281,7 @@ if ($setorExists) {
 
         <div class="section-title">💼 Dados Profissionais</div>
         <div style="margin-bottom: 15px;">
-            <a href="config_campos.php" class="btn btn-secondary">⚙️ Configurar Campos (Cargo e Setor)</a>
+            <a href="config_campos.php" class="btn btn-secondary">⚙️ Configurar Campos (Cargo)</a>
         </div>
 
         <div class="form-row">
@@ -301,22 +303,55 @@ if ($setorExists) {
                         <option value="<?php echo e($opt); ?>" <?php echo (($_POST['cargo'] ?? '') === $opt) ? 'selected' : ''; ?>><?php echo e($opt); ?></option>
                     <?php endforeach; ?>
                 </select>
-                <small>Gerencie opções em “Configurar Campos”.</small>
+                <small>Gerencie opções em "Configurar Campos".</small>
             </div>
         </div>
 
+        <?php if ($temUnidadePrincipal && $temSetorPrincipal): ?>
+        <!-- Nova estrutura: Unidade → Setor -->
         <div class="form-row">
             <div class="form-group">
+                <label>Unidade Principal <?php if (count($unidades) > 0): ?><span class="required">*</span><?php endif; ?></label>
+                <select name="unidade_principal_id" id="unidade_select" <?php if (count($unidades) > 0): ?>required<?php endif; ?> onchange="carregarSetores(this.value)">
+                    <option value="">Selecione...</option>
+                    <?php foreach ($unidades as $unidade): ?>
+                        <option value="<?php echo $unidade['id']; ?>" <?php echo ($_POST['unidade_principal_id'] ?? '') == $unidade['id'] ? 'selected' : ''; ?>>
+                            <?php echo e($unidade['nome']); ?><?php echo $unidade['codigo'] ? ' (' . e($unidade['codigo']) . ')' : ''; ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <?php if (count($unidades) == 0): ?>
+                    <small style="color: #dc3545;">⚠️ Nenhuma unidade cadastrada. <a href="../unidades/cadastrar.php">Cadastre uma unidade primeiro</a>.</small>
+                <?php else: ?>
+                    <small>Unidade/loja onde o colaborador trabalha</small>
+                <?php endif; ?>
+            </div>
+
+            <div class="form-group">
                 <label>Setor</label>
+                <select name="setor_principal" id="setor_select" disabled>
+                    <option value="">Primeiro selecione uma unidade</option>
+                </select>
+                <small>Os setores são gerenciados em <a href="../unidades/setores_globais/listar.php">Setores Globais</a></small>
+            </div>
+        </div>
+        <?php else: ?>
+        <!-- Estrutura antiga: Departamento direto -->
+        <div class="form-row">
+            <div class="form-group">
+                <label>Setor (Departamento)</label>
                 <select name="departamento">
                     <option value="">Selecione...</option>
                     <?php foreach ($departamentosOptions as $opt): ?>
                         <option value="<?php echo e($opt); ?>" <?php echo (($_POST['departamento'] ?? '') === $opt) ? 'selected' : ''; ?>><?php echo e($opt); ?></option>
                     <?php endforeach; ?>
                 </select>
-                <small>Gerencie opções em "Configurar Campos".</small>
+                <small style="color: #dc3545;">⚠️ Execute a <a href="../../database/migrations/migrar_setores_para_unidades.php">migração de setores</a> para usar o novo sistema</small>
             </div>
+        </div>
+        <?php endif; ?>
 
+        <div class="form-row">
             <div class="form-group">
                 <label>Data de Admissão</label>
                 <input type="date" name="data_admissao"
@@ -394,6 +429,67 @@ function formatarMoeda(campo) {
     valor = valor.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
     campo.value = valor;
 }
+
+// Carregar setores da unidade via AJAX
+function carregarSetores(unidadeId) {
+    const setorSelect = document.getElementById('setor_select');
+
+    if (!unidadeId) {
+        setorSelect.disabled = true;
+        setorSelect.innerHTML = '<option value="">Primeiro selecione uma unidade</option>';
+        return;
+    }
+
+    // Desabilita e mostra loading
+    setorSelect.disabled = true;
+    setorSelect.innerHTML = '<option value="">Carregando setores...</option>';
+
+    // Faz requisição AJAX
+    fetch('../api/unidades/get_setores.php?unidade_id=' + unidadeId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.setores) {
+                setorSelect.innerHTML = '<option value="">Selecione um setor...</option>';
+
+                if (data.setores.length === 0) {
+                    setorSelect.innerHTML = '<option value="">Nenhum setor ativo nesta unidade</option>';
+                } else {
+                    data.setores.forEach(setor => {
+                        const option = document.createElement('option');
+                        option.value = setor.setor;
+                        option.textContent = setor.setor;
+                        setorSelect.appendChild(option);
+                    });
+                    setorSelect.disabled = false;
+                }
+            } else {
+                setorSelect.innerHTML = '<option value="">Erro ao carregar setores</option>';
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            setorSelect.innerHTML = '<option value="">Erro ao carregar setores</option>';
+        });
+}
+
+// Se houver unidade selecionada no POST (após erro de validação), carregar os setores
+document.addEventListener('DOMContentLoaded', function() {
+    const unidadeSelect = document.getElementById('unidade_select');
+    if (unidadeSelect && unidadeSelect.value) {
+        carregarSetores(unidadeSelect.value);
+
+        // Após carregar, selecionar o setor que estava selecionado
+        const setorAtual = '<?php echo $_POST['setor_principal'] ?? ''; ?>';
+        if (setorAtual) {
+            setTimeout(() => {
+                const setorSelect = document.getElementById('setor_select');
+                if (setorSelect) {
+                    setorSelect.value = setorAtual;
+                }
+            }, 500);
+        }
+    }
+});
 </script>
 
 <?php include __DIR__ . '/../../app/views/layouts/footer.php'; ?>
