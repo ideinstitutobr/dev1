@@ -46,7 +46,8 @@ $params = [
     'search' => $_GET['search'] ?? '',
     'ativo' => $_GET['ativo'] ?? ''
 ];
-$categorias = $controller->listar($params);
+$resultado = $controller->listar($params);
+$categorias = $resultado['data'] ?? [];
 
 include __DIR__ . '/../../../app/views/layouts/header.php';
 ?>

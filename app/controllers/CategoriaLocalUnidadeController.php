@@ -124,4 +124,66 @@ class CategoriaLocalUnidadeController {
     public function getCategoriasAtivas() {
         return $this->model->listarAtivas();
     }
+
+    /**
+     * Busca categoria por ID
+     */
+    public function buscarPorId($id) {
+        return $this->model->buscarPorId($id);
+    }
+
+    /**
+     * Conta unidades vinculadas a uma categoria
+     */
+    public function contarUnidadesVinculadas($id) {
+        return $this->model->contarUnidadesVinculadas($id);
+    }
+
+    /**
+     * Cria categoria
+     */
+    public function criar($dados) {
+        // Valida CSRF se não for chamado por processarCadastro
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (!csrf_validate($dados['csrf_token'] ?? '')) {
+                return ['success' => false, 'message' => 'Token de segurança inválido'];
+            }
+        }
+
+        // Valida dados
+        $erros = $this->validarDados($dados);
+        if (!empty($erros)) {
+            return ['success' => false, 'message' => implode('<br>', $erros)];
+        }
+
+        // Sanitiza dados
+        $dadosSanitizados = $this->sanitizarDados($dados);
+
+        // Cria categoria
+        return $this->model->criar($dadosSanitizados);
+    }
+
+    /**
+     * Atualiza categoria
+     */
+    public function atualizar($id, $dados) {
+        // Valida CSRF se não for chamado por processarEdicao
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (!csrf_validate($dados['csrf_token'] ?? '')) {
+                return ['success' => false, 'message' => 'Token de segurança inválido'];
+            }
+        }
+
+        // Valida dados
+        $erros = $this->validarDados($dados);
+        if (!empty($erros)) {
+            return ['success' => false, 'message' => implode('<br>', $erros)];
+        }
+
+        // Sanitiza dados
+        $dadosSanitizados = $this->sanitizarDados($dados);
+
+        // Atualiza categoria
+        return $this->model->atualizar($id, $dadosSanitizados);
+    }
 }
