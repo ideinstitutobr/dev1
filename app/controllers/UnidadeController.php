@@ -177,6 +177,13 @@ class UnidadeController {
     }
 
     /**
+     * Busca unidade por ID
+     */
+    public function buscarPorId($id) {
+        return $this->model->buscarPorId($id);
+    }
+
+    /**
      * Valida dados
      */
     private function validarDados($dados) {
