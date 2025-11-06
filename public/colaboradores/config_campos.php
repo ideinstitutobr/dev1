@@ -376,11 +376,17 @@ include __DIR__ . '/../../app/views/layouts/header.php';
         $setVinculos = $setorExists ? array_sum(array_map(fn($t) => (int)$t, $setores)) : 0;
     ?>
 
+    <!-- Aviso de Migração -->
+    <div style="background: #e7f3ff; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #b3d9ff; color: #004085;">
+        <strong>ℹ️ Gestão de Setores Migrada</strong><br>
+        A gestão de setores agora é feita através do <a href="../unidades/setores_globais/listar.php" style="color: #004085; text-decoration: underline;"><strong>Sistema de Unidades → Setores Globais</strong></a>.<br>
+        Os setores são definidos globalmente e ativados por unidade. Os colaboradores escolhem o setor ao selecionar sua unidade.
+    </div>
+
     <!-- Navegação em abas -->
     <div class="tabs">
         <button class="tab active" data-tab="nivel">Nível Hierárquico</button>
         <button class="tab" data-tab="cargo">Cargo</button>
-        <button class="tab" data-tab="departamento">Setor</button>
     </div>
     <div class="panels">
         <!-- Painel: Nível Hierárquico -->
@@ -474,51 +480,6 @@ include __DIR__ . '/../../app/views/layouts/header.php';
             </div>
             <div class="hint">Itens adicionados entram no catálogo e podem ser usados nos formulários.</div>
         </section>
-
-        <!-- Painel: Setor -->
-        <section id="panel-departamento" class="panel">
-            <div class="panel-header">
-                <div class="panel-title">🏢 Setor</div>
-                <div class="panel-actions" style="gap:12px;">
-                    <span class="panel-meta">Itens: <?php echo $depItens; ?> • Vínculos: <?php echo $depVinculos; ?></span>
-                    <form method="POST" action="" class="add-bar" style="margin:0;">
-                        <input type="hidden" name="action" value="add_item">
-                        <input type="hidden" name="type" value="departamento">
-                        <input type="text" name="value" placeholder="Adicionar novo setor">
-                        <button>Adicionar</button>
-                    </form>
-                </div>
-            </div>
-            <div class="list">
-                <div class="list-header">
-                    <div>Nome</div>
-                    <div style="text-align:center;">Vinculados</div>
-                    <div style="text-align:right;">Ações</div>
-                </div>
-                <?php foreach ($departamentos as $nome => $total): ?>
-                    <div class="list-item">
-                        <span class="name"><?php echo e($nome); ?></span>
-                        <span class="pill-count"><?php echo $total; ?> vínculo(s)</span>
-                        <div class="actions">
-                            <button type="button" class="icon-btn icon-primary" title="Renomear" data-toggle="rename" data-target="rename-dep-<?php echo md5($nome); ?>">✏️</button>
-                            <form method="POST" action="" class="inline-form" id="rename-dep-<?php echo md5($nome); ?>">
-                                <input type="hidden" name="action" value="rename_item">
-                                <input type="hidden" name="type" value="departamento">
-                                <input type="hidden" name="value" value="<?php echo e($nome); ?>">
-                                <input type="text" name="new_value" placeholder="Novo nome" value="">
-                                <button>Salvar</button>
-                            </form>
-                            <form method="POST" action="" onsubmit="return confirm('Remover este item? Colaboradores vinculados terão o campo limpo.');">
-                                <input type="hidden" name="action" value="remove_item">
-                                <input type="hidden" name="type" value="departamento">
-                                <input type="hidden" name="value" value="<?php echo e($nome); ?>">
-                                <button class="icon-btn icon-danger" title="Remover">🗑️</button>
-                            </form>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        </section>
     </div>
 
     <div class="hint" style="margin-top: 16px;">Dica: Use renomear para corrigir grafias e padronizar itens; remover limpa o campo dos colaboradores vinculados.</div>
@@ -540,8 +501,7 @@ document.addEventListener('click', function(e) {
   const tabs = document.querySelectorAll('.tab');
   const panels = {
     nivel: document.getElementById('panel-nivel'),
-    cargo: document.getElementById('panel-cargo'),
-    departamento: document.getElementById('panel-departamento')
+    cargo: document.getElementById('panel-cargo')
   };
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
