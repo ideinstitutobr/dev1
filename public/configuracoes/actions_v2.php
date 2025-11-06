@@ -79,6 +79,11 @@ switch ($action) {
         $sidebarText = trim($_POST['sidebar_text'] ?? '#ecf0f1');
         $sidebarHover = trim($_POST['sidebar_hover'] ?? '#34495e');
         $sidebarActive = trim($_POST['sidebar_active'] ?? '#667eea');
+        $sidebarActiveBorder = trim($_POST['sidebar_active_border'] ?? '#ffffff');
+        $sidebarHeaderBorder = trim($_POST['sidebar_header_border'] ?? 'rgba(255,255,255,0.1)');
+        $sidebarSubmenuBg = trim($_POST['sidebar_submenu_bg'] ?? 'rgba(0,0,0,0.15)');
+        $sidebarToggleBg = trim($_POST['sidebar_toggle_bg'] ?? '#ffffff');
+        $sidebarToggleColor = trim($_POST['sidebar_toggle_color'] ?? '#333333');
 
         // Gradientes
         $gradStart = trim($_POST['gradient_start'] ?? '#667eea');
@@ -138,6 +143,11 @@ switch ($action) {
             SystemConfig::set('sidebar_text', $sidebarText);
             SystemConfig::set('sidebar_hover', $sidebarHover);
             SystemConfig::set('sidebar_active', $sidebarActive);
+            SystemConfig::set('sidebar_active_border', $sidebarActiveBorder);
+            SystemConfig::set('sidebar_header_border', $sidebarHeaderBorder);
+            SystemConfig::set('sidebar_submenu_bg', $sidebarSubmenuBg);
+            SystemConfig::set('sidebar_toggle_bg', $sidebarToggleBg);
+            SystemConfig::set('sidebar_toggle_color', $sidebarToggleColor);
 
             // Gradientes
             SystemConfig::set('gradient_start', $gradStart);
@@ -248,6 +258,8 @@ switch ($action) {
                 'link_color', 'link_hover',
                 'bg_body', 'bg_content',
                 'sidebar_bg', 'sidebar_text', 'sidebar_hover', 'sidebar_active',
+                'sidebar_active_border', 'sidebar_header_border', 'sidebar_submenu_bg',
+                'sidebar_toggle_bg', 'sidebar_toggle_color',
                 'gradient_start', 'gradient_end',
                 'font_family', 'font_family_headings',
                 'font_size_base', 'font_size_large', 'font_size_small',
