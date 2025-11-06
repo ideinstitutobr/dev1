@@ -68,14 +68,15 @@ function mergeUniqueSorted($dbList, $catalogList) {
     return array_values($vals);
 }
 
-$catalogPath = __DIR__ . '/../../app/config/field_catalog.json';
-$catalog = ['cargos'=>[], 'departamentos'=>[], 'setores'=>[]];
-if (file_exists($catalogPath)) {
-    $j = json_decode(@file_get_contents($catalogPath), true);
-    if (is_array($j)) {
-        $catalog['cargos'] = isset($j['cargos']) && is_array($j['cargos']) ? $j['cargos'] : [];
-        $catalog['departamentos'] = isset($j['departamentos']) && is_array($j['departamentos']) ? $j['departamentos'] : [];
-        $catalog['setores'] = isset($j['setores']) && is_array($j['setores']) ? $j['setores'] : [];
+// Função para ler categorias do banco de dados
+function getCategoriesFromDB($pdo, $tipo) {
+    try {
+        $stmt = $pdo->prepare("SELECT valor FROM field_categories WHERE tipo = ? AND ativo = 1 ORDER BY valor ASC");
+        $stmt->execute([$tipo]);
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    } catch (Exception $e) {
+        // Fallback: se a tabela não existir, retorna array vazio
+        return [];
     }
 }
 
@@ -85,8 +86,13 @@ try {
     $cargosDB = $pdo->query("SELECT DISTINCT cargo FROM colaboradores WHERE cargo IS NOT NULL AND cargo <> '' ORDER BY cargo ASC")->fetchAll(PDO::FETCH_COLUMN);
     $departamentosDB = $pdo->query("SELECT DISTINCT departamento FROM colaboradores WHERE departamento IS NOT NULL AND departamento <> '' ORDER BY departamento ASC")->fetchAll(PDO::FETCH_COLUMN);
 } catch (Exception $e) { /* ignore */ }
-$cargosOptions = mergeUniqueSorted($cargosDB, $catalog['cargos']);
-$departamentosOptions = mergeUniqueSorted($departamentosDB, $catalog['departamentos']);
+
+// Lê categorias do banco de dados
+$cargosCategories = getCategoriesFromDB($pdo, 'cargo');
+$departamentosCategories = getCategoriesFromDB($pdo, 'departamento');
+
+$cargosOptions = mergeUniqueSorted($cargosDB, $cargosCategories);
+$departamentosOptions = mergeUniqueSorted($departamentosDB, $departamentosCategories);
 
 $setorExists = hasColumn($pdo, 'colaboradores', 'setor');
 $setoresOptions = [];

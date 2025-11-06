@@ -1,0 +1,33 @@
+# Logs e arquivos temporários
+logs/
+*.log
+
+# Arquivos de configuração com senhas/credenciais
+.env
+config.local.php
+
+# Cache e sessões
+cache/
+sessions/
+tmp/
+temp/
+
+# Uploads de usuários (se aplicável)
+uploads/
+
+# Dependências do Composer
+vendor/
+composer.phar
+
+# IDEs e editores
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+
+# Arquivos de backup
+*.bak
+*.swp
+*~
