@@ -163,6 +163,13 @@ class UnidadeSetorController {
     }
 
     /**
+     * Busca setores por unidade (alias de getSetoresPorUnidade)
+     */
+    public function buscarPorUnidade($unidadeId, $apenasAtivos = true) {
+        return $this->model->buscarPorUnidade($unidadeId, $apenasAtivos);
+    }
+
+    /**
      * Obtém colaboradores de um setor
      */
     public function getColaboradoresDoSetor($setorId) {
