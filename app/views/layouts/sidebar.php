@@ -18,6 +18,10 @@
         box-shadow: 2px 0 10px rgba(0,0,0,0.1);
     }
 
+    .sidebar.use-gradient {
+        background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+    }
+
     .sidebar.collapsed {
         width: 70px;
     }
@@ -289,6 +293,18 @@
 
     // Restaura estado do sidebar do localStorage
     document.addEventListener('DOMContentLoaded', function() {
+        // Aplicar gradiente se configurado
+        <?php
+            if (!isset($sidebarUseGradient)) {
+                require_once APP_PATH . 'classes/SystemConfig.php';
+                $sidebarUseGradient = SystemConfig::get('sidebar_use_gradient', '0') === '1';
+            }
+        ?>
+        const useGradient = <?php echo $sidebarUseGradient ? 'true' : 'false'; ?>;
+        if (useGradient) {
+            document.getElementById('sidebar').classList.add('use-gradient');
+        }
+
         // Aplicar colapso padrão do sistema se não houver estado salvo
         try {
             const stored = localStorage.getItem('sidebarCollapsed');

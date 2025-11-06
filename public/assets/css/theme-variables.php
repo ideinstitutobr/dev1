@@ -54,10 +54,11 @@ $config = [
     'sidebar_hover' => SystemConfig::get('sidebar_hover', '#34495e'),
     'sidebar_active' => SystemConfig::get('sidebar_active', '#667eea'),
     'sidebar_active_border' => SystemConfig::get('sidebar_active_border', '#ffffff'),
-    'sidebar_header_border' => SystemConfig::get('sidebar_header_border', 'rgba(255,255,255,0.1)'),
-    'sidebar_submenu_bg' => SystemConfig::get('sidebar_submenu_bg', 'rgba(0,0,0,0.15)'),
+    'sidebar_header_border' => SystemConfig::get('sidebar_header_border', '#e0e0e0'),
+    'sidebar_submenu_bg' => SystemConfig::get('sidebar_submenu_bg', '#1a252f'),
     'sidebar_toggle_bg' => SystemConfig::get('sidebar_toggle_bg', '#ffffff'),
     'sidebar_toggle_color' => SystemConfig::get('sidebar_toggle_color', '#333333'),
+    'sidebar_use_gradient' => SystemConfig::get('sidebar_use_gradient', '0'),
 
     // Gradientes
     'gradient_start' => SystemConfig::get('gradient_start', '#667eea'),
@@ -131,6 +132,7 @@ $config = [
     --sidebar-submenu-bg: <?php echo $config['sidebar_submenu_bg']; ?>;
     --sidebar-toggle-bg: <?php echo $config['sidebar_toggle_bg']; ?>;
     --sidebar-toggle-color: <?php echo $config['sidebar_toggle_color']; ?>;
+    --sidebar-use-gradient: <?php echo $config['sidebar_use_gradient']; ?>;
 
     /* ===== GRADIENTES ===== */
     --gradient-start: <?php echo $config['gradient_start']; ?>;
