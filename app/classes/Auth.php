@@ -222,6 +222,18 @@ class Auth {
     }
 
     /**
+     * Redireciona se usuário não for administrador
+     * @param string $redirectTo
+     */
+    public static function requireAdmin($redirectTo = '/') {
+        if (!self::isAdmin()) {
+            $_SESSION['error_message'] = 'Acesso negado. Apenas administradores podem acessar esta área.';
+            header("Location: {$redirectTo}");
+            exit;
+        }
+    }
+
+    /**
      * Registra novo usuário
      * @param array $dados
      * @return array ['success' => bool, 'message' => string]
