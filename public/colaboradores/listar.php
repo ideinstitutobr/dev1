@@ -370,10 +370,14 @@ $departamentoOptions = mergeUniqueSorted($departamentosDB, $departamentosCategor
                     <td><?php echo $col['id']; ?></td>
                     <td><strong><?php echo e($col['nome']); ?></strong></td>
                     <td><?php echo e($col['email']); ?></td>
-                    <td>
-                        <span class="badge badge-info">
-                            <?php echo e($col['nivel_hierarquico']); ?>
-                        </span>
+                    <td style="min-width: 120px;">
+                        <?php if (!empty($col['nivel_hierarquico'])): ?>
+                            <span class="badge badge-info" style="display: inline-block; padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; background: #d1ecf1; color: #0c5460;">
+                                <?php echo e($col['nivel_hierarquico']); ?>
+                            </span>
+                        <?php else: ?>
+                            <span style="color: #999;">-</span>
+                        <?php endif; ?>
                     </td>
                     <td><?php echo !empty($col['cargo']) ? e($col['cargo']) : '-'; ?></td>
                     <td><?php echo !empty($col['departamento']) ? e($col['departamento']) : '-'; ?></td>
