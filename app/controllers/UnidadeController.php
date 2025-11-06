@@ -92,7 +92,57 @@ class UnidadeController {
         $dados = $this->sanitizarDados($_POST);
 
         // Atualiza unidade
-        return $this->model->atualizar($id, $dados);
+        $resultado = $this->model->atualizar($id, $dados);
+
+        // Gerencia setores: sincroniza os setores marcados
+        if ($resultado['success'] && isset($_POST['setores'])) {
+            $this->sincronizarSetores($id, $_POST['setores']);
+        }
+
+        return $resultado;
+    }
+
+    /**
+     * Sincroniza setores da unidade
+     * Inativa setores desmarcados e ativa/cria setores marcados
+     */
+    private function sincronizarSetores($unidadeId, $setoresSelecionados) {
+        // Busca setores atuais
+        $setoresAtuais = $this->modelSetor->buscarPorUnidade($unidadeId, false); // Busca todos, ativos e inativos
+        $setoresAtuaisArray = array_column($setoresAtuais, 'setor', 'id');
+
+        // Inativa setores que foram desmarcados
+        foreach ($setoresAtuais as $setorAtual) {
+            if (!in_array($setorAtual['setor'], $setoresSelecionados)) {
+                $this->modelSetor->inativar($setorAtual['id']);
+            }
+        }
+
+        // Ativa ou cria setores marcados
+        foreach ($setoresSelecionados as $setor) {
+            // Verifica se setor já existe
+            $setorExistente = null;
+            foreach ($setoresAtuais as $sa) {
+                if ($sa['setor'] === $setor) {
+                    $setorExistente = $sa;
+                    break;
+                }
+            }
+
+            if ($setorExistente) {
+                // Se existe mas está inativo, ativa
+                if (!$setorExistente['ativo']) {
+                    $this->modelSetor->ativar($setorExistente['id']);
+                }
+            } else {
+                // Se não existe, cria
+                $this->modelSetor->criar([
+                    'unidade_id' => $unidadeId,
+                    'setor' => $setor,
+                    'ativo' => 1
+                ]);
+            }
+        }
     }
 
     /**
