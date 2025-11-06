@@ -43,10 +43,6 @@ $config = [
     'text_secondary' => SystemConfig::get('text_secondary', '#6c757d'),
     'text_muted' => SystemConfig::get('text_muted', '#999999'),
 
-    // Cores de links
-    'link_color' => SystemConfig::get('link_color', '#667eea'),
-    'link_hover' => SystemConfig::get('link_hover', '#5568d3'),
-
     // Cores de fundo
     'bg_body' => SystemConfig::get('bg_body', '#f5f6fa'),
     'bg_content' => SystemConfig::get('bg_content', '#ffffff'),
@@ -120,10 +116,6 @@ $config = [
     --text-secondary: <?php echo $config['text_secondary']; ?>;
     --text-muted: <?php echo $config['text_muted']; ?>;
 
-    /* ===== CORES DE LINKS ===== */
-    --link-color: <?php echo $config['link_color']; ?>;
-    --link-hover: <?php echo $config['link_hover']; ?>;
-
     /* ===== CORES DE FUNDO ===== */
     --bg-body: <?php echo $config['bg_body']; ?>;
     --bg-content: <?php echo $config['bg_content']; ?>;
@@ -193,13 +185,13 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Links */
 a {
-    color: var(--link-color);
+    color: inherit;
     text-decoration: none;
-    transition: color 0.2s;
+    transition: opacity 0.2s;
 }
 
 a:hover {
-    color: var(--link-hover);
+    opacity: 0.8;
 }
 
 /* Botões */

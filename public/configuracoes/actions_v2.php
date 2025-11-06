@@ -66,10 +66,6 @@ switch ($action) {
         $textSecondary = trim($_POST['text_secondary'] ?? '#6c757d');
         $textMuted = trim($_POST['text_muted'] ?? '#999999');
 
-        // Cores de Links
-        $linkColor = trim($_POST['link_color'] ?? '#667eea');
-        $linkHover = trim($_POST['link_hover'] ?? '#5568d3');
-
         // Cores de Fundo
         $bgBody = trim($_POST['bg_body'] ?? '#f5f6fa');
         $bgContent = trim($_POST['bg_content'] ?? '#ffffff');
@@ -129,10 +125,6 @@ switch ($action) {
             SystemConfig::set('text_primary', $textPrimary);
             SystemConfig::set('text_secondary', $textSecondary);
             SystemConfig::set('text_muted', $textMuted);
-
-            // Cores de Links
-            SystemConfig::set('link_color', $linkColor);
-            SystemConfig::set('link_hover', $linkHover);
 
             // Cores de Fundo
             SystemConfig::set('bg_body', $bgBody);
@@ -255,7 +247,6 @@ switch ($action) {
                 'secondary_color', 'secondary_dark', 'secondary_light',
                 'success_color', 'danger_color', 'warning_color', 'info_color',
                 'text_primary', 'text_secondary', 'text_muted',
-                'link_color', 'link_hover',
                 'bg_body', 'bg_content',
                 'sidebar_bg', 'sidebar_text', 'sidebar_hover', 'sidebar_active',
                 'sidebar_active_border', 'sidebar_header_border', 'sidebar_submenu_bg',

@@ -48,10 +48,6 @@ $textPrimary = $configs['text_primary'] ?? '#2c3e50';
 $textSecondary = $configs['text_secondary'] ?? '#6c757d';
 $textMuted = $configs['text_muted'] ?? '#999999';
 
-// Cores de Links
-$linkColor = $configs['link_color'] ?? '#667eea';
-$linkHover = $configs['link_hover'] ?? '#5568d3';
-
 // Cores de Fundo
 $bgBody = $configs['bg_body'] ?? '#f5f6fa';
 $bgContent = $configs['bg_content'] ?? '#ffffff';
@@ -469,26 +465,6 @@ include __DIR__ . '/../../app/views/layouts/header.php';
                     <div class="color-input-wrapper">
                         <input type="color" name="text_muted" value="<?php echo e($textMuted); ?>">
                         <input type="text" class="color-code" value="<?php echo e($textMuted); ?>" readonly>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="config-card">
-            <h3>Cores de Links</h3>
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Cor do Link</label>
-                    <div class="color-input-wrapper">
-                        <input type="color" name="link_color" value="<?php echo e($linkColor); ?>">
-                        <input type="text" class="color-code" value="<?php echo e($linkColor); ?>" readonly>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Link (Hover)</label>
-                    <div class="color-input-wrapper">
-                        <input type="color" name="link_hover" value="<?php echo e($linkHover); ?>">
-                        <input type="text" class="color-code" value="<?php echo e($linkHover); ?>" readonly>
                     </div>
                 </div>
             </div>
