@@ -30,9 +30,13 @@ $config = [
 
     // Cores de status
     'success_color' => SystemConfig::get('success_color', '#28a745'),
+    'success_dark' => SystemConfig::get('success_dark', '#218838'),
     'danger_color' => SystemConfig::get('danger_color', '#dc3545'),
+    'danger_dark' => SystemConfig::get('danger_dark', '#c82333'),
     'warning_color' => SystemConfig::get('warning_color', '#ffc107'),
+    'warning_dark' => SystemConfig::get('warning_dark', '#e0a800'),
     'info_color' => SystemConfig::get('info_color', '#17a2b8'),
+    'info_dark' => SystemConfig::get('info_dark', '#138496'),
 
     // Cores de texto
     'text_primary' => SystemConfig::get('text_primary', '#2c3e50'),
@@ -73,6 +77,14 @@ $config = [
     // Bordas e sombras
     'border_radius' => SystemConfig::get('border_radius', '6px'),
     'box_shadow' => SystemConfig::get('box_shadow', '0 2px 10px rgba(0,0,0,0.08)'),
+    'border_color' => SystemConfig::get('border_color', '#e1e8ed'),
+    'border_light' => SystemConfig::get('border_light', '#f0f0f0'),
+
+    // Cores utilitárias
+    'color_light' => SystemConfig::get('color_light', '#f8f9fa'),
+    'color_light_accent' => SystemConfig::get('color_light_accent', '#f8f9ff'),
+    'color_white' => SystemConfig::get('color_white', '#ffffff'),
+    'color_dark' => SystemConfig::get('color_dark', '#333333'),
 ];
 ?>
 /**
@@ -95,9 +107,13 @@ $config = [
 
     /* ===== CORES DE STATUS ===== */
     --success-color: <?php echo $config['success_color']; ?>;
+    --success-dark: <?php echo $config['success_dark']; ?>;
     --danger-color: <?php echo $config['danger_color']; ?>;
+    --danger-dark: <?php echo $config['danger_dark']; ?>;
     --warning-color: <?php echo $config['warning_color']; ?>;
+    --warning-dark: <?php echo $config['warning_dark']; ?>;
     --info-color: <?php echo $config['info_color']; ?>;
+    --info-dark: <?php echo $config['info_dark']; ?>;
 
     /* ===== CORES DE TEXTO ===== */
     --text-primary: <?php echo $config['text_primary']; ?>;
@@ -140,6 +156,14 @@ $config = [
     --border-radius: <?php echo $config['border_radius']; ?>;
     --box-shadow: <?php echo $config['box_shadow']; ?>;
     --box-shadow-hover: 0 4px 20px rgba(0,0,0,0.12);
+    --border-color: <?php echo $config['border_color']; ?>;
+    --border-light: <?php echo $config['border_light']; ?>;
+
+    /* ===== CORES UTILITÁRIAS ===== */
+    --color-light: <?php echo $config['color_light']; ?>;
+    --color-light-accent: <?php echo $config['color_light_accent']; ?>;
+    --color-white: <?php echo $config['color_white']; ?>;
+    --color-dark: <?php echo $config['color_dark']; ?>;
 
     /* ===== ESPAÇAMENTOS ===== */
     --spacing-xs: 4px;
@@ -290,6 +314,8 @@ a:hover {
     border-radius: calc(var(--border-radius) * 3);
     padding: 4px 12px;
     font-size: var(--font-size-small);
+    display: inline-block;
+    font-weight: 500;
 }
 
 .badge-primary {
@@ -298,28 +324,33 @@ a:hover {
 }
 
 .badge-success {
-    background: var(--success-color);
-    color: white;
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
 }
 
 .badge-danger {
-    background: var(--danger-color);
-    color: white;
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
 }
 
 .badge-warning {
-    background: var(--warning-color);
-    color: #212529;
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
 }
 
 .badge-info {
-    background: var(--info-color);
-    color: white;
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
 }
 
 .badge-secondary {
-    background: var(--secondary-color);
-    color: white;
+    background: #e2e3e5;
+    color: #383d41;
+    border: 1px solid #d6d8db;
 }
 
 /* Formulários */
@@ -353,4 +384,106 @@ textarea:focus {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+}
+
+/* Tabelas */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table th {
+    background: var(--color-light);
+    color: var(--color-dark);
+    font-weight: 600;
+    text-align: left;
+    padding: 12px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+table td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+table tr:hover {
+    background: var(--color-light-accent);
+}
+
+/* Inputs e Selects */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="date"],
+input[type="search"],
+select,
+textarea {
+    border: 1px solid var(--border-color);
+    padding: 8px 12px;
+}
+
+input:focus, select:focus, textarea:focus {
+    border-color: var(--primary-color) !important;
+}
+
+/* Text Utilities */
+.text-primary { color: var(--primary-color); }
+.text-success { color: var(--success-color); }
+.text-danger { color: var(--danger-color); }
+.text-warning { color: var(--warning-color); }
+.text-info { color: var(--info-color); }
+.text-secondary { color: var(--text-secondary); }
+.text-muted { color: var(--text-muted); }
+.text-dark { color: var(--color-dark); }
+
+/* Background Utilities */
+.bg-light { background: var(--color-light); }
+.bg-white { background: var(--color-white); }
+.bg-primary { background: var(--primary-color); color: white; }
+.bg-success { background: var(--success-color); color: white; }
+.bg-danger { background: var(--danger-color); color: white; }
+.bg-warning { background: var(--warning-color); }
+.bg-info { background: var(--info-color); color: white; }
+
+/* Border Utilities */
+.border { border: 1px solid var(--border-color); }
+.border-top { border-top: 1px solid var(--border-color); }
+.border-bottom { border-bottom: 1px solid var(--border-color); }
+.border-left { border-left: 1px solid var(--border-color); }
+.border-right { border-right: 1px solid var(--border-color); }
+
+/* Pagination */
+.pagination a,
+.pagination span {
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.pagination a:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.pagination .active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+/* Stats/Info Cards */
+.stat-card {
+    border-left: 4px solid var(--primary-color);
+}
+
+.stat-value {
+    color: var(--primary-color);
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.stat-label {
+    color: var(--text-secondary);
+    font-size: 14px;
 }
