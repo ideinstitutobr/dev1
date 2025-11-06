@@ -32,6 +32,7 @@ $cfgFavicon = SystemConfig::get('favicon_path');
     <title><?php echo $pageTitle ?? 'Dashboard'; ?> - <?php echo $appNameCfg; ?></title>
 
     <!-- CSS do Sistema -->
+    <link rel="stylesheet" href="<?php echo ASSETS_URL; ?>css/theme-variables.php">
     <link rel="stylesheet" href="<?php echo ASSETS_URL; ?>css/main.css">
     <link rel="stylesheet" href="<?php echo ASSETS_URL; ?>css/dashboard.css">
 
