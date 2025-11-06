@@ -61,6 +61,11 @@ $sidebarBg = $configs['sidebar_bg'] ?? '#2c3e50';
 $sidebarText = $configs['sidebar_text'] ?? '#ecf0f1';
 $sidebarHover = $configs['sidebar_hover'] ?? '#34495e';
 $sidebarActive = $configs['sidebar_active'] ?? '#667eea';
+$sidebarActiveBorder = $configs['sidebar_active_border'] ?? '#ffffff';
+$sidebarHeaderBorder = $configs['sidebar_header_border'] ?? 'rgba(255,255,255,0.1)';
+$sidebarSubmenuBg = $configs['sidebar_submenu_bg'] ?? 'rgba(0,0,0,0.15)';
+$sidebarToggleBg = $configs['sidebar_toggle_bg'] ?? '#ffffff';
+$sidebarToggleColor = $configs['sidebar_toggle_color'] ?? '#333333';
 
 // Gradientes
 $gradStart = $configs['gradient_start'] ?? '#667eea';
@@ -513,7 +518,8 @@ include __DIR__ . '/../../app/views/layouts/header.php';
     <!-- Tab: Sidebar/Menu -->
     <div class="tab-content" id="tab-sidebar">
         <div class="config-card">
-            <h3>Cores do Menu Lateral (Sidebar)</h3>
+            <h3>Cores Principais do Menu</h3>
+            <p class="hint">Configure as cores básicas do menu lateral</p>
             <div class="form-grid">
                 <div class="form-group">
                     <label>Fundo do Sidebar</label>
@@ -521,6 +527,7 @@ include __DIR__ . '/../../app/views/layouts/header.php';
                         <input type="color" name="sidebar_bg" value="<?php echo e($sidebarBg); ?>">
                         <input type="text" class="color-code" value="<?php echo e($sidebarBg); ?>" readonly>
                     </div>
+                    <span class="hint">Cor de fundo do menu lateral</span>
                 </div>
                 <div class="form-group">
                     <label>Texto do Menu</label>
@@ -528,24 +535,83 @@ include __DIR__ . '/../../app/views/layouts/header.php';
                         <input type="color" name="sidebar_text" value="<?php echo e($sidebarText); ?>">
                         <input type="text" class="color-code" value="<?php echo e($sidebarText); ?>" readonly>
                     </div>
+                    <span class="hint">Cor do texto e ícones</span>
                 </div>
+            </div>
+        </div>
+
+        <div class="config-card">
+            <h3>Interatividade do Menu</h3>
+            <p class="hint">Cores quando o usuário interage com o menu</p>
+            <div class="form-grid">
                 <div class="form-group">
                     <label>Hover (Passar Mouse)</label>
                     <div class="color-input-wrapper">
                         <input type="color" name="sidebar_hover" value="<?php echo e($sidebarHover); ?>">
                         <input type="text" class="color-code" value="<?php echo e($sidebarHover); ?>" readonly>
                     </div>
+                    <span class="hint">Fundo ao passar o mouse</span>
                 </div>
                 <div class="form-group">
-                    <label>Item Ativo/Selecionado</label>
+                    <label>Item Ativo (Fundo)</label>
                     <div class="color-input-wrapper">
                         <input type="color" name="sidebar_active" value="<?php echo e($sidebarActive); ?>">
                         <input type="text" class="color-code" value="<?php echo e($sidebarActive); ?>" readonly>
                     </div>
+                    <span class="hint">Fundo do item selecionado</span>
+                </div>
+                <div class="form-group">
+                    <label>Item Ativo (Borda)</label>
+                    <div class="color-input-wrapper">
+                        <input type="color" name="sidebar_active_border" value="<?php echo e($sidebarActiveBorder); ?>">
+                        <input type="text" class="color-code" value="<?php echo e($sidebarActiveBorder); ?>" readonly>
+                    </div>
+                    <span class="hint">Cor da borda lateral do item ativo</span>
                 </div>
             </div>
+        </div>
 
-            <div class="form-group" style="margin-top:20px;">
+        <div class="config-card">
+            <h3>Detalhes Visuais</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Borda do Header</label>
+                    <div class="color-input-wrapper">
+                        <input type="color" name="sidebar_header_border" value="<?php echo e($sidebarHeaderBorder); ?>">
+                        <input type="text" class="color-code" value="<?php echo e($sidebarHeaderBorder); ?>" readonly>
+                    </div>
+                    <span class="hint">Linha divisória abaixo do logo</span>
+                </div>
+                <div class="form-group">
+                    <label>Fundo do Submenu</label>
+                    <div class="color-input-wrapper">
+                        <input type="color" name="sidebar_submenu_bg" value="<?php echo e($sidebarSubmenuBg); ?>">
+                        <input type="text" class="color-code" value="<?php echo e($sidebarSubmenuBg); ?>" readonly>
+                    </div>
+                    <span class="hint">Fundo dos submenus expandidos</span>
+                </div>
+                <div class="form-group">
+                    <label>Botão Toggle (Fundo)</label>
+                    <div class="color-input-wrapper">
+                        <input type="color" name="sidebar_toggle_bg" value="<?php echo e($sidebarToggleBg); ?>">
+                        <input type="text" class="color-code" value="<?php echo e($sidebarToggleBg); ?>" readonly>
+                    </div>
+                    <span class="hint">Fundo do botão de expandir/recolher</span>
+                </div>
+                <div class="form-group">
+                    <label>Botão Toggle (Ícone)</label>
+                    <div class="color-input-wrapper">
+                        <input type="color" name="sidebar_toggle_color" value="<?php echo e($sidebarToggleColor); ?>">
+                        <input type="text" class="color-code" value="<?php echo e($sidebarToggleColor); ?>" readonly>
+                    </div>
+                    <span class="hint">Cor do ícone do botão toggle</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="config-card">
+            <h3>Comportamento</h3>
+            <div class="form-group">
                 <label>
                     <input type="checkbox" name="sidebar_default_collapsed" value="1" <?php echo $sidebarCollapsed ? 'checked' : ''; ?>>
                     Sidebar colapsada por padrão

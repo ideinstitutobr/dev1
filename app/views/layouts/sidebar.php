@@ -7,7 +7,7 @@
 <style>
     .sidebar {
         width: 260px;
-        background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+        background: var(--sidebar-bg);
         height: 100vh;
         position: fixed;
         left: 0;
@@ -25,11 +25,11 @@
     .sidebar-header {
         padding: 25px 20px;
         text-align: center;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
+        border-bottom: 1px solid var(--sidebar-header-border, rgba(255,255,255,0.1));
     }
 
     .sidebar-header h2 {
-        color: white;
+        color: var(--sidebar-text);
         font-size: 24px;
         margin-bottom: 5px;
         transition: opacity 0.3s;
@@ -42,7 +42,8 @@
     }
 
     .sidebar-header p {
-        color: rgba(255,255,255,0.8);
+        color: var(--sidebar-text);
+        opacity: 0.8;
         font-size: 12px;
     }
 
@@ -59,20 +60,20 @@
         display: flex;
         align-items: center;
         padding: 12px 20px;
-        color: white;
+        color: var(--sidebar-text);
         text-decoration: none;
         transition: all 0.3s;
         position: relative;
     }
 
     .sidebar-menu a:hover {
-        background: rgba(255,255,255,0.1);
+        background: var(--sidebar-hover);
         padding-left: 25px;
     }
 
     .sidebar-menu a.active {
-        background: rgba(255,255,255,0.15);
-        border-left: 4px solid white;
+        background: var(--sidebar-active);
+        border-left: 4px solid var(--sidebar-active-border, var(--sidebar-text));
     }
 
     .sidebar-menu a .icon {
@@ -99,7 +100,7 @@
         max-height: 0;
         overflow: hidden;
         transition: max-height 0.3s;
-        background: rgba(0,0,0,0.1);
+        background: var(--sidebar-submenu-bg, rgba(0,0,0,0.15));
     }
 
     .sidebar-menu .submenu.active {
@@ -121,7 +122,8 @@
         top: 20px;
         width: 30px;
         height: 30px;
-        background: white;
+        background: var(--sidebar-toggle-bg, #ffffff);
+        color: var(--sidebar-toggle-color, #333333);
         border: none;
         border-radius: 50%;
         cursor: pointer;
