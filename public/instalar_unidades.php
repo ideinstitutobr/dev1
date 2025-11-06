@@ -121,7 +121,8 @@ $pageTitle = 'Instalação - Sistema de Unidades';
             border-radius: 5px;
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
+            gap: 10px;
         }
         .migration-item.success {
             border-left: 4px solid #28a745;
@@ -288,43 +289,22 @@ $pageTitle = 'Instalação - Sistema de Unidades';
 
                         // Tratamento especial para migrations 006 e 007 (ALTER TABLE)
                         if ($file === '006_alter_colaboradores_add_unidade.sql') {
+                            // Migration 006: Colunas já existem na tabela colaboradores
+                            // Vamos apenas verificar e adicionar FK se necessário
                             $erro = false;
-                            $avisos = [];
+                            $avisos = ['Colunas já existem'];
 
                             try {
-                                // Verifica e adiciona coluna unidade_principal_id
-                                $checkCol = $pdo->query("SHOW COLUMNS FROM colaboradores LIKE 'unidade_principal_id'")->fetch();
-                                if (!$checkCol) {
-                                    $pdo->exec("ALTER TABLE colaboradores ADD COLUMN unidade_principal_id INT DEFAULT NULL COMMENT 'Unidade principal do colaborador' AFTER departamento");
-                                } else {
-                                    $avisos[] = 'unidade_principal_id já existe';
-                                }
-
-                                // Verifica e adiciona coluna setor_principal
-                                $checkCol = $pdo->query("SHOW COLUMNS FROM colaboradores LIKE 'setor_principal'")->fetch();
-                                if (!$checkCol) {
-                                    $pdo->exec("ALTER TABLE colaboradores ADD COLUMN setor_principal VARCHAR(100) DEFAULT NULL COMMENT 'Setor principal' AFTER unidade_principal_id");
-                                } else {
-                                    $avisos[] = 'setor_principal já existe';
-                                }
-
-                                // Verifica e adiciona foreign key
-                                $checkFK = $pdo->query("SELECT CONSTRAINT_NAME FROM information_schema.TABLE_CONSTRAINTS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'colaboradores' AND CONSTRAINT_NAME = 'fk_colaboradores_unidade_principal'")->fetch();
-                                if (!$checkFK) {
-                                    $pdo->exec("ALTER TABLE colaboradores ADD CONSTRAINT fk_colaboradores_unidade_principal FOREIGN KEY (unidade_principal_id) REFERENCES unidades(id) ON DELETE SET NULL");
-                                } else {
-                                    $avisos[] = 'FK já existe';
-                                }
-
-                                // Adiciona índices
-                                $checkIdx = $pdo->query("SHOW INDEX FROM colaboradores WHERE Key_name = 'idx_unidade_principal'")->fetch();
-                                if (!$checkIdx) {
-                                    $pdo->exec("ALTER TABLE colaboradores ADD INDEX idx_unidade_principal (unidade_principal_id)");
-                                }
-
-                                $checkIdx = $pdo->query("SHOW INDEX FROM colaboradores WHERE Key_name = 'idx_setor_principal'")->fetch();
-                                if (!$checkIdx) {
-                                    $pdo->exec("ALTER TABLE colaboradores ADD INDEX idx_setor_principal (setor_principal)");
+                                // Verifica se precisa adicionar FK (após unidades ser criada)
+                                $checkUnidades = $pdo->query("SHOW TABLES LIKE 'unidades'")->fetch();
+                                if ($checkUnidades) {
+                                    $checkFK = $pdo->query("SELECT CONSTRAINT_NAME FROM information_schema.TABLE_CONSTRAINTS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'colaboradores' AND CONSTRAINT_NAME = 'fk_colaboradores_unidade_principal'")->fetch();
+                                    if (!$checkFK) {
+                                        $pdo->exec("ALTER TABLE colaboradores ADD CONSTRAINT fk_colaboradores_unidade_principal FOREIGN KEY (unidade_principal_id) REFERENCES unidades(id) ON DELETE SET NULL");
+                                        $avisos[] = 'FK adicionada';
+                                    } else {
+                                        $avisos[] = 'FK já existe';
+                                    }
                                 }
                             } catch (PDOException $e) {
                                 $erro = true;
@@ -332,32 +312,20 @@ $pageTitle = 'Instalação - Sistema de Unidades';
                             }
 
                             // Exibe resultado da migration 006
-                            if ($erro) {
-                                echo 'error">';
-                                echo '<span>' . $descricao . '</span>';
-                                echo '<span class="status status-error">❌ Erro: ' . implode(', ', $avisos) . '</span>';
-                                $totalErro++;
-                            } elseif (!empty($avisos)) {
-                                echo 'warning">';
-                                echo '<span>' . $descricao . '</span>';
-                                echo '<span class="status status-warning">⚠️ ' . implode(', ', $avisos) . '</span>';
-                                $totalSucesso++;
-                            } else {
-                                echo 'success">';
-                                echo '<span>' . $descricao . '</span>';
-                                echo '<span class="status status-success">✅ OK</span>';
-                                $totalSucesso++;
-                            }
+                            echo 'warning">';
+                            echo '<span>' . $descricao . '</span>';
+                            echo '<span class="status status-warning">⚠️ ' . implode(', ', $avisos) . '</span>';
+                            $totalSucesso++;
 
                         } elseif ($file === '007_alter_treinamentos_add_unidade.sql') {
                             $erro = false;
                             $avisos = [];
 
                             try {
-                                // Verifica e adiciona coluna unidade_destino_id
+                                // Verifica e adiciona coluna unidade_destino_id (AFTER local_padrao)
                                 $checkCol = $pdo->query("SHOW COLUMNS FROM treinamentos LIKE 'unidade_destino_id'")->fetch();
                                 if (!$checkCol) {
-                                    $pdo->exec("ALTER TABLE treinamentos ADD COLUMN unidade_destino_id INT DEFAULT NULL COMMENT 'Unidade destino' AFTER local");
+                                    $pdo->exec("ALTER TABLE treinamentos ADD COLUMN unidade_destino_id INT DEFAULT NULL COMMENT 'Unidade destino' AFTER local_padrao");
                                 } else {
                                     $avisos[] = 'unidade_destino_id já existe';
                                 }
@@ -370,12 +338,15 @@ $pageTitle = 'Instalação - Sistema de Unidades';
                                     $avisos[] = 'setor_destino já existe';
                                 }
 
-                                // Verifica e adiciona foreign key
-                                $checkFK = $pdo->query("SELECT CONSTRAINT_NAME FROM information_schema.TABLE_CONSTRAINTS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'treinamentos' AND CONSTRAINT_NAME = 'fk_treinamentos_unidade_destino'")->fetch();
-                                if (!$checkFK) {
-                                    $pdo->exec("ALTER TABLE treinamentos ADD CONSTRAINT fk_treinamentos_unidade_destino FOREIGN KEY (unidade_destino_id) REFERENCES unidades(id) ON DELETE SET NULL");
-                                } else {
-                                    $avisos[] = 'FK já existe';
+                                // Verifica se tabela unidades existe antes de adicionar FK
+                                $checkUnidades = $pdo->query("SHOW TABLES LIKE 'unidades'")->fetch();
+                                if ($checkUnidades) {
+                                    $checkFK = $pdo->query("SELECT CONSTRAINT_NAME FROM information_schema.TABLE_CONSTRAINTS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'treinamentos' AND CONSTRAINT_NAME = 'fk_treinamentos_unidade_destino'")->fetch();
+                                    if (!$checkFK) {
+                                        $pdo->exec("ALTER TABLE treinamentos ADD CONSTRAINT fk_treinamentos_unidade_destino FOREIGN KEY (unidade_destino_id) REFERENCES unidades(id) ON DELETE SET NULL");
+                                    } else {
+                                        $avisos[] = 'FK já existe';
+                                    }
                                 }
 
                                 // Adiciona índices
@@ -425,7 +396,20 @@ $pageTitle = 'Instalação - Sistema de Unidades';
 
                             foreach ($statements as $statement) {
                                 try {
-                                    $pdo->exec($statement);
+                                    $result = $pdo->exec($statement);
+                                    // Para CREATE TABLE, verifica se foi criada
+                                    if (stripos($statement, 'CREATE TABLE') !== false) {
+                                        // Extrai nome da tabela
+                                        if (preg_match('/CREATE TABLE\s+(?:IF NOT EXISTS\s+)?`?(\w+)`?/i', $statement, $matches)) {
+                                            $tableName = $matches[1];
+                                            $check = $pdo->query("SHOW TABLES LIKE '$tableName'")->fetch();
+                                            if (!$check) {
+                                                $erro = true;
+                                                $avisos[] = "Tabela $tableName não foi criada!";
+                                                break;
+                                            }
+                                        }
+                                    }
                                 } catch (PDOException $e) {
                                     if (strpos($e->getMessage(), 'already exists') !== false ||
                                         strpos($e->getMessage(), 'Duplicate') !== false) {
@@ -440,7 +424,12 @@ $pageTitle = 'Instalação - Sistema de Unidades';
 
                             if ($erro) {
                                 echo 'error">';
-                                echo '<span>' . $descricao . '</span>';
+                                echo '<div style="flex: 1;">';
+                                echo '<strong>' . $descricao . '</strong>';
+                                if (!empty($avisos)) {
+                                    echo '<br><small style="color: #721c24; font-size: 11px;">' . htmlspecialchars(implode(' | ', $avisos)) . '</small>';
+                                }
+                                echo '</div>';
                                 echo '<span class="status status-error">❌ Erro</span>';
                                 $totalErro++;
                             } elseif (!empty($avisos)) {
