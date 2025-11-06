@@ -72,34 +72,89 @@ switch ($action) {
         if (!is_dir($uploadBase)) { @mkdir($uploadBase, 0775, true); }
 
         $allowed = ['image/png' => 'png', 'image/jpeg' => 'jpg'];
+
         // Logo
         if (!empty($_FILES['logo_file']['name']) && $_FILES['logo_file']['error'] === UPLOAD_ERR_OK) {
+            // Validar tipo MIME
             $type = mime_content_type($_FILES['logo_file']['tmp_name']);
             if (!isset($allowed[$type])) {
-                $_SESSION['flash_error'] = 'Formato de logo inválido (use PNG/JPEG)';
+                $_SESSION['flash_error'] = 'Formato de logo inválido. Use PNG ou JPEG.';
                 header('Location: sistema.php');
                 exit;
             }
+
+            // Validar tamanho do arquivo (máximo 2MB)
+            $maxSize = 2 * 1024 * 1024; // 2MB em bytes
+            if ($_FILES['logo_file']['size'] > $maxSize) {
+                $sizeMB = round($_FILES['logo_file']['size'] / (1024 * 1024), 2);
+                $_SESSION['flash_error'] = "Logo muito grande ({$sizeMB} MB). Tamanho máximo: 2 MB.";
+                header('Location: sistema.php');
+                exit;
+            }
+
+            // Validar dimensões (aviso se não for ideal)
+            $imageInfo = getimagesize($_FILES['logo_file']['tmp_name']);
+            if ($imageInfo !== false) {
+                list($width, $height) = $imageInfo;
+                $ratio = $width / $height;
+
+                // Aviso se a proporção não for horizontal (opcional, não bloqueia)
+                if ($ratio < 2 || $ratio > 6) {
+                    $_SESSION['flash_warning'] = "Logo carregado com dimensões {$width}x{$height}px. Recomendado: proporção horizontal (ex: 300x80px) para melhor visualização.";
+                }
+            }
+
             $ext = $allowed[$type];
             $dest = $uploadBase . '/logo.' . $ext;
             if (move_uploaded_file($_FILES['logo_file']['tmp_name'], $dest)) {
                 $rel = 'uploads/branding/logo.' . $ext;
                 SystemConfig::set('logo_path', $rel);
-            }
-        }
-        // Favicon
-        if (!empty($_FILES['favicon_file']['name']) && $_FILES['favicon_file']['error'] === UPLOAD_ERR_OK) {
-            $type = mime_content_type($_FILES['favicon_file']['tmp_name']);
-            if (!isset($allowed[$type])) {
-                $_SESSION['flash_error'] = 'Formato de favicon inválido (use PNG/JPEG)';
+            } else {
+                $_SESSION['flash_error'] = 'Erro ao fazer upload do logo. Verifique as permissões do diretório.';
                 header('Location: sistema.php');
                 exit;
             }
+        }
+
+        // Favicon
+        if (!empty($_FILES['favicon_file']['name']) && $_FILES['favicon_file']['error'] === UPLOAD_ERR_OK) {
+            // Validar tipo MIME
+            $type = mime_content_type($_FILES['favicon_file']['tmp_name']);
+            if (!isset($allowed[$type])) {
+                $_SESSION['flash_error'] = 'Formato de favicon inválido. Use PNG ou JPEG.';
+                header('Location: sistema.php');
+                exit;
+            }
+
+            // Validar tamanho do arquivo (máximo 500KB)
+            $maxSize = 500 * 1024; // 500KB em bytes
+            if ($_FILES['favicon_file']['size'] > $maxSize) {
+                $sizeKB = round($_FILES['favicon_file']['size'] / 1024, 2);
+                $_SESSION['flash_error'] = "Favicon muito grande ({$sizeKB} KB). Tamanho máximo: 500 KB.";
+                header('Location: sistema.php');
+                exit;
+            }
+
+            // Validar dimensões (aviso se não for quadrado)
+            $imageInfo = getimagesize($_FILES['favicon_file']['tmp_name']);
+            if ($imageInfo !== false) {
+                list($width, $height) = $imageInfo;
+
+                // Aviso se não for quadrado (opcional, não bloqueia)
+                if ($width !== $height) {
+                    $_SESSION['flash_warning'] = "Favicon carregado com dimensões {$width}x{$height}px. Recomendado: formato quadrado (ex: 32x32 ou 64x64px).";
+                }
+            }
+
             $ext = $allowed[$type];
             $dest = $uploadBase . '/favicon.' . $ext;
             if (move_uploaded_file($_FILES['favicon_file']['tmp_name'], $dest)) {
                 $rel = 'uploads/branding/favicon.' . $ext;
                 SystemConfig::set('favicon_path', $rel);
+            } else {
+                $_SESSION['flash_error'] = 'Erro ao fazer upload do favicon. Verifique as permissões do diretório.';
+                header('Location: sistema.php');
+                exit;
             }
         }
 

@@ -48,6 +48,10 @@ include __DIR__ . '/../../app/views/layouts/header.php';
     .color-preview { display:flex; align-items:center; gap:8px; margin-top:6px; }
     .color-box { width:28px; height:18px; border:1px solid #ccc; border-radius:4px; display:inline-block; }
     .color-code { font-size:12px; color:#555; font-family:monospace; }
+    .alert { padding:12px 16px; border-radius:6px; margin-bottom:16px; }
+    .alert-success { background:#d4edda; color:#155724; border-left:4px solid #28a745; }
+    .alert-error { background:#f8d7da; color:#721c24; border-left:4px solid #dc3545; }
+    .alert-warning { background:#fff3cd; color:#856404; border-left:4px solid #ffc107; }
 </style>
 
 <?php if (isset($_SESSION['flash_success'])): ?>
@@ -55,6 +59,9 @@ include __DIR__ . '/../../app/views/layouts/header.php';
 <?php endif; ?>
 <?php if (isset($_SESSION['flash_error'])): ?>
     <div class="alert alert-error">❌ <?php echo e($_SESSION['flash_error']); unset($_SESSION['flash_error']); ?></div>
+<?php endif; ?>
+<?php if (isset($_SESSION['flash_warning'])): ?>
+    <div class="alert alert-warning">⚠️ <?php echo e($_SESSION['flash_warning']); unset($_SESSION['flash_warning']); ?></div>
 <?php endif; ?>
 
 <div class="config-card">
@@ -88,26 +95,57 @@ include __DIR__ . '/../../app/views/layouts/header.php';
 
         <div class="form-row">
             <div class="form-group">
-                <label>Logomarca (PNG/JPEG)</label>
-                <input type="file" name="logo_file" accept="image/png,image/jpeg">
-                <div class="preview">
+                <label>Logomarca</label>
+                <input type="file" name="logo_file" accept="image/png,image/jpeg,image/jpg" id="logo_input">
+
+                <!-- Guia de especificações -->
+                <div style="background:#f8f9fa; border-left:3px solid #667eea; padding:12px; margin-top:8px; border-radius:4px;">
+                    <strong style="color:#667eea;">📋 Especificações Recomendadas:</strong>
+                    <ul style="margin:8px 0 0 20px; font-size:13px; color:#555;">
+                        <li><strong>Formato:</strong> PNG (com fundo transparente) ou JPEG</li>
+                        <li><strong>Resolução:</strong> 300x80 pixels (proporção 4:1)</li>
+                        <li><strong>Tamanho máximo:</strong> 2 MB</li>
+                        <li><strong>Dica:</strong> Logotipos horizontais funcionam melhor</li>
+                    </ul>
+                </div>
+
+                <!-- Preview -->
+                <div class="preview" style="margin-top:12px;">
                     <?php if ($logoPath): ?>
-                        <img src="<?php echo BASE_URL . e($logoPath); ?>" alt="Logo" style="height:50px;">
-                        <span class="hint">Atual: <?php echo e($logoPath); ?></span>
+                        <div style="border:1px solid #e1e8ed; padding:10px; border-radius:6px; background:#fff;">
+                            <img src="<?php echo BASE_URL . e($logoPath); ?>" alt="Logo" style="max-height:60px; max-width:250px;">
+                        </div>
+                        <span class="hint">✅ Logo atual: <?php echo e($logoPath); ?></span>
                     <?php else: ?>
-                        <span class="hint">Sem logomarca configurada</span>
+                        <span class="hint">⚠️ Nenhuma logomarca configurada</span>
                     <?php endif; ?>
                 </div>
             </div>
+
             <div class="form-group">
-                <label>Favicon (PNG/JPEG)</label>
-                <input type="file" name="favicon_file" accept="image/png,image/jpeg">
-                <div class="preview">
+                <label>Favicon</label>
+                <input type="file" name="favicon_file" accept="image/png,image/jpeg,image/jpg" id="favicon_input">
+
+                <!-- Guia de especificações -->
+                <div style="background:#f8f9fa; border-left:3px solid #667eea; padding:12px; margin-top:8px; border-radius:4px;">
+                    <strong style="color:#667eea;">📋 Especificações Recomendadas:</strong>
+                    <ul style="margin:8px 0 0 20px; font-size:13px; color:#555;">
+                        <li><strong>Formato:</strong> PNG (com fundo transparente) ou ICO</li>
+                        <li><strong>Resolução:</strong> 32x32 ou 64x64 pixels (quadrado)</li>
+                        <li><strong>Tamanho máximo:</strong> 500 KB</li>
+                        <li><strong>Dica:</strong> Ícones simples e reconhecíveis funcionam melhor</li>
+                    </ul>
+                </div>
+
+                <!-- Preview -->
+                <div class="preview" style="margin-top:12px;">
                     <?php if ($faviconPath): ?>
-                        <img src="<?php echo BASE_URL . e($faviconPath); ?>" alt="Favicon" style="height:24px;">
-                        <span class="hint">Atual: <?php echo e($faviconPath); ?></span>
+                        <div style="border:1px solid #e1e8ed; padding:10px; border-radius:6px; background:#fff;">
+                            <img src="<?php echo BASE_URL . e($faviconPath); ?>" alt="Favicon" style="height:32px; width:32px;">
+                        </div>
+                        <span class="hint">✅ Favicon atual: <?php echo e($faviconPath); ?></span>
                     <?php else: ?>
-                        <span class="hint">Sem favicon configurado</span>
+                        <span class="hint">⚠️ Nenhum favicon configurado</span>
                     <?php endif; ?>
                 </div>
             </div>
@@ -140,6 +178,7 @@ include __DIR__ . '/../../app/views/layouts/header.php';
 
 <script>
     (function(){
+        // Preview de cores
         function setPreview(inputId, boxId, codeId){
             var input = document.getElementById(inputId);
             var box = document.getElementById(boxId);
@@ -153,6 +192,71 @@ include __DIR__ . '/../../app/views/layouts/header.php';
         setPreview('primary_color','box_primary','code_primary');
         setPreview('gradient_start','box_start','code_start');
         setPreview('gradient_end','box_end','code_end');
+
+        // Validação de upload de arquivos
+        function validateFileUpload(inputId, maxSizeMB, type) {
+            var input = document.getElementById(inputId);
+            if (!input) return;
+
+            input.addEventListener('change', function(e) {
+                var file = e.target.files[0];
+                if (!file) return;
+
+                // Validar tipo
+                var validTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+                if (!validTypes.includes(file.type)) {
+                    alert('❌ Formato inválido!\n\nApenas arquivos PNG ou JPEG são permitidos.');
+                    input.value = '';
+                    return;
+                }
+
+                // Validar tamanho
+                var sizeMB = file.size / (1024 * 1024);
+                if (sizeMB > maxSizeMB) {
+                    alert('❌ Arquivo muito grande!\n\nTamanho: ' + sizeMB.toFixed(2) + ' MB\nMáximo permitido: ' + maxSizeMB + ' MB\n\nPor favor, reduza o tamanho da imagem.');
+                    input.value = '';
+                    return;
+                }
+
+                // Validar dimensões (opcional, mas bom para UX)
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var img = new Image();
+                    img.onload = function() {
+                        var warnings = [];
+
+                        if (type === 'logo') {
+                            // Avisar se logo não está na proporção recomendada
+                            var ratio = img.width / img.height;
+                            if (ratio < 2 || ratio > 6) {
+                                warnings.push('⚠️ Proporção não ideal: ' + img.width + 'x' + img.height + ' pixels\n   Recomendado: proporção horizontal (ex: 300x80)');
+                            }
+                        } else if (type === 'favicon') {
+                            // Avisar se favicon não é quadrado
+                            if (img.width !== img.height) {
+                                warnings.push('⚠️ Dimensões não ideais: ' + img.width + 'x' + img.height + ' pixels\n   Recomendado: formato quadrado (ex: 32x32 ou 64x64)');
+                            }
+                        }
+
+                        if (warnings.length > 0) {
+                            var msg = warnings.join('\n\n') + '\n\nDeseja continuar mesmo assim?';
+                            if (!confirm(msg)) {
+                                input.value = '';
+                            }
+                        }
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+
+                // Mostrar feedback positivo
+                console.log('✅ Arquivo válido:', file.name, '-', sizeMB.toFixed(2), 'MB');
+            });
+        }
+
+        // Aplicar validações
+        validateFileUpload('logo_input', 2, 'logo');      // Logo: max 2MB
+        validateFileUpload('favicon_input', 0.5, 'favicon'); // Favicon: max 500KB
     })();
 </script>
 
