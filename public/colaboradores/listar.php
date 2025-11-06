@@ -372,11 +372,17 @@ $departamentoOptions = mergeUniqueSorted($departamentosDB, $departamentosCategor
                     <td><strong><?php echo e($col['nome']); ?></strong></td>
                     <td><?php echo e($col['email']); ?></td>
                     <td>
-                        <?php $nivelVal = $col['nivel_hierarquico'] ?? ''; ?>
-                        <span class="badge badge-info"><?php echo $nivelVal !== '' ? e($nivelVal) : '-'; ?></span>
+                        <?php
+                        // Exibe o nível hierárquico do colaborador
+                        if (isset($col['nivel_hierarquico']) && $col['nivel_hierarquico'] !== '') {
+                            echo '<span class="badge badge-info">' . e($col['nivel_hierarquico']) . '</span>';
+                        } else {
+                            echo '<span class="badge badge-info">-</span>';
+                        }
+                        ?>
                     </td>
-                    <td><?php echo e($col['cargo'] ?? '-'); ?></td>
-                    <td><?php echo e($col['departamento'] ?? '-'); ?></td>
+                    <td><?php echo !empty($col['cargo']) ? e($col['cargo']) : '-'; ?></td>
+                    <td><?php echo !empty($col['departamento']) ? e($col['departamento']) : '-'; ?></td>
                     <!-- Coluna Setor removida -->
                     <td>
                         <div style="display: flex; gap: 5px;">
