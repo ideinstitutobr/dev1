@@ -1,7 +1,7 @@
 <?php
 /**
  * View: Configurar Campos de Colaboradores
- * Gerencia valores de Nível Hierárquico, Cargo, Departamento e Setor
+ * Gerencia valores de Nível Hierárquico, Cargo e Setor
  */
 
 // Define constante do sistema
@@ -382,7 +382,7 @@ include __DIR__ . '/../../app/views/layouts/header.php';
 
 <div class="config-page" style="max-width: 1100px; margin: 0 auto;">
     <h2>⚙️ Configurar Campos de Colaboradores</h2>
-    <p style="color:#666;">Gerencie os valores e vínculos para Nível Hierárquico, Cargo, Departamento e Setor.</p>
+    <p style="color:#666;">Gerencie os valores e vínculos para Nível Hierárquico, Cargo e Setor.</p>
 
     <?php if (!empty($message)): ?>
         <div class="msg"><?php echo $message; ?></div>
@@ -404,8 +404,7 @@ include __DIR__ . '/../../app/views/layouts/header.php';
     <div class="tabs">
         <button class="tab active" data-tab="nivel">Nível Hierárquico</button>
         <button class="tab" data-tab="cargo">Cargo</button>
-        <button class="tab" data-tab="departamento">Departamento</button>
-        <button class="tab" data-tab="setor">Setor</button>
+        <button class="tab" data-tab="departamento">Setor</button>
     </div>
     <div class="panels">
         <!-- Painel: Nível Hierárquico -->
@@ -427,21 +426,13 @@ include __DIR__ . '/../../app/views/layouts/header.php';
                 <div class="list-header">
                     <div>Nome</div>
                     <div style="text-align:center;">Vinculados</div>
-                    <div style="text-align:right;">Ações</div>
+                    <div style="text-align:right;">Ação</div>
                 </div>
                 <?php foreach ($nivelItems as $nome => $total): ?>
                     <div class="list-item">
                         <span class="name"><?php echo e($nome); ?></span>
                         <span class="pill-count"><?php echo $total; ?> vínculo(s)</span>
                         <div class="actions">
-                            <button type="button" class="icon-btn icon-primary" title="Renomear" data-toggle="rename" data-target="rename-nivel-<?php echo md5($nome); ?>">✏️</button>
-                            <form method="POST" action="" class="inline-form" id="rename-nivel-<?php echo md5($nome); ?>">
-                                <input type="hidden" name="action" value="rename_item">
-                                <input type="hidden" name="type" value="nivel">
-                                <input type="hidden" name="value" value="<?php echo e($nome); ?>">
-                                <input type="text" name="new_value" placeholder="Novo nome" value="">
-                                <button>Salvar</button>
-                            </form>
                             <form method="POST" action="" onsubmit="return confirm('Remover este nível? Só é possível remover se não houver colaboradores vinculados.');">
                                 <input type="hidden" name="action" value="remove_item">
                                 <input type="hidden" name="type" value="nivel">
@@ -472,21 +463,13 @@ include __DIR__ . '/../../app/views/layouts/header.php';
                 <div class="list-header">
                     <div>Nome</div>
                     <div style="text-align:center;">Vinculados</div>
-                    <div style="text-align:right;">Ações</div>
+                    <div style="text-align:right;">Ação</div>
                 </div>
                 <?php foreach ($cargos as $nome => $total): ?>
                     <div class="list-item">
                         <span class="name"><?php echo e($nome); ?></span>
                         <span class="pill-count"><?php echo $total; ?> vínculo(s)</span>
                         <div class="actions">
-                            <button type="button" class="icon-btn icon-primary" title="Renomear" data-toggle="rename" data-target="rename-cargo-<?php echo md5($nome); ?>">✏️</button>
-                            <form method="POST" action="" class="inline-form" id="rename-cargo-<?php echo md5($nome); ?>">
-                                <input type="hidden" name="action" value="rename_item">
-                                <input type="hidden" name="type" value="cargo">
-                                <input type="hidden" name="value" value="<?php echo e($nome); ?>">
-                                <input type="text" name="new_value" placeholder="Novo nome" value="">
-                                <button>Salvar</button>
-                            </form>
                             <form method="POST" action="" onsubmit="return confirm('Remover este item? Colaboradores vinculados terão o campo limpo.');">
                                 <input type="hidden" name="action" value="remove_item">
                                 <input type="hidden" name="type" value="cargo">
@@ -500,16 +483,16 @@ include __DIR__ . '/../../app/views/layouts/header.php';
             <div class="hint">Itens adicionados entram no catálogo e podem ser usados nos formulários.</div>
         </section>
 
-        <!-- Painel: Departamento -->
+        <!-- Painel: Setor -->
         <section id="panel-departamento" class="panel">
             <div class="panel-header">
-                <div class="panel-title">🏢 Departamento</div>
+                <div class="panel-title">🏢 Setor</div>
                 <div class="panel-actions" style="gap:12px;">
                     <span class="panel-meta">Itens: <?php echo $depItens; ?> • Vínculos: <?php echo $depVinculos; ?></span>
                     <form method="POST" action="" class="add-bar" style="margin:0;">
                         <input type="hidden" name="action" value="add_item">
                         <input type="hidden" name="type" value="departamento">
-                        <input type="text" name="value" placeholder="Adicionar novo departamento">
+                        <input type="text" name="value" placeholder="Adicionar novo setor">
                         <button>Adicionar</button>
                     </form>
                 </div>
@@ -518,21 +501,13 @@ include __DIR__ . '/../../app/views/layouts/header.php';
                 <div class="list-header">
                     <div>Nome</div>
                     <div style="text-align:center;">Vinculados</div>
-                    <div style="text-align:right;">Ações</div>
+                    <div style="text-align:right;">Ação</div>
                 </div>
                 <?php foreach ($departamentos as $nome => $total): ?>
                     <div class="list-item">
                         <span class="name"><?php echo e($nome); ?></span>
                         <span class="pill-count"><?php echo $total; ?> vínculo(s)</span>
                         <div class="actions">
-                            <button type="button" class="icon-btn icon-primary" title="Renomear" data-toggle="rename" data-target="rename-dep-<?php echo md5($nome); ?>">✏️</button>
-                            <form method="POST" action="" class="inline-form" id="rename-dep-<?php echo md5($nome); ?>">
-                                <input type="hidden" name="action" value="rename_item">
-                                <input type="hidden" name="type" value="departamento">
-                                <input type="hidden" name="value" value="<?php echo e($nome); ?>">
-                                <input type="text" name="new_value" placeholder="Novo nome" value="">
-                                <button>Salvar</button>
-                            </form>
                             <form method="POST" action="" onsubmit="return confirm('Remover este item? Colaboradores vinculados terão o campo limpo.');">
                                 <input type="hidden" name="action" value="remove_item">
                                 <input type="hidden" name="type" value="departamento">
@@ -544,58 +519,9 @@ include __DIR__ . '/../../app/views/layouts/header.php';
                 <?php endforeach; ?>
             </div>
         </section>
-
-        <!-- Painel: Setor -->
-        <section id="panel-setor" class="panel">
-            <div class="panel-header">
-                <div class="panel-title">🏭 Setor</div>
-                <div class="panel-actions" style="gap:12px;">
-                    <span class="panel-meta">Itens: <?php echo $setItens; ?> • Vínculos: <?php echo $setVinculos; ?></span>
-                    <form method="POST" action="" class="add-bar" style="margin:0;">
-                        <input type="hidden" name="action" value="add_item">
-                        <input type="hidden" name="type" value="setor">
-                        <input type="text" name="value" placeholder="Adicionar novo setor">
-                        <button>Adicionar</button>
-                    </form>
-                </div>
-            </div>
-            <?php if (!$setorExists): ?>
-                <div class="hint">Campo "Setor" não existe na base. Você pode cadastrar itens no catálogo; para vincular aos colaboradores, execute o instalador em <a href="../instalar_setor.php">instalar_setor.php</a>.</div>
-            <?php else: ?>
-                <div class="list">
-                    <div class="list-header">
-                        <div>Nome</div>
-                        <div style="text-align:center;">Vinculados</div>
-                        <div style="text-align:right;">Ações</div>
-                    </div>
-                    <?php foreach ($setores as $nome => $total): ?>
-                        <div class="list-item">
-                            <span class="name"><?php echo e($nome); ?></span>
-                            <span class="pill-count"><?php echo $total; ?> vínculo(s)</span>
-                            <div class="actions">
-                                <button type="button" class="icon-btn icon-primary" title="Renomear" data-toggle="rename" data-target="rename-setor-<?php echo md5($nome); ?>">✏️</button>
-                                <form method="POST" action="" class="inline-form" id="rename-setor-<?php echo md5($nome); ?>">
-                                    <input type="hidden" name="action" value="rename_item">
-                                    <input type="hidden" name="type" value="setor">
-                                    <input type="hidden" name="value" value="<?php echo e($nome); ?>">
-                                    <input type="text" name="new_value" placeholder="Novo nome" value="">
-                                    <button>Salvar</button>
-                                </form>
-                                <form method="POST" action="" onsubmit="return confirm('Remover este item? Colaboradores vinculados terão o campo limpo.');">
-                                    <input type="hidden" name="action" value="remove_item">
-                                    <input type="hidden" name="type" value="setor">
-                                    <input type="hidden" name="value" value="<?php echo e($nome); ?>">
-                                    <button class="icon-btn icon-danger" title="Remover">🗑️</button>
-                                </form>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
-        </section>
     </div>
 
-    <div class="hint" style="margin-top: 16px;">Dica: Use renomear para corrigir grafias e padronizar itens; remover limpa o campo dos colaboradores vinculados.</div>
+    <div class="hint" style="margin-top: 16px;">Dica: Remover um item limpa o campo dos colaboradores vinculados.</div>
 </div>
 
 <script>
@@ -615,8 +541,7 @@ document.addEventListener('click', function(e) {
   const panels = {
     nivel: document.getElementById('panel-nivel'),
     cargo: document.getElementById('panel-cargo'),
-    departamento: document.getElementById('panel-departamento'),
-    setor: document.getElementById('panel-setor')
+    departamento: document.getElementById('panel-departamento')
   };
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
