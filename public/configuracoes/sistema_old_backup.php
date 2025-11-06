@@ -1,12 +1,13 @@
 <?php
 /**
- * Configurações do Sistema
- * Redireciona para nova versão com customização completa
+ * Configurações do Sistema (cores, logos, textos)
  */
 
-// Redireciona para versão 2.0 com painel completo de customização
-header('Location: sistema_v2.php');
-exit;
+define('SGC_SYSTEM', true);
+require_once __DIR__ . '/../../app/config/config.php';
+require_once __DIR__ . '/../../app/classes/Database.php';
+require_once __DIR__ . '/../../app/classes/Auth.php';
+require_once __DIR__ . '/../../app/classes/SystemConfig.php';
 
 Auth::requireLogin(BASE_URL);
 if (Auth::getUserLevel() !== 'admin') {
