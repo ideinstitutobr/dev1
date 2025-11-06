@@ -194,12 +194,31 @@ include __DIR__ . '/../../app/views/layouts/header.php';
     </div>
 </div>
 
+<!-- Ações Rápidas -->
+<div class="info-card" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-left: 4px solid #667eea;">
+    <h3 style="margin-top: 0;">⚡ Ações Rápidas</h3>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="setores/gerenciar.php?unidade_id=<?php echo $unidade['id']; ?>" class="btn btn-primary">
+            🏭 Gerenciar Setores
+        </a>
+        <a href="colaboradores/vincular.php?unidade_id=<?php echo $unidade['id']; ?>" class="btn btn-success">
+            👥 Vincular Colaborador
+        </a>
+        <a href="lideranca/atribuir.php?unidade_id=<?php echo $unidade['id']; ?>" class="btn" style="background: #6f42c1; color: white;">
+            👔 Atribuir Liderança
+        </a>
+        <a href="../unidades/setores_globais/listar.php" class="btn" style="background: #fd7e14; color: white;">
+            🏭 Ver Setores Globais
+        </a>
+    </div>
+</div>
+
 <!-- Tabs -->
 <div class="tabs">
     <button class="tab active" onclick="showTab('info')">📋 Informações</button>
-    <button class="tab" onclick="showTab('setores')">🏢 Setores</button>
-    <button class="tab" onclick="showTab('colaboradores')">👥 Colaboradores</button>
-    <button class="tab" onclick="showTab('lideranca')">👔 Liderança</button>
+    <button class="tab" onclick="showTab('setores')">🏢 Setores (<?php echo $unidade['estatisticas']['total_setores']; ?>)</button>
+    <button class="tab" onclick="showTab('colaboradores')">👥 Colaboradores (<?php echo $unidade['estatisticas']['total_colaboradores']; ?>)</button>
+    <button class="tab" onclick="showTab('lideranca')">👔 Liderança (<?php echo $unidade['estatisticas']['total_lideres']; ?>)</button>
 </div>
 
 <!-- Tab: Informações -->
@@ -261,13 +280,32 @@ include __DIR__ . '/../../app/views/layouts/header.php';
 
 <!-- Tab: Setores -->
 <div class="tab-content" id="tab-setores">
+    <!-- Aviso Informativo -->
+    <div style="background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+        <strong>ℹ️ Sobre Setores:</strong> Os setores organizam a estrutura da unidade. Ative apenas os setores que existem nesta unidade.
+        Cada setor pode ter um responsável e vários colaboradores vinculados.
+    </div>
+
     <div class="info-card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h3>🏢 Setores da Unidade</h3>
-            <a href="setores/gerenciar.php?unidade_id=<?php echo $unidade['id']; ?>" class="btn btn-primary">Gerenciar Setores</a>
+            <div style="display: flex; gap: 10px;">
+                <a href="setores/gerenciar.php?unidade_id=<?php echo $unidade['id']; ?>" class="btn btn-primary">
+                    ⚙️ Gerenciar Setores
+                </a>
+                <a href="../unidades/setores_globais/listar.php" class="btn" style="background: #6c757d; color: white;">
+                    🏭 Setores Globais
+                </a>
+            </div>
         </div>
         <?php if (empty($unidade['setores'])): ?>
-            <p style="text-align: center; color: #718096; padding: 20px;">Nenhum setor cadastrado.</p>
+            <div style="text-align: center; padding: 40px; background: #f8f9fa; border-radius: 8px;">
+                <div style="font-size: 48px; margin-bottom: 10px;">📭</div>
+                <p style="color: #718096; margin: 0;">Nenhum setor cadastrado nesta unidade.</p>
+                <a href="setores/gerenciar.php?unidade_id=<?php echo $unidade['id']; ?>" class="btn btn-primary" style="margin-top: 15px;">
+                    ➕ Adicionar Primeiro Setor
+                </a>
+            </div>
         <?php else: ?>
             <?php foreach ($unidade['setores'] as $setor): ?>
                 <div class="setor-card">
@@ -290,13 +328,27 @@ include __DIR__ . '/../../app/views/layouts/header.php';
 
 <!-- Tab: Colaboradores -->
 <div class="tab-content" id="tab-colaboradores">
+    <!-- Aviso Informativo -->
+    <div style="background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+        <strong>⚠️ Regra de Vinculação:</strong> Um colaborador comum pode estar vinculado a apenas UMA unidade.
+        Somente <strong>Diretores de Varejo</strong> podem estar em múltiplas unidades.
+    </div>
+
     <div class="info-card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h3>👥 Colaboradores por Setor</h3>
-            <a href="colaboradores/vincular.php?unidade_id=<?php echo $unidade['id']; ?>" class="btn btn-primary">Vincular Colaborador</a>
+            <a href="colaboradores/vincular.php?unidade_id=<?php echo $unidade['id']; ?>" class="btn btn-success">
+                ➕ Vincular Colaborador
+            </a>
         </div>
         <?php if (empty($unidade['colaboradores_por_setor'])): ?>
-            <p style="text-align: center; color: #718096; padding: 20px;">Nenhum colaborador vinculado.</p>
+            <div style="text-align: center; padding: 40px; background: #f8f9fa; border-radius: 8px;">
+                <div style="font-size: 48px; margin-bottom: 10px;">👥</div>
+                <p style="color: #718096; margin: 0;">Nenhum colaborador vinculado a esta unidade.</p>
+                <a href="colaboradores/vincular.php?unidade_id=<?php echo $unidade['id']; ?>" class="btn btn-success" style="margin-top: 15px;">
+                    ➕ Vincular Primeiro Colaborador
+                </a>
+            </div>
         <?php else: ?>
             <?php foreach ($unidade['colaboradores_por_setor'] as $setor): ?>
                 <div class="setor-card">
@@ -331,13 +383,29 @@ include __DIR__ . '/../../app/views/layouts/header.php';
 
 <!-- Tab: Liderança -->
 <div class="tab-content" id="tab-lideranca">
+    <!-- Aviso Informativo -->
+    <div style="background: #e7e4ff; border: 1px solid #d4c5ff; color: #5a3e97; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+        <strong>👔 Sobre Liderança:</strong> Define os cargos de gestão da unidade:<br>
+        • <strong>Diretor de Varejo:</strong> Pode estar em múltiplas unidades (1 por unidade)<br>
+        • <strong>Gerente de Loja:</strong> Gerente geral da unidade (1 por unidade)<br>
+        • <strong>Supervisor de Loja:</strong> Responsável por setor específico (vários permitidos)
+    </div>
+
     <div class="info-card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h3>👔 Cargos de Liderança</h3>
-            <a href="lideranca/atribuir.php?unidade_id=<?php echo $unidade['id']; ?>" class="btn btn-primary">Atribuir Liderança</a>
+            <a href="lideranca/atribuir.php?unidade_id=<?php echo $unidade['id']; ?>" class="btn" style="background: #6f42c1; color: white;">
+                ➕ Atribuir Liderança
+            </a>
         </div>
         <?php if (empty($unidade['lideranca'])): ?>
-            <p style="text-align: center; color: #718096; padding: 20px;">Nenhum cargo de liderança atribuído.</p>
+            <div style="text-align: center; padding: 40px; background: #f8f9fa; border-radius: 8px;">
+                <div style="font-size: 48px; margin-bottom: 10px;">👔</div>
+                <p style="color: #718096; margin: 0;">Nenhum cargo de liderança atribuído.</p>
+                <a href="lideranca/atribuir.php?unidade_id=<?php echo $unidade['id']; ?>" class="btn" style="background: #6f42c1; color: white; margin-top: 15px;">
+                    ➕ Atribuir Primeiro Líder
+                </a>
+            </div>
         <?php else: ?>
             <?php
             $cargosNomes = [

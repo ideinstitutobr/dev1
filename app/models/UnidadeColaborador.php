@@ -225,6 +225,18 @@ class UnidadeColaborador {
                 ];
             }
 
+            // Valida vinculação única: colaborador comum só pode estar em 1 unidade
+            // Exceção: Diretor de Varejo pode estar em múltiplas unidades
+            if (!$this->isDiretorVarejo($colaboradorId)) {
+                $vinculoOutraUnidade = $this->verificarVinculoOutraUnidade($colaboradorId, $unidadeId);
+                if ($vinculoOutraUnidade) {
+                    return [
+                        'success' => false,
+                        'message' => 'Este colaborador já está vinculado à unidade "' . $vinculoOutraUnidade['unidade_nome'] . '". Apenas Diretores de Varejo podem estar em múltiplas unidades.'
+                    ];
+                }
+            }
+
             // Se for vínculo principal, remove o principal anterior
             if (!empty($dados['is_vinculo_principal']) && $dados['is_vinculo_principal'] == 1) {
                 $this->removerVinculoPrincipal($colaboradorId);
@@ -471,5 +483,40 @@ class UnidadeColaborador {
                 WHERE id = ?";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$unidadeId, $setor['setor'] ?? null, $colaboradorId]);
+    }
+
+    /**
+     * Verifica se colaborador é Diretor de Varejo
+     * Diretores de Varejo podem estar vinculados a múltiplas unidades
+     */
+    private function isDiretorVarejo($colaboradorId) {
+        $sql = "SELECT COUNT(*) as total FROM unidade_lideranca
+                WHERE colaborador_id = ?
+                AND cargo_lideranca = 'diretor_varejo'
+                AND ativo = 1";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$colaboradorId]);
+        $result = $stmt->fetch();
+        return $result['total'] > 0;
+    }
+
+    /**
+     * Verifica se colaborador já está vinculado a outra unidade
+     * Retorna o vínculo se encontrado, ou false se não houver
+     */
+    private function verificarVinculoOutraUnidade($colaboradorId, $unidadeIdAtual) {
+        $sql = "SELECT
+                    uc.*,
+                    u.nome as unidade_nome,
+                    u.codigo as unidade_codigo
+                FROM unidade_colaboradores uc
+                INNER JOIN unidades u ON uc.unidade_id = u.id
+                WHERE uc.colaborador_id = ?
+                AND uc.unidade_id != ?
+                AND uc.ativo = 1
+                LIMIT 1";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$colaboradorId, $unidadeIdAtual]);
+        return $stmt->fetch();
     }
 }
