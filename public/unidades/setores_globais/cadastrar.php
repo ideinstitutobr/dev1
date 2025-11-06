@@ -159,14 +159,7 @@ include __DIR__ . '/../../../app/views/layouts/header.php';
     }
 </style>
 
-<div class="main-content">
-    <div class="content-wrapper">
-        <div class="page-header">
-            <h1>➕ <?php echo $pageTitle; ?></h1>
-            <p class="breadcrumb"><?php echo $breadcrumb; ?></p>
-        </div>
-
-        <?php if ($erro): ?>
+<?php if ($erro): ?>
             <div class="alert alert-danger"><?php echo htmlspecialchars($erro); ?></div>
         <?php endif; ?>
 
@@ -215,7 +208,6 @@ include __DIR__ . '/../../../app/views/layouts/header.php';
                 </div>
             </form>
         </div>
-    </div>
-</div>
+    
 
-<?php include __DIR__ . '/../../../app/views/layouts/footer.php'; ?>
+<?php include __DIR__ . '/../../app/views/layouts/footer.php'; ?>

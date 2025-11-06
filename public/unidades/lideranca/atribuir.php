@@ -269,12 +269,6 @@ include __DIR__ . '/../../../app/views/layouts/header.php';
     }
 </style>
 
-<div class="main-content">
-    <div class="page-header">
-        <h1>👔 Atribuir Liderança</h1>
-        <p><?php echo $breadcrumb; ?></p>
-    </div>
-
     <div class="form-container">
         <?php if ($erro): ?>
             <div class="alert alert-danger"><?php echo htmlspecialchars($erro); ?></div>
