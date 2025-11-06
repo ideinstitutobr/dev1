@@ -19,6 +19,32 @@ Sistema completo de gestão de treinamentos e capacitação de colaboradores com
 - Listagem com busca e filtros
 - Validação de CPF e e-mail únicos
 - Interface responsiva
+  
+**Configurar Campos (Arquitetura)**
+
+**Arquivos:** `public/colaboradores/config_campos.php`
+
+**Funções/Fluxo:**
+- `readCatalog()` / `writeCatalog()` — leitura/escrita do catálogo JSON (`app/config/field_catalog.json`), com `LOCK_EX` e deduplicação case‑insensível.
+- `getEnumValues($pdo, 'colaboradores', 'nivel_hierarquico')` — leitura dos valores do ENUM via `information_schema`.
+- Ações POST:
+  - `add_item` — tipos: `nivel`, `cargo`, `departamento`, `setor`. Para `nivel`, altera o ENUM para incluir o novo valor.
+  - `rename_item` — renomeia; para `nivel`, atualiza registros e redefine o ENUM.
+  - `remove_item` — remove; para `nivel`, só sem vínculos; redefine o ENUM.
+- UI em abas: **Nível**, **Cargo**, **Departamento**, **Setor** com:
+  - Cabeçalho (Itens • Vínculos) e barra de adição inline.
+  - Linhas com colunas: Nome | Vinculados | Ações (✏️ renomear inline, 🗑️ remover com confirmação).
+  - Indicador "N vínculo(s)".
+
+**Formulários (Cadastrar/Editar)**
+- Nível — select dinâmico lendo ENUM.
+- Cargo/Departamento/Setor — selects dinâmicos unindo valores distintos do banco + catálogo.
+- Setor — condicional, exibe select quando a coluna existe; caso contrário, campo desabilitado com instrução.
+
+**Listagem**
+- Filtros dinâmicos: Nível, Cargo, Departamento, Setor.
+- Colunas estáveis e fallback visual para valores ausentes.
+- CSS defensivo para garantir exibição dos cabeçalhos `<th>`.
 
 **Campos da tabela:**
 ```sql

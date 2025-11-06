@@ -44,6 +44,45 @@
 
 ---
 
+## 🛠️ Atualização: Configurar Campos, Nível (ENUM) e Formulários de Colaboradores
+
+**Data:** 2025-11-06
+
+**Resumo:** Reestruturação da página Configurar Campos em abas, implementação de manipulação segura do catálogo, suporte completo a adição/renomeação/remoção de Nível Hierárquico (ENUM), selects dinâmicos em cadastro/edição e filtros/colunas na listagem.
+
+**Detalhes da mudança**
+- Página `public/colaboradores/config_campos.php`:
+  - Abas para Nível, Cargo, Departamento e Setor.
+  - Linhas com colunas Nome | Vinculados | Ações; ações por ícones (renomear inline e remover com confirmação).
+  - Escrita do catálogo com `LOCK_EX`; deduplicação case‑insensível.
+  - `getEnumValues` para ler valores do ENUM.
+  - Ações POST: `add_item`, `rename_item`, `remove_item` com suporte especial para `nivel` (ALTER TABLE, atualização de registros, bloqueio de remoção com vínculos).
+
+- Formulários `cadastrar.php` e `editar.php` (Colaboradores):
+  - Nível como select dinâmico (ENUM).
+  - Cargo/Departamento/Setor como selects dinâmicos unindo banco+catálogo.
+  - Setor condicional: select quando a coluna existe; instrução de instalação quando não existe.
+
+- Listagem `public/colaboradores/listar.php`:
+  - Filtros para Nível, Cargo, Departamento e Setor.
+  - Colunas adicionadas/ajustadas (inclui Setor) e fallback visual para valores ausentes.
+  - CSS defensivo para garantir cabeçalhos `<th>` visíveis.
+
+- Visualização `public/colaboradores/visualizar.php`:
+  - Exibição de Setor quando a coluna existe.
+
+**Arquivos relacionados**
+- `public/colaboradores/config_campos.php`
+- `public/colaboradores/cadastrar.php`
+- `public/colaboradores/editar.php`
+- `public/colaboradores/listar.php`
+- `public/colaboradores/visualizar.php`
+- `app/models/Colaborador.php`, `app/controllers/ColaboradorController.php`
+
+**Observações/Troubleshooting**
+- Em ambientes sem Vite, `@vite/dashboard.php` pode acusar erro de asset ausente; não bloqueia as funcionalidades.
+- Para manipular Nível (ENUM), garanta permissão de `ALTER TABLE` no banco.
+
 ## 📁 Estrutura de Diretórios
 
 ```

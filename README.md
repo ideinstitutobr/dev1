@@ -26,6 +26,46 @@ O **SGC** é uma plataforma web robusta para gerenciar todo o ciclo de vida de t
 
 ---
 
+## 🔄 Atualizações Recentes (Configurar Campos, Listagem e Formulários)
+
+Nos últimos ciclos, o SGC recebeu melhorias significativas nos módulos de Colaboradores e na página de configuração de campos:
+
+- ✅ **Configurar Campos (Colaboradores > Configurar Campos)** reestruturado em abas: Nível Hierárquico, Cargo, Departamento e Setor.
+  - Cabeçalho com meta de "Itens • Vínculos".
+  - Linhas padronizadas com colunas: Nome | Vinculados | Ações.
+  - Ações compactas por ícones: Renomear (edição inline) e Remover (com confirmação).
+  - Botão de adicionar direto no cabeçalho (sem rodapés escondidos).
+  - Indicador de vínculos padronizado como "N vínculo(s)".
+  - Escrita do catálogo (`app/config/field_catalog.json`) **atômica** (LOCK_EX) e sem duplicados case‑insensíveis.
+
+- 🏷️ **Nível Hierárquico (ENUM) dinâmico**:
+  - Adição de novos níveis alterando o ENUM via `ALTER TABLE colaboradores MODIFY COLUMN nivel_hierarquico ENUM(...)`.
+  - Renomear nível atualiza registros e redefine o ENUM para refletir o novo valor.
+  - Remoção de nível só é permitida se não houver colaboradores vinculados.
+
+- 🧭 **Formulários (Cadastrar/Editar Colaborador)**:
+  - Nível Hierárquico como `<select>` dinâmico (valores do ENUM).
+  - Cargo/Departamento/Setor como `<select>` dinâmicos (união de valores distintos do banco + catálogo).
+  - Setor aparece como `<select>` quando a coluna existe; caso contrário, é exibido desabilitado com instrução para instalar.
+
+- 📋 **Listagem de Colaboradores**:
+  - Filtros dinâmicos para Nível, Cargo, Departamento e Setor.
+  - Colunas visíveis: ID, Nome, E‑mail, Nível, Cargo, Departamento, Setor, Ações.
+  - Ajuste CSS defensivo para garantir exibição dos cabeçalhos `<th>`.
+  - Fallback visual em "Nível" e "Setor" para "-" quando não houver valor.
+
+- 👁️ **Visualização do Colaborador**:
+  - Exibe Nível com badges e, quando disponível, o **Setor**.
+
+- 🧩 **Assets placeholders**:
+  - `public/assets/css/main.css`, `dashboard.css` e `public/assets/js/main.js` adicionados como base para evitar 404 e prover estilos mínimos.
+
+> Observação: alguns ambientes locais podem registrar `@vite/dashboard.php` como asset ausente; isso **não bloqueia** as funcionalidades acima.
+
+---
+
+---
+
 ## 🚀 Demonstração
 
 ### Dashboard Principal

@@ -55,6 +55,57 @@ Fazer upload do arquivo local `visualizar.php` para o servidor:
 
 ---
 
+## ⚠️ PENDENTE: Assets `@vite` ausentes no ambiente local
+
+**Módulo:** Layout global
+**Gravidade:** BAIXA
+
+### Descrição
+Ambientes locais sem Vite exibem erro de asset `@vite/dashboard.php`. As páginas funcionam, mas o console acusa `net::ERR_ABORTED`.
+
+### Causa
+Header global referencia `@vite`; placeholders mínimos já foram adicionados (`public/assets/css/main.css`, `dashboard.css`, `public/assets/js/main.js`).
+
+### Solução sugerida
+- Remover/ocultar referência a Vite no header; ou
+- Instalar Vite/tema global; ou
+- Manter placeholders até migração do tema.
+
+### Status
+BAIXA — não bloqueia funcionalidades.
+
+---
+
+## ⚠️ PENDENTE: Fallback para Nível (ENUM) sem permissão de ALTER
+
+**Módulo:** Configurar Campos / Cadastro/Edição
+**Gravidade:** MÉDIA
+
+### Descrição
+Em bancos sem permissão de `ALTER TABLE`, adicionar/renomear Níveis não altera o ENUM e pode deixar o select de Nível sem opções.
+
+### Solução sugerida
+- Implementar fallback para carregar valores distintos dos colaboradores + valores padrão (Estratégico/Tático/Operacional) quando a leitura do ENUM falhar.
+
+### Status
+MÉDIA — requer ajuste quando houver restrições no banco.
+
+---
+
+## ⚠️ PENDENTE: Unificação de tema global (placeholders CSS/JS)
+
+**Módulo:** Frontend
+**Gravidade:** BAIXA
+
+### Descrição
+`main.css`/`dashboard.css`/`main.js` foram adicionados como base mínima para evitar 404; é desejável integrar ao tema definitivo.
+
+### Solução sugerida
+- Substituir placeholders por tema global com bundling (Vite/Webpack) ou folhas de estilo oficiais.
+
+### Status
+BAIXA — melhoria estética.
+
 ## 📦 **PENDENTE: Instalar PHPMailer**
 
 **Data:** 04/01/2025

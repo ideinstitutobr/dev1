@@ -91,6 +91,31 @@ composer install --no-dev --prefer-dist
 - Acesse novamente `instalador.php` para aplicar migrations (wizard idempotente).  
 - Revalide SMTP e relatórios.
 
+---
+
+## 📌 Notas de Implantação (Campos de Colaboradores)
+
+### Instalar coluna Setor
+- Em ambientes que ainda não possuem `colaboradores.setor`, execute:
+  - `https://seu-dominio/sgc/public/instalar_setor.php`
+- Após instalar, a página **Configurar Campos** passa a permitir gerenciar Setores e os formulários (Cadastrar/Editar) exibirão o campo como select.
+
+### Permissões para Nível Hierárquico (ENUM)
+- A adição/renomeação/remoção de Níveis altera o ENUM via `ALTER TABLE`.
+- Garanta que o usuário do banco tenha permissão de `ALTER` na tabela `colaboradores`.
+- Se não houver permissão, o sistema mantém catálogo e interface, mas não conseguirá alterar o ENUM; opcionalmente, migre para `VARCHAR(100)`.
+
+### Assets mínimos
+- Para evitar 404 em ambientes sem tema global, foram adicionados placeholders:
+  - `public/assets/css/main.css`
+  - `public/assets/css/dashboard.css`
+  - `public/assets/js/main.js`
+- Esses arquivos fornecem estilos/JS mínimos e podem ser substituídos por seu tema definitivo.
+
+### Observação sobre `@vite`
+- Em ambientes locais sem Vite, pode aparecer erro de asset `@vite/dashboard.php`; isso não bloqueia a operação.
+- Remova referências a Vite no layout global se desejado.
+
 ## 📎 Observações por Hospedagem
 - cPanel:
   - MultiPHP Manager → PHP 8.1  
