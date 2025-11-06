@@ -151,6 +151,43 @@ $avisos = [];
             echo '<div class="status error">✗ Erro: ' . htmlspecialchars($e->getMessage()) . '</div>';
         }
 
+        // 1.5 Verificar se field_categories suporta setores
+        echo "<h2>1.5. Verificando Suporte a Setores em field_categories</h2>";
+        try {
+            // Verifica se a coluna tipo permite 'setor'
+            $stmt = $pdo->query("SHOW COLUMNS FROM field_categories WHERE Field = 'tipo'");
+            $tipoCol = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($tipoCol && strpos($tipoCol['Type'], 'setor') !== false) {
+                echo '<div class="status success">✓ ENUM tipo inclui <strong>setor</strong></div>';
+            } else {
+                $problemas[] = "ENUM tipo não inclui 'setor'";
+                echo '<div class="status error">✗ ENUM tipo não inclui <strong>setor</strong></div>';
+                echo '<div class="status warning">';
+                echo '<strong>Solução:</strong> Execute a migration 009_fix_field_categories_setores.sql<br>';
+                echo '<a href="/database/migrations/executar_migration_009.php" class="btn" target="_blank">Clique aqui para executar a correção</a>';
+                echo '</div>';
+            }
+
+            // Verifica se existe coluna descricao
+            $stmt = $pdo->query("SHOW COLUMNS FROM field_categories WHERE Field = 'descricao'");
+            $descCol = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($descCol) {
+                echo '<div class="status success">✓ Coluna <strong>descricao</strong> existe</div>';
+            } else {
+                $problemas[] = "Coluna descricao não existe em field_categories";
+                echo '<div class="status error">✗ Coluna <strong>descricao</strong> não existe</div>';
+                echo '<div class="status warning">';
+                echo '<strong>Solução:</strong> Execute a migration 009_fix_field_categories_setores.sql<br>';
+                echo '<a href="/database/migrations/executar_migration_009.php" class="btn" target="_blank">Clique aqui para executar a correção</a>';
+                echo '</div>';
+            }
+        } catch (Exception $e) {
+            $problemas[] = "Erro ao verificar field_categories: " . $e->getMessage();
+            echo '<div class="status error">✗ Erro: ' . htmlspecialchars($e->getMessage()) . '</div>';
+        }
+
         // 2. Verificar setores globais em field_categories
         echo "<h2>2. Verificando Setores Globais</h2>";
         try {

@@ -193,19 +193,27 @@ Dashboard → Colaboradores → Novo Colaborador
 
 **Possíveis causas:**
 
-1. **As migrations não foram executadas**
-   - **Solução**: Execute o script de migrations:
-     ```bash
-     php /home/user/dev1/database/migrations/executar_migrations_unidades.php
+1. **Erro: "Column not found: 1054 Unknown column 'descricao'"**
+   - **Causa**: A tabela `field_categories` não foi atualizada para suportar setores
+   - **Solução**: Execute a migration 009:
+     ```
+     Acesse: /database/migrations/executar_migration_009.php
+     ```
+     Ou execute via verificador: `/public/verificar_setores.php`
+
+2. **As migrations não foram executadas**
+   - **Solução**: Execute o script de migrations completo:
+     ```
+     Acesse: /database/migrations/executar_migrations_unidades.php
      ```
 
-2. **Tabela `unidade_setores` não existe**
+3. **Tabela `unidade_setores` não existe**
    - **Solução**: Execute a migration específica:
      ```bash
      mysql -u root -p sgc_db < /home/user/dev1/database/migrations/003_create_unidade_setores.sql
      ```
 
-3. **Nenhum setor global cadastrado**
+4. **Nenhum setor global cadastrado**
    - **Solução**: Execute a migration de população:
      ```bash
      mysql -u root -p sgc_db < /home/user/dev1/database/migrations/008_populate_setores_iniciais.sql

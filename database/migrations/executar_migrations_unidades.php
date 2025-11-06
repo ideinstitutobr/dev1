@@ -25,7 +25,8 @@ try {
         '005_create_unidade_lideranca.sql',
         '006_alter_colaboradores_add_unidade.sql',
         '007_alter_treinamentos_add_unidade.sql',
-        '008_populate_setores_iniciais.sql'
+        '008_populate_setores_iniciais.sql',
+        '009_fix_field_categories_setores.sql'
     ];
 
     echo "Iniciando execução de " . count($migrations) . " migrations...\n\n";
