@@ -176,6 +176,8 @@ class ColaboradorController {
             'cargo' => trim($dados['cargo'] ?? ''),
             'departamento' => trim($dados['departamento'] ?? ''),
             'setor' => trim($dados['setor'] ?? ''),
+            'unidade_principal_id' => !empty($dados['unidade_principal_id']) ? (int)$dados['unidade_principal_id'] : null,
+            'setor_principal' => trim($dados['setor_principal'] ?? ''),
             // Remove milhares e converte vírgula para ponto antes do floatval
             'salario' => !empty($dados['salario'])
                 ? floatval(str_replace(',', '.', str_replace('.', '', $dados['salario'])))

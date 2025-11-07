@@ -123,6 +123,11 @@ $departamentoOptions = mergeUniqueSorted($departamentosDB, $departamentosCategor
         color: white;
     }
 
+    .btn-info {
+        background: #17a2b8;
+        color: white;
+    }
+
     .btn-danger {
         background: #dc3545;
         color: white;
@@ -300,6 +305,9 @@ $departamentoOptions = mergeUniqueSorted($departamentosDB, $departamentosCategor
     <div style="display: flex; gap: 10px;">
         <a href="cadastrar.php" class="btn btn-primary">
             ➕ Novo Colaborador
+        </a>
+        <a href="importar.php" class="btn btn-info">
+            📊 Importação em Massa
         </a>
         <a href="?export=csv<?php echo !empty($_GET['search']) ? '&search=' . urlencode($_GET['search']) : ''; ?>" class="btn btn-success">
             📥 Exportar CSV
