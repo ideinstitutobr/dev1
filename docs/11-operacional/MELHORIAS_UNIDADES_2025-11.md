@@ -736,7 +736,28 @@ Para dúvidas sobre esta implementação:
 
 ## 📜 Changelog
 
-### Versão 1.0 (07/11/2025)
+### Versão 1.2 (07/11/2025) - Hotfix
+
+**Corrigido:**
+- 🐛 `remover.php` - Adicionado require de UnidadeSetor.php (commit 0418b55)
+- 🐛 `editar_vinculo.php` - Adicionado require de Colaborador.php (commit 6619166)
+
+**Detalhes:**
+- Corrigido erro "Class UnidadeSetor not found" em remover.php
+- Corrigido erro "Class Colaborador not found" em editar_vinculo.php
+- Ambas as páginas agora carregam corretamente
+- Ver documentação completa em: `docs/11-operacional/CORRECOES_DEPENDENCIAS_2025-11.md`
+
+---
+
+### Versão 1.1 (07/11/2025) - Correção de Caminhos
+
+**Corrigido:**
+- 🐛 Caminhos incorretos do footer.php em 6 arquivos de subpastas (commit 192ef88)
+
+---
+
+### Versão 1.0 (07/11/2025) - Release Inicial
 
 **Adicionado:**
 - ✅ Funcionalidade de remover liderança
