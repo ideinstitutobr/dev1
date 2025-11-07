@@ -50,18 +50,9 @@ foreach ($respostasExistentes as $resp) {
 
 $pageTitle = 'Preencher Avaliação';
 include APP_PATH . 'views/layouts/header.php';
-include APP_PATH . 'views/layouts/sidebar.php';
 ?>
 
 <style>
-    .main-content {
-        margin-left: 260px;
-        padding: 30px;
-        transition: margin-left 0.3s;
-    }
-    .main-content.sidebar-collapsed {
-        margin-left: 70px;
-    }
     .checklist-header {
         background: white;
         padding: 30px;
@@ -242,8 +233,7 @@ include APP_PATH . 'views/layouts/sidebar.php';
     }
 </style>
 
-<div class="main-content" id="mainContent">
-    <!-- Cabeçalho do Checklist -->
+<!-- Cabeçalho do Checklist -->
     <div class="checklist-header">
         <h1>📋 Preencher Avaliação</h1>
         <div class="checklist-info">
@@ -326,7 +316,6 @@ include APP_PATH . 'views/layouts/sidebar.php';
         </button>
         <a href="index.php" class="btn btn-danger">❌ Cancelar</a>
     </div>
-</div>
 
 <script>
 const checklistId = <?php echo $checklistId; ?>;

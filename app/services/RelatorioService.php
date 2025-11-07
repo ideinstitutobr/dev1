@@ -4,6 +4,8 @@
  * Lógica de negócio para relatórios de checklists
  */
 
+require_once __DIR__ . '/../classes/Database.php';
+
 class RelatorioService {
     private $db;
     private $pdo;

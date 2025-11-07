@@ -46,19 +46,9 @@ $classificacao = classificarPercentual($checklist['percentual']);
 
 $pageTitle = 'Visualizar Checklist';
 include APP_PATH . 'views/layouts/header.php';
-include APP_PATH . 'views/layouts/sidebar.php';
 ?>
 
 <style>
-    .main-content {
-        margin-left: 260px;
-        padding: 30px;
-        transition: margin-left 0.3s;
-        max-width: 1200px;
-    }
-    .main-content.sidebar-collapsed {
-        margin-left: 70px;
-    }
     .checklist-header {
         background: white;
         padding: 30px;
@@ -223,14 +213,10 @@ include APP_PATH . 'views/layouts/sidebar.php';
         .sidebar, .btn, .no-print {
             display: none !important;
         }
-        .main-content {
-            margin-left: 0 !important;
-        }
     }
 </style>
 
-<div class="main-content" id="mainContent">
-    <!-- Cabeçalho -->
+<!-- Cabeçalho -->
     <div class="checklist-header">
         <div class="header-top">
             <div>
@@ -350,6 +336,5 @@ include APP_PATH . 'views/layouts/sidebar.php';
             <a href="editar.php?id=<?php echo $checklist['id']; ?>" class="btn btn-primary">✏️ Continuar Edição</a>
         <?php endif; ?>
     </div>
-</div>
 
 <?php include APP_PATH . 'views/layouts/footer.php'; ?>

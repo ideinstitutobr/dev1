@@ -134,18 +134,9 @@ $modulos = $moduloModel->listarAtivos();
 
 $pageTitle = 'Gerenciar Módulos';
 include APP_PATH . 'views/layouts/header.php';
-include APP_PATH . 'views/layouts/sidebar.php';
 ?>
 
 <style>
-    .main-content {
-        margin-left: 260px;
-        padding: 30px;
-        transition: margin-left 0.3s;
-    }
-    .main-content.sidebar-collapsed {
-        margin-left: 70px;
-    }
     .page-header {
         display: flex;
         justify-content: space-between;
@@ -354,8 +345,7 @@ include APP_PATH . 'views/layouts/sidebar.php';
     }
 </style>
 
-<div class="main-content" id="mainContent">
-    <div class="page-header">
+<div class="page-header">
         <div>
             <h1>⚙️ Gerenciar Módulos de Avaliação</h1>
             <p>Configure os módulos e suas perguntas</p>
@@ -435,7 +425,6 @@ include APP_PATH . 'views/layouts/sidebar.php';
             <?php endif; ?>
         </div>
     <?php endif; ?>
-</div>
 
 <!-- Modal de Módulo -->
 <div class="modal" id="modalModulo">

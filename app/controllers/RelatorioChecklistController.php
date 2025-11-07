@@ -4,6 +4,11 @@
  * Gerencia relatórios e dashboards de checklists
  */
 
+require_once __DIR__ . '/../models/Checklist.php';
+require_once __DIR__ . '/../models/Loja.php';
+require_once __DIR__ . '/../models/ModuloAvaliacao.php';
+require_once __DIR__ . '/../services/RelatorioService.php';
+
 class RelatorioChecklistController {
     private $checklistModel;
     private $relatorioService;

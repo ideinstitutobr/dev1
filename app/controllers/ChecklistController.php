@@ -4,6 +4,12 @@
  * Gerencia operações de checklists de lojas
  */
 
+require_once __DIR__ . '/../models/Checklist.php';
+require_once __DIR__ . '/../models/RespostaChecklist.php';
+require_once __DIR__ . '/../models/ModuloAvaliacao.php';
+require_once __DIR__ . '/../models/Pergunta.php';
+require_once __DIR__ . '/../models/Loja.php';
+
 class ChecklistController {
     private $checklistModel;
     private $respostaModel;

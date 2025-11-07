@@ -23,8 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $resultado = $controller->criar();
 
     if ($resultado['success']) {
-        $_SESSION['flash_message'] = $resultado['message'];
-        $_SESSION['flash_type'] = 'success';
+        $_SESSION['success_message'] = $resultado['message'];
         header('Location: editar.php?id=' . $resultado['checklist_id']);
         exit;
     } else {
@@ -37,18 +36,9 @@ $dados = $controller->exibirFormularioNovo();
 
 $pageTitle = 'Nova Avaliação';
 include APP_PATH . 'views/layouts/header.php';
-include APP_PATH . 'views/layouts/sidebar.php';
 ?>
 
 <style>
-    .main-content {
-        margin-left: 260px;
-        padding: 30px;
-        transition: margin-left 0.3s;
-    }
-    .main-content.sidebar-collapsed {
-        margin-left: 70px;
-    }
     .form-card {
         background: white;
         padding: 30px;
@@ -94,72 +84,57 @@ include APP_PATH . 'views/layouts/sidebar.php';
         transform: translateY(-2px);
         box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
     }
-    .alert {
-        padding: 15px;
-        border-radius: 5px;
-        margin-bottom: 20px;
-    }
-    .alert-danger {
-        background: #f8d7da;
-        color: #721c24;
-        border-left: 4px solid #dc3545;
-    }
 </style>
 
-<div class="main-content" id="mainContent">
-    <div class="page-header" style="margin-bottom: 30px;">
-        <h1>➕ Nova Avaliação</h1>
-        <p>Preencha os dados para iniciar uma nova avaliação de loja</p>
+<?php if (isset($erro)): ?>
+    <div class="alert alert-error">
+        <?php echo htmlspecialchars($erro); ?>
     </div>
+<?php endif; ?>
 
-    <?php if (isset($erro)): ?>
-        <div class="alert alert-danger"><?php echo $erro; ?></div>
-    <?php endif; ?>
+<div class="form-card">
+    <form method="POST">
+        <div class="form-group">
+            <label>Loja *</label>
+            <select name="loja_id" class="form-control" required>
+                <option value="">Selecione uma loja</option>
+                <?php foreach ($dados['lojas'] as $loja): ?>
+                    <option value="<?php echo $loja['id']; ?>">
+                        <?php echo htmlspecialchars($loja['nome']); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
 
-    <div class="form-card">
-        <form method="POST">
-            <div class="form-group">
-                <label>Loja *</label>
-                <select name="loja_id" class="form-control" required>
-                    <option value="">Selecione uma loja</option>
-                    <?php foreach ($dados['lojas'] as $loja): ?>
-                        <option value="<?php echo $loja['id']; ?>">
-                            <?php echo htmlspecialchars($loja['nome']); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
+        <div class="form-group">
+            <label>Módulo de Avaliação *</label>
+            <select name="modulo_id" class="form-control" required>
+                <option value="">Selecione um módulo</option>
+                <?php foreach ($dados['modulos'] as $modulo): ?>
+                    <option value="<?php echo $modulo['id']; ?>">
+                        <?php echo htmlspecialchars($modulo['nome']); ?>
+                        (<?php echo $modulo['total_perguntas']; ?> perguntas)
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
 
-            <div class="form-group">
-                <label>Módulo de Avaliação *</label>
-                <select name="modulo_id" class="form-control" required>
-                    <option value="">Selecione um módulo</option>
-                    <?php foreach ($dados['modulos'] as $modulo): ?>
-                        <option value="<?php echo $modulo['id']; ?>">
-                            <?php echo htmlspecialchars($modulo['nome']); ?>
-                            (<?php echo $modulo['total_perguntas']; ?> perguntas)
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
+        <div class="form-group">
+            <label>Data da Avaliação *</label>
+            <input type="date" name="data_avaliacao" class="form-control" value="<?php echo date('Y-m-d'); ?>" required>
+        </div>
 
-            <div class="form-group">
-                <label>Data da Avaliação *</label>
-                <input type="date" name="data_avaliacao" class="form-control" value="<?php echo date('Y-m-d'); ?>" required>
-            </div>
+        <div class="form-group">
+            <label>Observações Gerais</label>
+            <textarea name="observacoes_gerais" class="form-control" rows="4" placeholder="Observações gerais sobre a avaliação..."></textarea>
+        </div>
 
-            <div class="form-group">
-                <label>Observações Gerais</label>
-                <textarea name="observacoes_gerais" class="form-control" rows="4" placeholder="Observações gerais sobre a avaliação..."></textarea>
-            </div>
-
-            <div class="form-group" style="text-align: center;">
-                <button type="submit" class="btn btn-primary">
-                    ✅ Criar e Começar Avaliação
-                </button>
-            </div>
-        </form>
-    </div>
+        <div class="form-group" style="text-align: center;">
+            <button type="submit" class="btn btn-primary">
+                ✅ Criar e Começar Avaliação
+            </button>
+        </div>
+    </form>
 </div>
 
 <?php include APP_PATH . 'views/layouts/footer.php'; ?>
