@@ -202,6 +202,33 @@ include APP_PATH . 'views/layouts/header.php';
         color: #555;
         font-style: italic;
     }
+    .resposta-foto {
+        margin-top: 15px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+    .resposta-foto strong {
+        display: block;
+        margin-bottom: 10px;
+        color: #333;
+    }
+    .resposta-foto img {
+        max-width: 100%;
+        max-height: 400px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        cursor: pointer;
+        transition: transform 0.3s;
+    }
+    .resposta-foto img:hover {
+        transform: scale(1.02);
+    }
+    .foto-info {
+        margin-top: 8px;
+        font-size: 13px;
+        color: #666;
+    }
     .observacoes-gerais {
         background: #fff3cd;
         padding: 20px;
@@ -322,6 +349,18 @@ include APP_PATH . 'views/layouts/header.php';
                     <?php if (!empty($resposta['observacao'])): ?>
                         <div class="resposta-observacao">
                             <strong>Observação:</strong> <?php echo nl2br(htmlspecialchars($resposta['observacao'])); ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if (!empty($resposta['foto_evidencia'])): ?>
+                        <div class="resposta-foto">
+                            <strong>📷 Foto de Evidência:</strong>
+                            <a href="/<?php echo htmlspecialchars($resposta['foto_evidencia']); ?>" target="_blank">
+                                <img src="/<?php echo htmlspecialchars($resposta['foto_evidencia']); ?>" alt="Foto de evidência">
+                            </a>
+                            <div class="foto-info">
+                                <em>Clique na imagem para visualizar em tamanho original</em>
+                            </div>
                         </div>
                     <?php endif; ?>
                 </div>
