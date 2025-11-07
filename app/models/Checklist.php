@@ -4,6 +4,8 @@
  * Gerencia operações de checklists de lojas
  */
 
+require_once __DIR__ . '/../classes/Database.php';
+
 class Checklist {
     private $db;
     private $pdo;

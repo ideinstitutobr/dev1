@@ -4,6 +4,8 @@
  * Gerencia lojas/unidades
  */
 
+require_once __DIR__ . '/../classes/Database.php';
+
 class Loja {
     private $db;
     private $pdo;
