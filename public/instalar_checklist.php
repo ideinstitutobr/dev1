@@ -1,29 +1,35 @@
 <?php
 /**
- * INSTALADOR DO SISTEMA DE CHECKLIST DE LOJAS
+ * INSTALADOR STANDALONE DO SISTEMA DE CHECKLIST DE LOJAS
  *
- * Este script instala automaticamente as tabelas e dados iniciais
- * do sistema de checklist de lojas.
+ * Este arquivo é completamente independente e não precisa de nenhum outro arquivo.
+ * Basta acessar pelo navegador e clicar em "Instalar".
  *
  * INSTRUÇÕES:
- * 1. Acesse este arquivo pelo navegador: http://seudominio.com/instalar_checklist.php
+ * 1. Acesse: http://seudominio.com/instalar_checklist.php
  * 2. Clique em "Instalar Banco de Dados"
- * 3. Aguarde a conclusão
- * 4. Por segurança, DELETE este arquivo após a instalação
- *
- * ATENÇÃO: Este script irá criar as tabelas. Se elas já existirem, pode dar erro.
+ * 3. Aguarde a conclusão (pode levar alguns segundos)
+ * 4. DELETE este arquivo após a instalação por segurança!
  */
 
-// Configurações
-define('INSTALADOR_ATIVO', true);
+// ============================================
+// CONFIGURAÇÕES DO BANCO DE DADOS
+// ============================================
+// IMPORTANTE: Edite estas configurações se necessário
+$DB_HOST = 'localhost';
+$DB_NAME = 'u411458227_comercial255';
+$DB_USER = 'u411458227_comercial255';
+$DB_PASS = '#Ide@2k25';
+$DB_CHARSET = 'utf8mb4';
 
-// Incluir configuração do banco de dados
-require_once __DIR__ . '/../app/config/database.php';
+// ============================================
+// NÃO EDITE DAQUI PARA BAIXO
+// ============================================
 
-// Verificar se já foi instalado (opcional - pode comentar esta linha para reinstalar)
-// if (file_exists(__DIR__ . '/uploads/.checklist_instalado')) {
-//     die('Sistema de checklist já foi instalado! Delete o arquivo uploads/.checklist_instalado para reinstalar.');
-// }
+// Desabilitar timeout para scripts longos
+set_time_limit(300);
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 
 ?>
 <!DOCTYPE html>
@@ -51,7 +57,7 @@ require_once __DIR__ . '/../app/config/database.php';
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            max-width: 800px;
+            max-width: 900px;
             width: 100%;
             overflow: hidden;
         }
@@ -141,8 +147,35 @@ require_once __DIR__ . '/../app/config/database.php';
         .btn-success {
             background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
         }
-        .btn-danger {
-            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        .log-box {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 500px;
+            overflow-y: auto;
+            margin: 20px 0;
+            line-height: 1.6;
+        }
+        .log-box .error {
+            color: #ff5555;
+        }
+        .log-box .success {
+            color: #50fa7b;
+        }
+        .log-box .info {
+            color: #8be9fd;
+        }
+        .log-box .warning {
+            color: #f1fa8c;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
         }
         .step {
             display: flex;
@@ -169,57 +202,41 @@ require_once __DIR__ . '/../app/config/database.php';
         .step-text {
             flex: 1;
         }
-        .log-box {
-            background: #1e1e1e;
-            color: #00ff00;
-            padding: 20px;
-            border-radius: 5px;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            max-height: 400px;
-            overflow-y: auto;
-            margin: 20px 0;
-        }
-        .log-box .error {
-            color: #ff5555;
-        }
-        .log-box .success {
-            color: #50fa7b;
-        }
-        .log-box .info {
-            color: #8be9fd;
-        }
-        .button-group {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 20px;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>📋 Instalador do Sistema de Checklist de Lojas</h1>
-            <p>Versão 1.0 - Instalação Automática</p>
+            <p>Versão 1.0 - Instalação Automática Standalone</p>
         </div>
 
         <div class="content">
             <?php
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['instalar'])) {
+                // ============================================
                 // PROCESSAR INSTALAÇÃO
+                // ============================================
                 echo '<div class="log-box" id="log">';
 
                 try {
-                    // Conectar ao banco
-                    $db = Database::getInstance();
-                    $pdo = $db->getConnection();
+                    echo '<span class="info">[INFO] Iniciando instalação do Sistema de Checklist de Lojas...</span><br>';
+                    echo '<span class="info">[INFO] Conectando ao banco de dados...</span><br>';
 
-                    echo '<span class="info">[INFO] Conectado ao banco de dados com sucesso!</span><br>';
-                    echo '<span class="info">[INFO] Iniciando instalação...</span><br><br>';
+                    // Conectar ao banco
+                    $dsn = "mysql:host={$DB_HOST};dbname={$DB_NAME};charset={$DB_CHARSET}";
+                    $options = [
+                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                        PDO::ATTR_EMULATE_PREPARES => false,
+                    ];
+
+                    $pdo = new PDO($dsn, $DB_USER, $DB_PASS, $options);
+                    echo '<span class="success">[OK] Conectado ao banco de dados com sucesso!</span><br><br>';
 
                     // Ler arquivo de schema
                     $schemaFile = __DIR__ . '/../database/migrations/checklist_lojas_schema.sql';
+
                     if (!file_exists($schemaFile)) {
                         throw new Exception('Arquivo de schema não encontrado: ' . $schemaFile);
                     }
@@ -227,12 +244,15 @@ require_once __DIR__ . '/../app/config/database.php';
                     $schema = file_get_contents($schemaFile);
                     echo '<span class="success">[OK] Arquivo de schema carregado</span><br>';
 
-                    // Executar schema (criar tabelas)
-                    $statements = array_filter(array_map('trim', explode(';', $schema)));
-                    $totalStatements = count($statements);
+                    // Executar schema
+                    echo '<span class="info">[INFO] Criando tabelas do banco de dados...</span><br>';
+
+                    $statements = explode(';', $schema);
                     $executados = 0;
 
                     foreach ($statements as $statement) {
+                        $statement = trim($statement);
+
                         if (empty($statement) || strpos($statement, '--') === 0) {
                             continue;
                         }
@@ -241,32 +261,35 @@ require_once __DIR__ . '/../app/config/database.php';
                             $pdo->exec($statement);
                             $executados++;
                         } catch (PDOException $e) {
-                            // Ignora erros de tabela já existente
                             if (strpos($e->getMessage(), 'already exists') !== false) {
-                                echo '<span class="info">[INFO] Tabela já existe, pulando...</span><br>';
+                                echo '<span class="warning">[AVISO] Tabela já existe, pulando...</span><br>';
                             } else {
                                 throw $e;
                             }
                         }
                     }
 
-                    echo '<span class="success">[OK] Tabelas criadas: ' . $executados . ' de ' . $totalStatements . ' comandos executados</span><br><br>';
+                    echo '<span class="success">[OK] Tabelas criadas com sucesso! (' . $executados . ' comandos executados)</span><br><br>';
 
                     // Ler arquivo de seed
                     $seedFile = __DIR__ . '/../database/migrations/checklist_lojas_seed.sql';
+
                     if (!file_exists($seedFile)) {
                         throw new Exception('Arquivo de seed não encontrado: ' . $seedFile);
                     }
 
                     $seed = file_get_contents($seedFile);
-                    echo '<span class="success">[OK] Arquivo de seed carregado</span><br>';
+                    echo '<span class="success">[OK] Arquivo de dados iniciais carregado</span><br>';
 
-                    // Executar seed (dados iniciais)
-                    $statements = array_filter(array_map('trim', explode(';', $seed)));
-                    $totalStatements = count($statements);
+                    // Executar seed
+                    echo '<span class="info">[INFO] Inserindo dados iniciais (módulos, perguntas, lojas)...</span><br>';
+
+                    $statements = explode(';', $seed);
                     $executados = 0;
 
                     foreach ($statements as $statement) {
+                        $statement = trim($statement);
+
                         if (empty($statement) || strpos($statement, '--') === 0) {
                             continue;
                         }
@@ -275,19 +298,19 @@ require_once __DIR__ . '/../app/config/database.php';
                             $pdo->exec($statement);
                             $executados++;
                         } catch (PDOException $e) {
-                            // Ignora erros de duplicata
                             if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
-                                echo '<span class="info">[INFO] Registro já existe, pulando...</span><br>';
+                                echo '<span class="warning">[AVISO] Registro já existe, pulando...</span><br>';
                             } else {
                                 throw $e;
                             }
                         }
                     }
 
-                    echo '<span class="success">[OK] Dados iniciais inseridos: ' . $executados . ' de ' . $totalStatements . ' comandos executados</span><br><br>';
+                    echo '<span class="success">[OK] Dados iniciais inseridos! (' . $executados . ' comandos executados)</span><br><br>';
 
                     // Criar diretório de uploads
                     $uploadDir = __DIR__ . '/uploads/fotos_checklist';
+
                     if (!is_dir($uploadDir)) {
                         mkdir($uploadDir, 0755, true);
                         echo '<span class="success">[OK] Diretório de uploads criado</span><br>';
@@ -298,64 +321,92 @@ require_once __DIR__ . '/../app/config/database.php';
                     // Marcar como instalado
                     file_put_contents(__DIR__ . '/uploads/.checklist_instalado', date('Y-m-d H:i:s'));
 
-                    echo '<br><span class="success">[SUCESSO] ✅ Instalação concluída com sucesso!</span><br>';
+                    echo '<br><span class="success">═══════════════════════════════════════</span><br>';
+                    echo '<span class="success">[SUCESSO] ✅ Instalação concluída com êxito!</span><br>';
+                    echo '<span class="success">═══════════════════════════════════════</span><br>';
                     echo '<span class="info">[INFO] Sistema pronto para uso!</span><br>';
 
                     echo '</div>';
 
                     echo '<div class="success-box">';
-                    echo '<h3>✅ Instalação Concluída!</h3>';
+                    echo '<h3>✅ Instalação Concluída com Sucesso!</h3>';
                     echo '<p><strong>O que foi instalado:</strong></p>';
                     echo '<ul>';
                     echo '<li>✅ 8 tabelas do banco de dados</li>';
-                    echo '<li>✅ 8 módulos de avaliação</li>';
+                    echo '<li>✅ 8 módulos de avaliação (Organização, Caixas, Ovos, Gôndolas, Frios, Câmara, Estoque, Áreas Comuns)</li>';
                     echo '<li>✅ 58 perguntas pré-cadastradas</li>';
                     echo '<li>✅ 4 lojas de exemplo</li>';
                     echo '<li>✅ 4 cargos padrão</li>';
                     echo '<li>✅ Configurações de pesos de pontuação</li>';
                     echo '<li>✅ Diretório de uploads criado</li>';
                     echo '</ul>';
-                    echo '<p style="margin-top: 15px;"><strong>⚠️ IMPORTANTE:</strong> Por questões de segurança, DELETE este arquivo (instalar_checklist.php) após a instalação!</p>';
+                    echo '<p style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 5px;"><strong>⚠️ IMPORTANTE:</strong> Por questões de segurança, <strong>DELETE</strong> este arquivo (instalar_checklist.php) após a instalação!</p>';
                     echo '</div>';
 
+                    $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'];
+                    $baseUrl .= str_replace('/instalar_checklist.php', '', $_SERVER['REQUEST_URI']);
+
                     echo '<div class="button-group">';
-                    echo '<a href="' . BASE_URL . 'checklist/" class="btn btn-success">🚀 Acessar Sistema de Checklist</a>';
-                    echo '<a href="' . BASE_URL . 'dashboard.php" class="btn">📊 Ir para Dashboard</a>';
+                    echo '<a href="' . $baseUrl . '/checklist/" class="btn btn-success">🚀 Acessar Sistema de Checklist</a>';
+                    echo '<a href="' . $baseUrl . '/dashboard.php" class="btn">📊 Ir para Dashboard</a>';
+                    echo '</div>';
+
+                } catch (PDOException $e) {
+                    echo '<span class="error">[ERRO PDO] ' . htmlspecialchars($e->getMessage()) . '</span><br>';
+                    echo '<span class="error">[CÓDIGO] ' . $e->getCode() . '</span><br>';
+                    echo '</div>';
+
+                    echo '<div class="error-box">';
+                    echo '<h3>❌ Erro de Conexão/Banco de Dados</h3>';
+                    echo '<p><strong>Erro:</strong> ' . htmlspecialchars($e->getMessage()) . '</p>';
+                    echo '<p style="margin-top: 10px;"><strong>Possíveis soluções:</strong></p>';
+                    echo '<ul>';
+                    echo '<li>Verifique as configurações do banco de dados no início deste arquivo</li>';
+                    echo '<li>Confirme que o banco de dados existe</li>';
+                    echo '<li>Confirme que o usuário tem permissões para criar tabelas</li>';
+                    echo '<li>Verifique se o MySQL está rodando</li>';
+                    echo '</ul>';
                     echo '</div>';
 
                 } catch (Exception $e) {
-                    echo '<span class="error">[ERRO] ' . $e->getMessage() . '</span><br>';
+                    echo '<span class="error">[ERRO] ' . htmlspecialchars($e->getMessage()) . '</span><br>';
                     echo '</div>';
 
                     echo '<div class="error-box">';
                     echo '<h3>❌ Erro na Instalação</h3>';
                     echo '<p>' . htmlspecialchars($e->getMessage()) . '</p>';
-                    echo '<p style="margin-top: 10px;">Verifique as configurações do banco de dados e tente novamente.</p>';
+                    echo '<p style="margin-top: 10px;">Verifique se os arquivos SQL estão na pasta correta:</p>';
+                    echo '<ul>';
+                    echo '<li>database/migrations/checklist_lojas_schema.sql</li>';
+                    echo '<li>database/migrations/checklist_lojas_seed.sql</li>';
+                    echo '</ul>';
                     echo '</div>';
                 }
 
             } else {
+                // ============================================
                 // EXIBIR FORMULÁRIO DE INSTALAÇÃO
+                // ============================================
             ?>
 
             <div class="info-box">
                 <h3>📦 O que será instalado?</h3>
                 <ul>
-                    <li><strong>8 Tabelas:</strong> lojas, cargos, módulos, perguntas, checklists, respostas, fotos, configurações</li>
-                    <li><strong>8 Módulos de Avaliação:</strong> Organização, Caixas, Ovos, Gôndolas, Frios, Câmara Fria, Estoque, Áreas Comuns</li>
+                    <li><strong>8 Tabelas:</strong> lojas, cargos_checklist, modulos_avaliacao, perguntas, checklists, respostas_checklist, fotos_checklist, configuracoes_sistema</li>
+                    <li><strong>8 Módulos:</strong> Organização de Lojas, Caixas, Setor Ovos, Gôndolas e Ilhas, Balcão de Frios, Câmara Fria, Estoque, Áreas Comuns</li>
                     <li><strong>58 Perguntas:</strong> Distribuídas entre os 8 módulos</li>
                     <li><strong>4 Lojas de Exemplo:</strong> Para começar a usar imediatamente</li>
-                    <li><strong>Sistema de Pontuação:</strong> Pesos configurados para 6 e 8 perguntas por módulo</li>
+                    <li><strong>Sistema de Pontuação:</strong> Pesos configurados automaticamente</li>
                 </ul>
             </div>
 
             <div class="warning-box">
-                <h3>⚠️ Atenção</h3>
+                <h3>⚠️ Antes de Instalar</h3>
                 <ul>
-                    <li>Certifique-se de que as configurações do banco de dados estão corretas</li>
+                    <li>Verifique se as configurações do banco de dados estão corretas (início deste arquivo)</li>
                     <li>O banco de dados será modificado (novas tabelas serão criadas)</li>
-                    <li>Se as tabelas já existirem, alguns erros podem aparecer (é normal)</li>
-                    <li>Após a instalação, DELETE este arquivo por segurança</li>
+                    <li>Se as tabelas já existirem, a instalação irá pular elas</li>
+                    <li>Após a instalação, DELETE este arquivo por segurança!</li>
                 </ul>
             </div>
 
@@ -384,9 +435,12 @@ require_once __DIR__ . '/../app/config/database.php';
             </div>
 
             <form method="POST" style="text-align: center;">
-                <button type="submit" name="instalar" class="btn" onclick="return confirm('Deseja iniciar a instalação do Sistema de Checklist de Lojas?');">
+                <button type="submit" name="instalar" class="btn" onclick="return confirm('Deseja iniciar a instalação do Sistema de Checklist de Lojas? Isso irá criar tabelas no banco de dados.');">
                     🚀 Instalar Banco de Dados
                 </button>
+                <p style="margin-top: 15px; color: #666; font-size: 14px;">
+                    A instalação pode levar alguns segundos. Por favor, aguarde até o final.
+                </p>
             </form>
 
             <?php } ?>
