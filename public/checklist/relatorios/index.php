@@ -8,7 +8,7 @@ require_once __DIR__ . '/../../../app/config/config.php';
 require_once __DIR__ . '/../../../app/config/database.php';
 require_once __DIR__ . '/../../../app/classes/Auth.php';
 
-Auth::checkAuth();
+Auth::requireLogin();
 
 require_once APP_PATH . 'models/Checklist.php';
 require_once APP_PATH . 'models/Loja.php';
