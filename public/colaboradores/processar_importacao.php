@@ -10,7 +10,6 @@ define('SGC_SYSTEM', true);
 require_once __DIR__ . '/../../app/config/config.php';
 require_once __DIR__ . '/../../app/classes/Database.php';
 require_once __DIR__ . '/../../app/classes/Auth.php';
-require_once __DIR__ . '/../../app/classes/SimpleExcelReader.php';
 require_once __DIR__ . '/../../app/models/Colaborador.php';
 require_once __DIR__ . '/../../app/controllers/ColaboradorController.php';
 
@@ -42,108 +41,140 @@ $file = $_FILES['file'];
 $fileExtension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 
 // Verifica extensão
-if (!in_array($fileExtension, ['csv', 'xlsx'])) {
-    if ($fileExtension === 'xls') {
-        $_SESSION['error_message'] = 'Arquivos .xls (Excel antigo) não são suportados. Por favor, salve como .xlsx (Excel 2007+) ou exporte como CSV.';
-    } else {
-        $_SESSION['error_message'] = 'Formato de arquivo inválido. Use apenas CSV (.csv) ou Excel (.xlsx).';
-    }
+if ($fileExtension !== 'csv') {
+    $_SESSION['error_message'] = 'Formato de arquivo inválido. Use apenas arquivos CSV (.csv). Se você tem um arquivo Excel, exporte-o como CSV antes de importar.';
     header('Location: importar.php');
     exit;
 }
 
-// Processa arquivo
+/**
+ * Normaliza nome de coluna para comparação
+ */
+function normalizarNomeColuna($nome) {
+    // Remove acentos, espaços, traços e converte para minúsculas
+    $nome = mb_strtolower(trim($nome), 'UTF-8');
+    $nome = str_replace(['á', 'à', 'ã', 'â', 'ä'], 'a', $nome);
+    $nome = str_replace(['é', 'è', 'ê', 'ë'], 'e', $nome);
+    $nome = str_replace(['í', 'ì', 'î', 'ï'], 'i', $nome);
+    $nome = str_replace(['ó', 'ò', 'õ', 'ô', 'ö'], 'o', $nome);
+    $nome = str_replace(['ú', 'ù', 'û', 'ü'], 'u', $nome);
+    $nome = str_replace(['ç'], 'c', $nome);
+    $nome = preg_replace('/[^a-z0-9]/', '', $nome);
+    return $nome;
+}
+
+/**
+ * Mapeia colunas do CSV automaticamente
+ */
+function mapearColunas($header) {
+    $mapeamento = [
+        'nome' => null,
+        'cpf' => null,
+        'email' => null
+    ];
+
+    // Variações possíveis para cada campo
+    $variacoes = [
+        'nome' => ['nome', 'nomecompleto', 'nomecolaborador', 'colaborador', 'funcionario'],
+        'cpf' => ['cpf', 'documento', 'doc'],
+        'email' => ['email', 'e-mail', 'mail', 'correio', 'emailcorporativo']
+    ];
+
+    // Normaliza header
+    $headerNormalizado = array_map('normalizarNomeColuna', $header);
+
+    // Mapeia cada campo
+    foreach ($variacoes as $campo => $opcoes) {
+        foreach ($opcoes as $opcao) {
+            $indice = array_search($opcao, $headerNormalizado);
+            if ($indice !== false) {
+                $mapeamento[$campo] = $indice;
+                break;
+            }
+        }
+    }
+
+    return $mapeamento;
+}
+
+// Processa arquivo CSV
 $colaboradores = [];
 
-if ($fileExtension === 'csv') {
-    // Processa CSV com detecção automática de delimitador
-    $handle = fopen($file['tmp_name'], 'r');
+$handle = fopen($file['tmp_name'], 'r');
 
-    if ($handle === false) {
-        $_SESSION['error_message'] = 'Erro ao ler arquivo CSV';
-        header('Location: importar.php');
-        exit;
-    }
-
-    // Lê primeira linha para detectar delimitador
-    $primeiraLinha = fgets($handle);
-    rewind($handle);
-
-    // Detecta delimitador
-    $virgulas = substr_count($primeiraLinha, ',');
-    $pontoVirgulas = substr_count($primeiraLinha, ';');
-    $tabs = substr_count($primeiraLinha, "\t");
-
-    if ($pontoVirgulas > $virgulas && $pontoVirgulas > $tabs) {
-        $delimitador = ';';
-    } elseif ($tabs > $virgulas && $tabs > $pontoVirgulas) {
-        $delimitador = "\t";
-    } else {
-        $delimitador = ',';
-    }
-
-    // Pula cabeçalho
-    $header = fgetcsv($handle, 10000, $delimitador);
-
-    // Lê linhas - aumentado limite para 10000 bytes
-    $linhaAtual = 1; // Contador para debug
-    while (($data = fgetcsv($handle, 10000, $delimitador)) !== false) {
-        $linhaAtual++;
-
-        // Pula linhas vazias
-        if (empty(array_filter($data))) {
-            continue;
-        }
-
-        // Extrai dados (suporta arquivos com mais colunas)
-        $colaboradores[] = [
-            'nome' => trim($data[0] ?? ''),
-            'cpf' => trim($data[1] ?? ''),
-            'email' => trim($data[2] ?? ''),
-            '_linha_arquivo' => $linhaAtual
-        ];
-    }
-
-    fclose($handle);
-} elseif ($fileExtension === 'xlsx') {
-    // Processa Excel
-    try {
-        // Lê arquivo Excel
-        $excelData = SimpleExcelReader::readFile($file['tmp_name']);
-
-        if (empty($excelData)) {
-            $_SESSION['error_message'] = 'Arquivo Excel vazio ou inválido';
-            header('Location: importar.php');
-            exit;
-        }
-
-        // Remove cabeçalho (primeira linha)
-        $header = array_shift($excelData);
-
-        // Converte para formato padrão
-        $linhaAtual = 1; // Contador para debug
-        foreach ($excelData as $row) {
-            $linhaAtual++;
-
-            // Pula linhas vazias
-            if (empty(array_filter($row))) {
-                continue;
-            }
-
-            // Extrai dados (suporta arquivos com mais colunas)
-            $colaboradores[] = [
-                'nome' => trim($row[0] ?? ''),
-                'cpf' => trim($row[1] ?? ''),
-                'email' => trim($row[2] ?? ''),
-                '_linha_arquivo' => $linhaAtual
-            ];
-        }
-    } catch (Exception $e) {
-        $_SESSION['error_message'] = 'Erro ao ler arquivo Excel: ' . $e->getMessage();
-        header('Location: importar.php');
-        exit;
-    }
+if ($handle === false) {
+    $_SESSION['error_message'] = 'Erro ao ler arquivo CSV';
+    header('Location: importar.php');
+    exit;
 }
+
+// Lê primeira linha para detectar delimitador
+$primeiraLinha = fgets($handle);
+rewind($handle);
+
+// Detecta delimitador
+$virgulas = substr_count($primeiraLinha, ',');
+$pontoVirgulas = substr_count($primeiraLinha, ';');
+$tabs = substr_count($primeiraLinha, "\t");
+
+if ($pontoVirgulas > $virgulas && $pontoVirgulas > $tabs) {
+    $delimitador = ';';
+} elseif ($tabs > $virgulas && $tabs > $pontoVirgulas) {
+    $delimitador = "\t";
+} else {
+    $delimitador = ',';
+}
+
+// Lê cabeçalho
+$header = fgetcsv($handle, 10000, $delimitador);
+
+if ($header === false) {
+    $_SESSION['error_message'] = 'Erro ao ler cabeçalho do arquivo CSV';
+    fclose($handle);
+    header('Location: importar.php');
+    exit;
+}
+
+// Mapeia colunas automaticamente
+$mapeamento = mapearColunas($header);
+
+// Valida se campos obrigatórios foram encontrados
+$camposNaoEncontrados = [];
+if ($mapeamento['nome'] === null) {
+    $camposNaoEncontrados[] = 'Nome';
+}
+if ($mapeamento['email'] === null) {
+    $camposNaoEncontrados[] = 'E-mail';
+}
+
+if (!empty($camposNaoEncontrados)) {
+    $campos = implode(', ', $camposNaoEncontrados);
+    $_SESSION['error_message'] = "Campos obrigatórios não encontrados no arquivo: {$campos}. Verifique se o cabeçalho está correto.";
+    fclose($handle);
+    header('Location: importar.php');
+    exit;
+}
+
+// Lê linhas
+$linhaAtual = 1; // Contador para debug
+while (($data = fgetcsv($handle, 10000, $delimitador)) !== false) {
+    $linhaAtual++;
+
+    // Pula linhas vazias
+    if (empty(array_filter($data))) {
+        continue;
+    }
+
+    // Extrai dados usando o mapeamento
+    $colaboradores[] = [
+        'nome' => trim($data[$mapeamento['nome']] ?? ''),
+        'cpf' => trim($data[$mapeamento['cpf']] ?? ''),
+        'email' => trim($data[$mapeamento['email']] ?? ''),
+        '_linha_arquivo' => $linhaAtual
+    ];
+}
+
+fclose($handle);
 
 // Valida se tem dados
 if (empty($colaboradores)) {
