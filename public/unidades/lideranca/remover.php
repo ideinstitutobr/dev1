@@ -9,6 +9,7 @@ require_once __DIR__ . '/../../../app/config/config.php';
 require_once __DIR__ . '/../../../app/classes/Database.php';
 require_once __DIR__ . '/../../../app/classes/Auth.php';
 require_once __DIR__ . '/../../../app/models/Unidade.php';
+require_once __DIR__ . '/../../../app/models/UnidadeSetor.php';
 require_once __DIR__ . '/../../../app/models/UnidadeLideranca.php';
 require_once __DIR__ . '/../../../app/controllers/UnidadeController.php';
 require_once __DIR__ . '/../../../app/controllers/UnidadeLiderancaController.php';
