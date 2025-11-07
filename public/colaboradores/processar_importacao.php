@@ -42,8 +42,12 @@ $file = $_FILES['file'];
 $fileExtension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 
 // Verifica extensão
-if (!in_array($fileExtension, ['csv', 'xlsx', 'xls'])) {
-    $_SESSION['error_message'] = 'Formato de arquivo inválido. Use CSV ou Excel';
+if (!in_array($fileExtension, ['csv', 'xlsx'])) {
+    if ($fileExtension === 'xls') {
+        $_SESSION['error_message'] = 'Arquivos .xls (Excel antigo) não são suportados. Por favor, salve como .xlsx (Excel 2007+) ou exporte como CSV.';
+    } else {
+        $_SESSION['error_message'] = 'Formato de arquivo inválido. Use apenas CSV (.csv) ou Excel (.xlsx).';
+    }
     header('Location: importar.php');
     exit;
 }
@@ -101,7 +105,7 @@ if ($fileExtension === 'csv') {
     }
 
     fclose($handle);
-} elseif (in_array($fileExtension, ['xlsx', 'xls'])) {
+} elseif ($fileExtension === 'xlsx') {
     // Processa Excel
     try {
         // Lê arquivo Excel
