@@ -1,6 +1,7 @@
 <?php
 /**
- * View: Listar Colaboradores
+ * View: Listar Colaboradores - VERSÃO REFATORADA
+ * Query direta no arquivo para garantir funcionamento
  */
 
 // Define constante do sistema
@@ -10,79 +11,158 @@ define('SGC_SYSTEM', true);
 require_once __DIR__ . '/../../app/config/config.php';
 require_once __DIR__ . '/../../app/classes/Database.php';
 require_once __DIR__ . '/../../app/classes/Auth.php';
-require_once __DIR__ . '/../../app/models/Colaborador.php';
-require_once __DIR__ . '/../../app/controllers/ColaboradorController.php';
 
 // Configurações da página
 $pageTitle = 'Colaboradores';
 $breadcrumb = '<a href="../dashboard.php">Dashboard</a> > Colaboradores';
 
-// Instancia controller
-$controller = new ColaboradorController();
+// Conexão direta com banco
+$pdo = Database::getInstance()->getConnection();
 
-// Processa exportação se solicitada
-if (isset($_GET['export']) && $_GET['export'] === 'csv') {
-    $controller->exportarCSV($_GET);
+// =============================================================================
+// QUERY DIRETA - MESMA DO DIAGNÓSTICO QUE FUNCIONA
+// =============================================================================
+
+// Verifica estrutura
+function hasColumn($pdo, $table, $column) {
+    $stmt = $pdo->prepare("SELECT COUNT(*) AS cnt FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?");
+    $stmt->execute([$table, $column]);
+    return ((int)($stmt->fetch()['cnt'] ?? 0)) > 0;
 }
 
-// Lista colaboradores
-$resultado = $controller->listar();
-$colaboradores = $resultado['data'];
-$pagination = [
-    'total' => $resultado['total'],
-    'page' => $resultado['page'],
-    'per_page' => $resultado['per_page'],
-    'total_pages' => $resultado['total_pages']
-];
+$temUnidadePrincipal = hasColumn($pdo, 'colaboradores', 'unidade_principal_id');
+$temSetorPrincipal = hasColumn($pdo, 'colaboradores', 'setor_principal');
 
-// Inclui header
-include __DIR__ . '/../../app/views/layouts/header.php';
-?>
-<?php
-// Carrega opções dinâmicas do ENUM 'nivel_hierarquico' para filtros
-$pdo = Database::getInstance()->getConnection();
+// Paginação
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$perPage = 20;
+$offset = ($page - 1) * $perPage;
+
+// Filtros
+$search = $_GET['search'] ?? '';
+$nivelFiltro = $_GET['nivel'] ?? '';
+$cargoFiltro = $_GET['cargo'] ?? '';
+$departamentoFiltro = $_GET['departamento'] ?? '';
+
+// Monta WHERE
+$where = ['1=1'];
+$bindings = [];
+
+if (!empty($search)) {
+    $where[] = "(c.nome LIKE ? OR c.email LIKE ? OR c.cpf LIKE ?)";
+    $searchTerm = "%{$search}%";
+    $bindings[] = $searchTerm;
+    $bindings[] = $searchTerm;
+    $bindings[] = $searchTerm;
+}
+
+if (!empty($nivelFiltro)) {
+    $where[] = "c.nivel_hierarquico = ?";
+    $bindings[] = $nivelFiltro;
+}
+
+if (!empty($cargoFiltro)) {
+    $where[] = "c.cargo = ?";
+    $bindings[] = $cargoFiltro;
+}
+
+if (!empty($departamentoFiltro)) {
+    $where[] = "c.departamento = ?";
+    $bindings[] = $departamentoFiltro;
+}
+
+$whereClause = implode(' AND ', $where);
+
+// Conta total
+$sqlCount = "SELECT COUNT(*) as total FROM colaboradores c WHERE {$whereClause}";
+$stmt = $pdo->prepare($sqlCount);
+$stmt->execute($bindings);
+$totalColaboradores = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+$totalPages = ceil($totalColaboradores / $perPage);
+
+// BUSCA DADOS - QUERY EXATA DO DIAGNÓSTICO
+if ($temUnidadePrincipal && $temSetorPrincipal) {
+    $sql = "SELECT
+                c.id,
+                c.nome,
+                c.email,
+                c.nivel_hierarquico,
+                c.cargo,
+                c.departamento,
+                c.unidade_principal_id,
+                c.setor_principal,
+                c.ativo,
+                c.origem,
+                u.nome as unidade_nome
+            FROM colaboradores c
+            LEFT JOIN unidades u ON c.unidade_principal_id = u.id
+            WHERE {$whereClause}
+            ORDER BY c.nome ASC
+            LIMIT {$perPage} OFFSET {$offset}";
+} else {
+    $sql = "SELECT
+                c.id,
+                c.nome,
+                c.email,
+                c.nivel_hierarquico,
+                c.cargo,
+                c.departamento,
+                c.ativo,
+                c.origem
+            FROM colaboradores c
+            WHERE {$whereClause}
+            ORDER BY c.nome ASC
+            LIMIT {$perPage} OFFSET {$offset}";
+}
+
+$stmt = $pdo->prepare($sql);
+$stmt->execute($bindings);
+$colaboradores = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Normaliza departamento_exibicao
+foreach ($colaboradores as &$col) {
+    if ($temSetorPrincipal) {
+        $col['departamento_exibicao'] = $col['setor_principal'] ?? $col['departamento'] ?? null;
+    } else {
+        $col['departamento_exibicao'] = $col['departamento'] ?? null;
+    }
+}
+unset($col);
+
+// =============================================================================
+// OPÇÕES PARA FILTROS
+// =============================================================================
+
+// Opções de nível hierárquico
 $nivelOptions = [];
 try {
     $stmt = $pdo->prepare("SELECT COLUMN_TYPE FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'colaboradores' AND column_name = 'nivel_hierarquico'");
     $stmt->execute();
-    $row = $stmt->fetch();
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($row && isset($row['COLUMN_TYPE']) && preg_match("/^enum\\((.*)\\)$/i", $row['COLUMN_TYPE'], $m)) {
         preg_match_all("/'((?:\\\\'|[^'])*)'/", $m[1], $matches);
-        foreach ($matches[1] as $v) { $nivelOptions[] = str_replace("\\'", "'", $v); }
+        foreach ($matches[1] as $v) {
+            $nivelOptions[] = str_replace("\\'", "'", $v);
+        }
     }
 } catch (Exception $e) { /* ignora erro */ }
-// Opções dinâmicas para Cargo e Setor (Departamento)
-function getCategoriesFromDB($pdo, $tipo) {
-    try {
-        $stmt = $pdo->prepare("SELECT valor FROM field_categories WHERE tipo = ? AND ativo = 1 ORDER BY valor ASC");
-        $stmt->execute([$tipo]);
-        return $stmt->fetchAll(PDO::FETCH_COLUMN);
-    } catch (Exception $e) {
-        // Fallback: se a tabela não existir, retorna array vazio
-        return [];
-    }
-}
-function mergeUniqueSorted($dbList, $categoriesList) {
-    $map = [];
-    foreach ((array)$dbList as $v) { if ($v !== null && $v !== '') { $map[strtolower($v)] = $v; } }
-    foreach ((array)$categoriesList as $v) { if ($v !== null && $v !== '') { $map[strtolower($v)] = $v; } }
-    $vals = array_values($map);
-    natcasesort($vals);
-    return array_values($vals);
-}
-$cargosDB = [];
-$departamentosDB = [];
+
+// Opções de cargo
+$cargoOptions = [];
 try {
-    $cargosDB = $pdo->query("SELECT DISTINCT cargo FROM colaboradores WHERE cargo IS NOT NULL AND cargo <> '' ORDER BY cargo ASC")->fetchAll(PDO::FETCH_COLUMN);
-    $departamentosDB = $pdo->query("SELECT DISTINCT departamento FROM colaboradores WHERE departamento IS NOT NULL AND departamento <> '' ORDER BY departamento ASC")->fetchAll(PDO::FETCH_COLUMN);
+    $stmt = $pdo->query("SELECT DISTINCT cargo FROM colaboradores WHERE cargo IS NOT NULL AND cargo <> '' ORDER BY cargo ASC");
+    $cargoOptions = $stmt->fetchAll(PDO::FETCH_COLUMN);
 } catch (Exception $e) { /* ignore */ }
 
-// Lê categorias do banco de dados
-$cargosCategories = getCategoriesFromDB($pdo, 'cargo');
-$departamentosCategories = getCategoriesFromDB($pdo, 'departamento');
+// Opções de departamento
+$departamentoOptions = [];
+try {
+    $stmt = $pdo->query("SELECT DISTINCT departamento FROM colaboradores WHERE departamento IS NOT NULL AND departamento <> '' ORDER BY departamento ASC");
+    $departamentoOptions = $stmt->fetchAll(PDO::FETCH_COLUMN);
+} catch (Exception $e) { /* ignore */ }
 
-$cargoOptions = mergeUniqueSorted($cargosDB, $cargosCategories);
-$departamentoOptions = mergeUniqueSorted($departamentosDB, $departamentosCategories);
+// Inclui header
+include __DIR__ . '/../../app/views/layouts/header.php';
 ?>
 
 <style>
@@ -186,11 +266,9 @@ $departamentoOptions = mergeUniqueSorted($departamentosDB, $departamentosCategor
 
     thead {
         background: #f8f9fa;
-        display: table-header-group; /* evita resets globais que ocultam cabeçalhos */
     }
 
     th {
-        display: table-cell; /* garante exibição mesmo com CSS global agressivo */
         padding: 15px;
         text-align: left;
         font-weight: 600;
@@ -214,24 +292,9 @@ $departamentoOptions = mergeUniqueSorted($departamentosDB, $departamentosCategor
         font-weight: 600;
     }
 
-    .badge-success {
-        background: #d4edda;
-        color: #155724;
-    }
-
-    .badge-danger {
-        background: #f8d7da;
-        color: #721c24;
-    }
-
     .badge-info {
         background: #d1ecf1;
         color: #0c5460;
-    }
-
-    .badge-warning {
-        background: #fff3cd;
-        color: #856404;
     }
 
     .pagination {
@@ -295,7 +358,7 @@ $departamentoOptions = mergeUniqueSorted($departamentosDB, $departamentosCategor
 
 <div class="stats-bar">
     <div class="stat-item">
-        <div class="stat-value"><?php echo number_format($pagination['total'], 0, ',', '.'); ?></div>
+        <div class="stat-value"><?php echo number_format($totalColaboradores, 0, ',', '.'); ?></div>
         <div class="stat-label">Total de Colaboradores</div>
     </div>
 </div>
@@ -309,9 +372,6 @@ $departamentoOptions = mergeUniqueSorted($departamentosDB, $departamentosCategor
         <a href="importar.php" class="btn btn-info">
             📊 Importação em Massa
         </a>
-        <a href="?export=csv<?php echo !empty($_GET['search']) ? '&search=' . urlencode($_GET['search']) : ''; ?>" class="btn btn-success">
-            📥 Exportar CSV
-        </a>
     </div>
 </div>
 
@@ -319,30 +379,37 @@ $departamentoOptions = mergeUniqueSorted($departamentosDB, $departamentosCategor
     <form method="GET" action="">
         <div class="filter-group">
             <input type="text" name="search" placeholder="🔍 Buscar por nome, email ou CPF..."
-                   value="<?php echo e($_GET['search'] ?? ''); ?>">
+                   value="<?php echo htmlspecialchars($_GET['search'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
 
             <select name="nivel">
                 <option value="">Todos os Níveis Hierárquicos</option>
                 <?php foreach ($nivelOptions as $opt): ?>
-                    <option value="<?php echo e($opt); ?>" <?php echo ($_GET['nivel'] ?? '') === $opt ? 'selected' : ''; ?>><?php echo e($opt); ?></option>
+                    <option value="<?php echo htmlspecialchars($opt, ENT_QUOTES, 'UTF-8'); ?>"
+                            <?php echo ($_GET['nivel'] ?? '') === $opt ? 'selected' : ''; ?>>
+                        <?php echo htmlspecialchars($opt, ENT_QUOTES, 'UTF-8'); ?>
+                    </option>
                 <?php endforeach; ?>
             </select>
 
             <select name="cargo">
                 <option value="">Todos os Cargos</option>
                 <?php foreach ($cargoOptions as $opt): ?>
-                    <option value="<?php echo e($opt); ?>" <?php echo ($_GET['cargo'] ?? '') === $opt ? 'selected' : ''; ?>><?php echo e($opt); ?></option>
+                    <option value="<?php echo htmlspecialchars($opt, ENT_QUOTES, 'UTF-8'); ?>"
+                            <?php echo ($_GET['cargo'] ?? '') === $opt ? 'selected' : ''; ?>>
+                        <?php echo htmlspecialchars($opt, ENT_QUOTES, 'UTF-8'); ?>
+                    </option>
                 <?php endforeach; ?>
             </select>
 
             <select name="departamento">
                 <option value="">Todos os Setores</option>
                 <?php foreach ($departamentoOptions as $opt): ?>
-                    <option value="<?php echo e($opt); ?>" <?php echo ($_GET['departamento'] ?? '') === $opt ? 'selected' : ''; ?>><?php echo e($opt); ?></option>
+                    <option value="<?php echo htmlspecialchars($opt, ENT_QUOTES, 'UTF-8'); ?>"
+                            <?php echo ($_GET['departamento'] ?? '') === $opt ? 'selected' : ''; ?>>
+                        <?php echo htmlspecialchars($opt, ENT_QUOTES, 'UTF-8'); ?>
+                    </option>
                 <?php endforeach; ?>
             </select>
-
-            <!-- Removido filtro de Status por solicitação -->
         </div>
 
         <div style="display: flex; gap: 10px;">
@@ -375,31 +442,31 @@ $departamentoOptions = mergeUniqueSorted($departamentosDB, $departamentosCategor
             <tbody>
                 <?php foreach ($colaboradores as $col): ?>
                 <tr>
-                    <td><?php echo $col['id']; ?></td>
-                    <td><strong><?php echo e($col['nome']); ?></strong></td>
-                    <td><?php echo e($col['email']); ?></td>
+                    <td><?php echo (int)$col['id']; ?></td>
+                    <td><strong><?php echo htmlspecialchars($col['nome'], ENT_QUOTES, 'UTF-8'); ?></strong></td>
+                    <td><?php echo htmlspecialchars($col['email'], ENT_QUOTES, 'UTF-8'); ?></td>
                     <td style="min-width: 120px;">
                         <?php if (!empty($col['nivel_hierarquico'])): ?>
-                            <span class="badge badge-info" style="display: inline-block; padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; background: #d1ecf1; color: #0c5460;">
-                                <?php echo e($col['nivel_hierarquico']); ?>
+                            <span class="badge badge-info">
+                                <?php echo htmlspecialchars($col['nivel_hierarquico'], ENT_QUOTES, 'UTF-8'); ?>
                             </span>
                         <?php else: ?>
                             <span style="color: #999;">-</span>
                         <?php endif; ?>
                     </td>
-                    <td><?php echo !empty($col['cargo']) ? e($col['cargo']) : '-'; ?></td>
-                    <td><?php echo !empty($col['departamento_exibicao']) ? e($col['departamento_exibicao']) : '-'; ?></td>
+                    <td><?php echo !empty($col['cargo']) ? htmlspecialchars($col['cargo'], ENT_QUOTES, 'UTF-8') : '-'; ?></td>
+                    <td><?php echo !empty($col['departamento_exibicao']) ? htmlspecialchars($col['departamento_exibicao'], ENT_QUOTES, 'UTF-8') : '-'; ?></td>
                     <td>
                         <div style="display: flex; gap: 5px;">
-                            <a href="visualizar.php?id=<?php echo $col['id']; ?>" class="btn btn-sm btn-primary" title="Visualizar">👁️</a>
-                            <a href="editar.php?id=<?php echo $col['id']; ?>" class="btn btn-sm btn-secondary" title="Editar">✏️</a>
+                            <a href="visualizar.php?id=<?php echo (int)$col['id']; ?>" class="btn btn-sm btn-primary" title="Visualizar">👁️</a>
+                            <a href="editar.php?id=<?php echo (int)$col['id']; ?>" class="btn btn-sm btn-secondary" title="Editar">✏️</a>
                             <?php if ($col['ativo']): ?>
-                                <a href="actions.php?action=inativar&id=<?php echo $col['id']; ?>"
+                                <a href="actions.php?action=inativar&id=<?php echo (int)$col['id']; ?>"
                                    class="btn btn-sm btn-danger"
                                    onclick="return confirm('Deseja realmente inativar este colaborador?')"
                                    title="Inativar">❌</a>
                             <?php else: ?>
-                                <a href="actions.php?action=ativar&id=<?php echo $col['id']; ?>"
+                                <a href="actions.php?action=ativar&id=<?php echo (int)$col['id']; ?>"
                                    class="btn btn-sm btn-success"
                                    title="Ativar">✅</a>
                             <?php endif; ?>
@@ -410,16 +477,16 @@ $departamentoOptions = mergeUniqueSorted($departamentosDB, $departamentosCategor
             </tbody>
         </table>
 
-        <?php if ($pagination['total_pages'] > 1): ?>
+        <?php if ($totalPages > 1): ?>
         <div class="pagination">
-            <?php if ($pagination['page'] > 1): ?>
-                <a href="?page=<?php echo $pagination['page'] - 1; ?><?php echo !empty($_GET['search']) ? '&search=' . urlencode($_GET['search']) : ''; ?>">
+            <?php if ($page > 1): ?>
+                <a href="?page=<?php echo $page - 1; ?><?php echo !empty($_GET['search']) ? '&search=' . urlencode($_GET['search']) : ''; ?>">
                     ← Anterior
                 </a>
             <?php endif; ?>
 
-            <?php for ($i = 1; $i <= $pagination['total_pages']; $i++): ?>
-                <?php if ($i == $pagination['page']): ?>
+            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                <?php if ($i == $page): ?>
                     <span class="active"><?php echo $i; ?></span>
                 <?php else: ?>
                     <a href="?page=<?php echo $i; ?><?php echo !empty($_GET['search']) ? '&search=' . urlencode($_GET['search']) : ''; ?>">
@@ -428,8 +495,8 @@ $departamentoOptions = mergeUniqueSorted($departamentosDB, $departamentosCategor
                 <?php endif; ?>
             <?php endfor; ?>
 
-            <?php if ($pagination['page'] < $pagination['total_pages']): ?>
-                <a href="?page=<?php echo $pagination['page'] + 1; ?><?php echo !empty($_GET['search']) ? '&search=' . urlencode($_GET['search']) : ''; ?>">
+            <?php if ($page < $totalPages): ?>
+                <a href="?page=<?php echo $page + 1; ?><?php echo !empty($_GET['search']) ? '&search=' . urlencode($_GET['search']) : ''; ?>">
                     Próxima →
                 </a>
             <?php endif; ?>
