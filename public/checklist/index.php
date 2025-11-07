@@ -32,18 +32,9 @@ $pageTitle = 'Checklists de Lojas';
 
 // Incluir header
 include APP_PATH . 'views/layouts/header.php';
-include APP_PATH . 'views/layouts/sidebar.php';
 ?>
 
 <style>
-    .main-content {
-        margin-left: 260px;
-        padding: 30px;
-        transition: margin-left 0.3s;
-    }
-    .main-content.sidebar-collapsed {
-        margin-left: 70px;
-    }
     .page-header {
         margin-bottom: 30px;
     }
@@ -168,8 +159,7 @@ include APP_PATH . 'views/layouts/sidebar.php';
     }
 </style>
 
-<div class="main-content" id="mainContent">
-    <div class="page-header">
+<div class="page-header">
         <h1>📋 Checklists de Lojas</h1>
         <p>Gerencie e visualize todas as avaliações realizadas</p>
     </div>
@@ -313,6 +303,5 @@ include APP_PATH . 'views/layouts/sidebar.php';
             Página <?php echo $dados['paginacao']['pagina_atual']; ?> de <?php echo $dados['paginacao']['total_paginas']; ?>
         </div>
     <?php endif; ?>
-</div>
 
 <?php include APP_PATH . 'views/layouts/footer.php'; ?>

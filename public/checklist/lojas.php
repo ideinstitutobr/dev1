@@ -85,18 +85,9 @@ $resultado = $lojaModel->listar($filtros);
 
 $pageTitle = 'Gerenciar Lojas';
 include APP_PATH . 'views/layouts/header.php';
-include APP_PATH . 'views/layouts/sidebar.php';
 ?>
 
 <style>
-    .main-content {
-        margin-left: 260px;
-        padding: 30px;
-        transition: margin-left 0.3s;
-    }
-    .main-content.sidebar-collapsed {
-        margin-left: 70px;
-    }
     .page-header {
         display: flex;
         justify-content: space-between;
@@ -293,8 +284,7 @@ include APP_PATH . 'views/layouts/sidebar.php';
     }
 </style>
 
-<div class="main-content" id="mainContent">
-    <div class="page-header">
+<div class="page-header">
         <div>
             <h1>🏪 Gerenciar Lojas</h1>
             <p>Cadastre e gerencie as lojas do sistema</p>
@@ -396,7 +386,6 @@ include APP_PATH . 'views/layouts/sidebar.php';
             </div>
         <?php endif; ?>
     </div>
-</div>
 
 <!-- Modal de Cadastro/Edição -->
 <div class="modal" id="modalLoja">
