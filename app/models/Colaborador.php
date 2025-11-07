@@ -28,12 +28,19 @@ class Colaborador {
 
         $offset = ($page - 1) * $perPage;
 
+        // Verifica se campos da nova estrutura existem
+        $temUnidadePrincipal = $this->hasColumn('colaboradores', 'unidade_principal_id');
+        $temSetorPrincipal = $this->hasColumn('colaboradores', 'setor_principal');
+
+        // Define alias da tabela baseado na estrutura
+        $tablePrefix = ($temUnidadePrincipal && $temSetorPrincipal) ? 'c.' : '';
+
         // Monta query com filtros
         $where = ['1=1'];
         $bindings = [];
 
         if (!empty($search)) {
-            $where[] = '(nome LIKE ? OR email LIKE ? OR cpf LIKE ?)';
+            $where[] = "({$tablePrefix}nome LIKE ? OR {$tablePrefix}email LIKE ? OR {$tablePrefix}cpf LIKE ?)";
             $searchTerm = "%{$search}%";
             $bindings[] = $searchTerm;
             $bindings[] = $searchTerm;
@@ -41,39 +48,39 @@ class Colaborador {
         }
 
         if (!empty($nivel)) {
-            $where[] = 'nivel_hierarquico = ?';
+            $where[] = "{$tablePrefix}nivel_hierarquico = ?";
             $bindings[] = $nivel;
         }
 
         if ($ativo !== '') {
-            $where[] = 'ativo = ?';
+            $where[] = "{$tablePrefix}ativo = ?";
             $bindings[] = $ativo;
         }
 
         if (!empty($cargo)) {
-            $where[] = 'cargo = ?';
+            $where[] = "{$tablePrefix}cargo = ?";
             $bindings[] = $cargo;
         }
 
         if (!empty($departamento)) {
-            $where[] = 'departamento = ?';
+            $where[] = "{$tablePrefix}departamento = ?";
             $bindings[] = $departamento;
         }
 
         // Adiciona filtro de setor somente se a coluna existir
         if (!empty($setor) && $this->hasColumn('colaboradores', 'setor')) {
-            $where[] = 'setor = ?';
+            $where[] = "{$tablePrefix}setor = ?";
             $bindings[] = $setor;
         }
 
         $whereClause = implode(' AND ', $where);
 
-        // Verifica se campos da nova estrutura existem
-        $temUnidadePrincipal = $this->hasColumn('colaboradores', 'unidade_principal_id');
-        $temSetorPrincipal = $this->hasColumn('colaboradores', 'setor_principal');
-
         // Conta total
-        $sql = "SELECT COUNT(*) as total FROM colaboradores WHERE {$whereClause}";
+        if ($temUnidadePrincipal && $temSetorPrincipal) {
+            $sql = "SELECT COUNT(*) as total FROM colaboradores c WHERE {$whereClause}";
+        } else {
+            $sql = "SELECT COUNT(*) as total FROM colaboradores WHERE {$whereClause}";
+        }
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($bindings);
         $total = $stmt->fetch()['total'];
@@ -82,7 +89,25 @@ class Colaborador {
         if ($temUnidadePrincipal && $temSetorPrincipal) {
             // Nova estrutura: busca dados de unidade e setor
             $sql = "SELECT
-                        c.*,
+                        c.id,
+                        c.nome,
+                        c.email,
+                        c.cpf,
+                        c.nivel_hierarquico,
+                        c.cargo,
+                        c.departamento,
+                        c.salario,
+                        c.data_admissao,
+                        c.telefone,
+                        c.ativo,
+                        c.origem,
+                        c.wordpress_id,
+                        c.foto_perfil,
+                        c.observacoes,
+                        c.created_at,
+                        c.updated_at,
+                        c.unidade_principal_id,
+                        c.setor_principal,
                         u.nome as unidade_nome,
                         u.codigo as unidade_codigo,
                         COALESCE(c.setor_principal, c.departamento) as setor_nome
@@ -147,7 +172,25 @@ class Colaborador {
         if ($temUnidadePrincipal && $temSetorPrincipal) {
             // Nova estrutura: busca com JOINs
             $sql = "SELECT
-                        c.*,
+                        c.id,
+                        c.nome,
+                        c.email,
+                        c.cpf,
+                        c.nivel_hierarquico,
+                        c.cargo,
+                        c.departamento,
+                        c.salario,
+                        c.data_admissao,
+                        c.telefone,
+                        c.ativo,
+                        c.origem,
+                        c.wordpress_id,
+                        c.foto_perfil,
+                        c.observacoes,
+                        c.created_at,
+                        c.updated_at,
+                        c.unidade_principal_id,
+                        c.setor_principal,
                         u.nome as unidade_nome,
                         u.codigo as unidade_codigo,
                         COALESCE(c.setor_principal, c.departamento) as setor_nome
