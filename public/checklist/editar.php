@@ -135,23 +135,53 @@ include APP_PATH . 'views/layouts/header.php';
     }
     .estrelas-container {
         display: flex;
-        gap: 10px;
+        gap: 15px;
         margin: 20px 0;
+        align-items: center;
     }
     .estrela {
-        font-size: 40px;
+        position: relative;
+        font-size: 50px;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         user-select: none;
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
     }
     .estrela.empty {
-        color: #ddd;
+        color: transparent;
+        -webkit-text-stroke: 2px #ddd;
+        text-stroke: 2px #ddd;
     }
     .estrela.filled {
         color: #ffd700;
+        -webkit-text-stroke: 2px #f39c12;
+        text-stroke: 2px #f39c12;
+        filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
+        animation: starPulse 0.4s ease-out;
     }
     .estrela:hover {
-        transform: scale(1.2);
+        transform: scale(1.3) rotate(10deg);
+        filter: drop-shadow(0 4px 12px rgba(255, 215, 0, 0.4));
+    }
+    .estrela.hover-preview {
+        color: #ffed4e;
+        -webkit-text-stroke: 2px #f39c12;
+        text-stroke: 2px #f39c12;
+        transform: scale(1.15);
+    }
+    @keyframes starPulse {
+        0% {
+            transform: scale(0.8);
+            filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.8));
+        }
+        50% {
+            transform: scale(1.2);
+            filter: drop-shadow(0 0 20px rgba(255, 215, 0, 1));
+        }
+        100% {
+            transform: scale(1);
+            filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
+        }
     }
     .observacao-area {
         margin-top: 15px;
@@ -462,9 +492,38 @@ function finalizarAvaliacao() {
     });
 }
 
+// Adicionar efeitos de hover nas estrelas
+function inicializarHoverEstrelas() {
+    const containers = document.querySelectorAll('.estrelas-container');
+
+    containers.forEach(container => {
+        const estrelas = container.querySelectorAll('.estrela');
+
+        estrelas.forEach((estrela, index) => {
+            // Efeito de hover preview
+            estrela.addEventListener('mouseenter', function() {
+                // Aplicar preview até a estrela atual
+                estrelas.forEach((e, i) => {
+                    if (i <= index) {
+                        e.classList.add('hover-preview');
+                    } else {
+                        e.classList.remove('hover-preview');
+                    }
+                });
+            });
+        });
+
+        // Remover preview quando sair do container
+        container.addEventListener('mouseleave', function() {
+            estrelas.forEach(e => e.classList.remove('hover-preview'));
+        });
+    });
+}
+
 // Atualizar progresso ao carregar a página
 document.addEventListener('DOMContentLoaded', function() {
     atualizarProgresso();
+    inicializarHoverEstrelas();
 });
 </script>
 
