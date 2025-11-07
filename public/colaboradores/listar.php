@@ -388,7 +388,7 @@ $departamentoOptions = mergeUniqueSorted($departamentosDB, $departamentosCategor
                         <?php endif; ?>
                     </td>
                     <td><?php echo !empty($col['cargo']) ? e($col['cargo']) : '-'; ?></td>
-                    <td><?php echo !empty($col['departamento']) ? e($col['departamento']) : '-'; ?></td>
+                    <td><?php echo !empty($col['departamento_exibicao']) ? e($col['departamento_exibicao']) : '-'; ?></td>
                     <td>
                         <div style="display: flex; gap: 5px;">
                             <a href="visualizar.php?id=<?php echo $col['id']; ?>" class="btn btn-sm btn-primary" title="Visualizar">👁️</a>

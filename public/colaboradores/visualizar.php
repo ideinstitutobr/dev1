@@ -283,8 +283,8 @@ include __DIR__ . '/../../app/views/layouts/header.php';
         <?php if ($colaborador['cargo']): ?>
             <span>💼 <?php echo e($colaborador['cargo']); ?></span>
         <?php endif; ?>
-        <?php if ($colaborador['departamento']): ?>
-            <span>🏢 <?php echo e($colaborador['departamento']); ?></span>
+        <?php if ($colaborador['departamento_exibicao']): ?>
+            <span>🏢 <?php echo e($colaborador['departamento_exibicao']); ?></span>
         <?php endif; ?>
         <span>
             <?php if ($colaborador['ativo']): ?>
@@ -362,8 +362,8 @@ include __DIR__ . '/../../app/views/layouts/header.php';
             <span class="info-value"><?php echo $colaborador['cargo'] ? e($colaborador['cargo']) : '-'; ?></span>
         </div>
         <div class="info-row">
-            <span class="info-label">Departamento:</span>
-            <span class="info-value"><?php echo $colaborador['departamento'] ? e($colaborador['departamento']) : '-'; ?></span>
+            <span class="info-label">Setor/Departamento:</span>
+            <span class="info-value"><?php echo $colaborador['departamento_exibicao'] ? e($colaborador['departamento_exibicao']) : '-'; ?></span>
         </div>
         <?php
         // Exibe Setor quando a coluna existir

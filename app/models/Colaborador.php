@@ -68,21 +68,51 @@ class Colaborador {
 
         $whereClause = implode(' AND ', $where);
 
+        // Verifica se campos da nova estrutura existem
+        $temUnidadePrincipal = $this->hasColumn('colaboradores', 'unidade_principal_id');
+        $temSetorPrincipal = $this->hasColumn('colaboradores', 'setor_principal');
+
         // Conta total
         $sql = "SELECT COUNT(*) as total FROM colaboradores WHERE {$whereClause}";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($bindings);
         $total = $stmt->fetch()['total'];
 
-        // Busca dados
-        $sql = "SELECT * FROM colaboradores
-                WHERE {$whereClause}
-                ORDER BY nome ASC
-                LIMIT {$perPage} OFFSET {$offset}";
+        // Busca dados com JOINs adequados
+        if ($temUnidadePrincipal && $temSetorPrincipal) {
+            // Nova estrutura: busca dados de unidade e setor
+            $sql = "SELECT
+                        c.*,
+                        u.nome as unidade_nome,
+                        u.codigo as unidade_codigo,
+                        COALESCE(c.setor_principal, c.departamento) as setor_nome
+                    FROM colaboradores c
+                    LEFT JOIN unidades u ON c.unidade_principal_id = u.id
+                    WHERE {$whereClause}
+                    ORDER BY c.nome ASC
+                    LIMIT {$perPage} OFFSET {$offset}";
+        } else {
+            // Estrutura antiga: busca dados diretos
+            $sql = "SELECT * FROM colaboradores
+                    WHERE {$whereClause}
+                    ORDER BY nome ASC
+                    LIMIT {$perPage} OFFSET {$offset}";
+        }
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($bindings);
         $colaboradores = $stmt->fetchAll();
+
+        // Normaliza os dados para garantir compatibilidade
+        foreach ($colaboradores as &$colaborador) {
+            // Se tem estrutura nova, usa setor_nome; senão usa departamento
+            if ($temSetorPrincipal && isset($colaborador['setor_nome'])) {
+                $colaborador['departamento_exibicao'] = $colaborador['setor_nome'];
+            } else {
+                $colaborador['departamento_exibicao'] = $colaborador['departamento'] ?? null;
+            }
+        }
+        unset($colaborador);
 
         return [
             'data' => $colaboradores,
@@ -110,9 +140,39 @@ class Colaborador {
      * Busca colaborador por ID
      */
     public function buscarPorId($id) {
-        $stmt = $this->pdo->prepare("SELECT * FROM colaboradores WHERE id = ?");
+        // Verifica se campos da nova estrutura existem
+        $temUnidadePrincipal = $this->hasColumn('colaboradores', 'unidade_principal_id');
+        $temSetorPrincipal = $this->hasColumn('colaboradores', 'setor_principal');
+
+        if ($temUnidadePrincipal && $temSetorPrincipal) {
+            // Nova estrutura: busca com JOINs
+            $sql = "SELECT
+                        c.*,
+                        u.nome as unidade_nome,
+                        u.codigo as unidade_codigo,
+                        COALESCE(c.setor_principal, c.departamento) as setor_nome
+                    FROM colaboradores c
+                    LEFT JOIN unidades u ON c.unidade_principal_id = u.id
+                    WHERE c.id = ?";
+        } else {
+            // Estrutura antiga
+            $sql = "SELECT * FROM colaboradores WHERE id = ?";
+        }
+
+        $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$id]);
-        return $stmt->fetch();
+        $colaborador = $stmt->fetch();
+
+        if ($colaborador) {
+            // Normaliza os dados
+            if ($temSetorPrincipal && isset($colaborador['setor_nome'])) {
+                $colaborador['departamento_exibicao'] = $colaborador['setor_nome'];
+            } else {
+                $colaborador['departamento_exibicao'] = $colaborador['departamento'] ?? null;
+            }
+        }
+
+        return $colaborador;
     }
 
     /**

@@ -254,7 +254,7 @@ class ColaboradorController {
                 $col['cpf'],
                 $col['nivel_hierarquico'],
                 $col['cargo'],
-                $col['departamento'],
+                $col['departamento_exibicao'] ?? $col['departamento'],
                 $col['salario'],
                 $col['data_admissao'],
                 $col['telefone'],
