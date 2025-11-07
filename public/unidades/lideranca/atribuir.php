@@ -109,9 +109,8 @@ $liderancasAtuais = $pdo->prepare("
 $liderancasAtuais->execute([$unidadeId]);
 $liderancas = $liderancasAtuais->fetchAll(PDO::FETCH_ASSOC);
 
-// Mapeamento de cargos
+// Mapeamento de cargos (sem Diretor de Varejo)
 $cargoLabels = [
-    'diretor_varejo' => 'Diretor de Varejo',
     'gerente_loja' => 'Gerente de Loja',
     'supervisor_loja' => 'Supervisor de Loja'
 ];
@@ -343,10 +342,12 @@ include __DIR__ . '/../../../app/views/layouts/header.php';
                 <label>Cargo de Liderança<span class="required">*</span></label>
                 <select name="cargo_lideranca" required id="cargo_select">
                     <option value="">Selecione o cargo...</option>
-                    <option value="diretor_varejo">👔 Diretor de Varejo</option>
                     <option value="gerente_loja">💼 Gerente de Loja</option>
                     <option value="supervisor_loja">📋 Supervisor de Loja</option>
                 </select>
+                <small style="color: #666; display: block; margin-top: 5px;">
+                    ℹ️ O Diretor de Varejo é definido no cadastro do colaborador, não por unidade.
+                </small>
 
                 <div class="cargo-info" id="cargo_info" style="display: none;"></div>
             </div>
@@ -405,9 +406,8 @@ include __DIR__ . '/../../../app/views/layouts/header.php';
 </div>
 
 <script>
-// Informações sobre os cargos
+// Informações sobre os cargos (sem Diretor de Varejo - definido no cadastro do colaborador)
 const cargoInfo = {
-    'diretor_varejo': 'Responsável pela direção estratégica de todas as operações de varejo. Cargo único por unidade.',
     'gerente_loja': 'Responsável pela gestão operacional da loja, incluindo vendas, estoque e equipe.',
     'supervisor_loja': 'Responsável por supervisionar setores específicos e auxiliar o gerente nas operações diárias.'
 };

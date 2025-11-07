@@ -205,6 +205,46 @@ class CategoriaLocalUnidade {
     }
 
     /**
+     * Exclui uma categoria permanentemente
+     */
+    public function excluir($id) {
+        try {
+            // Verifica se há unidades vinculadas
+            $totalUnidades = $this->contarUnidadesVinculadas($id);
+            if ($totalUnidades > 0) {
+                return [
+                    'success' => false,
+                    'message' => "Não é possível excluir esta categoria. Existem {$totalUnidades} unidade(s) vinculada(s). Desvincule as unidades primeiro ou inative a categoria ao invés de excluir."
+                ];
+            }
+
+            // Busca dados da categoria antes de excluir (para log)
+            $categoria = $this->buscarPorId($id);
+            if (!$categoria) {
+                return [
+                    'success' => false,
+                    'message' => 'Categoria não encontrada.'
+                ];
+            }
+
+            // Exclui permanentemente
+            $sql = "DELETE FROM categorias_local_unidade WHERE id = ?";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$id]);
+
+            return [
+                'success' => true,
+                'message' => 'Categoria "' . $categoria['nome'] . '" excluída permanentemente!'
+            ];
+        } catch (PDOException $e) {
+            return [
+                'success' => false,
+                'message' => 'Erro ao excluir categoria: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
      * Verifica se nome já existe
      */
     private function nomeExiste($nome, $excluirId = null) {

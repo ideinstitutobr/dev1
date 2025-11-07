@@ -20,7 +20,7 @@ if (!$unidadeId) {
     echo json_encode([
         'success' => false,
         'message' => 'unidade_id é obrigatório',
-        'data' => []
+        'setores' => []
     ]);
     exit;
 }
@@ -31,12 +31,13 @@ try {
 
     echo json_encode([
         'success' => true,
-        'data' => $setores
+        'setores' => $setores,  // Mudado de 'data' para 'setores'
+        'total' => count($setores)
     ]);
 } catch (Exception $e) {
     echo json_encode([
         'success' => false,
         'message' => 'Erro ao buscar setores: ' . $e->getMessage(),
-        'data' => []
+        'setores' => []
     ]);
 }
