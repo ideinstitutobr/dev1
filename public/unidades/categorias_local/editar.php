@@ -165,12 +165,6 @@ include __DIR__ . '/../../../app/views/layouts/header.php';
     }
 </style>
 
-<div class="main-content">
-    <div class="page-header">
-        <h1>✏️ Editar Categoria de Local</h1>
-        <p><?php echo $breadcrumb; ?></p>
-    </div>
-
     <div class="form-container">
         <?php if ($erro): ?>
             <div class="alert alert-danger"><?php echo htmlspecialchars($erro); ?></div>
@@ -243,7 +237,6 @@ include __DIR__ . '/../../../app/views/layouts/header.php';
                 <a href="listar.php" class="btn btn-secondary">❌ Cancelar</a>
             </div>
         </form>
-    </div>
-</div>
+    
 
-<?php include __DIR__ . '/../../../app/views/layouts/footer.php'; ?>
+<?php include __DIR__ . '/../../app/views/layouts/footer.php'; ?>

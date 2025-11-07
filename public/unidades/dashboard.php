@@ -233,12 +233,6 @@ include __DIR__ . '/../../app/views/layouts/header.php';
     }
 </style>
 
-<div class="main-content">
-    <div class="page-header">
-        <h1>📊 Dashboard de Unidades</h1>
-        <p><?php echo $breadcrumb; ?></p>
-    </div>
-
     <div class="dashboard">
         <!-- Ações Rápidas -->
         <div class="quick-actions">
@@ -403,7 +397,6 @@ include __DIR__ . '/../../app/views/layouts/header.php';
             <?php endforeach; ?>
         </div>
         <?php endif; ?>
-    </div>
-</div>
+    
 
 <?php include __DIR__ . '/../../app/views/layouts/footer.php'; ?>

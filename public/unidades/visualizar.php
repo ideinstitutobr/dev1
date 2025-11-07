@@ -147,13 +147,6 @@ include __DIR__ . '/../../app/views/layouts/header.php';
     }
 </style>
 
-<div class="main-content">
-    <div class="content-wrapper">
-        <div class="page-header">
-            <h1>👁️ <?php echo $pageTitle; ?></h1>
-            <p class="breadcrumb"><?php echo $breadcrumb; ?></p>
-        </div>
-
 <!-- Header da Unidade -->
 <div class="unit-header">
     <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -441,8 +434,5 @@ function showTab(tabName) {
     document.getElementById('tab-' + tabName).classList.add('active');
 }
 </script>
-
-    </div>
-</div>
 
 <?php include __DIR__ . '/../../app/views/layouts/footer.php'; ?>

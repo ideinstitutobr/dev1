@@ -342,12 +342,6 @@ include __DIR__ . '/../../../app/views/layouts/header.php';
     }
 </style>
 
-<div class="main-content">
-    <div class="page-header">
-        <h1>🏛️ Gerenciar Setores</h1>
-        <p><?php echo $breadcrumb; ?></p>
-    </div>
-
     <?php if ($sucesso): ?>
         <div class="alert alert-success"><?php echo htmlspecialchars($sucesso); ?></div>
     <?php endif; ?>

@@ -175,13 +175,7 @@ include __DIR__ . '/../../app/views/layouts/header.php';
     }
 </style>
 
-<div class="main-content">
-    <div class="page-header">
-        <h1>✏️ Editar Unidade</h1>
-        <p><?php echo $breadcrumb; ?></p>
-    </div>
-
-    <div class="form-container">
+<div class="form-container">
         <?php if ($erro): ?>
             <div class="alert alert-danger">
                 <?php echo htmlspecialchars($erro); ?>
@@ -376,6 +370,5 @@ include __DIR__ . '/../../app/views/layouts/header.php';
             </div>
         </form>
     </div>
-</div>
 
 <?php include __DIR__ . '/../../app/views/layouts/footer.php'; ?>
