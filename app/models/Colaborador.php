@@ -79,57 +79,37 @@ class Colaborador {
         $stmt->execute($bindings);
         $total = $stmt->fetch()['total'];
 
-        // Busca dados - sempre usando SELECT explícito
-        if ($usarNovaEstrutura) {
-            // Nova estrutura: com JOIN
+        // QUERY EXATA DO DIAGNÓSTICO QUE FUNCIONA
+        if ($temUnidadePrincipal && $temSetorPrincipal) {
+            // Nova estrutura: com JOIN (mesma do diagnóstico)
             $sql = "SELECT
                         c.id,
                         c.nome,
                         c.email,
-                        c.cpf,
                         c.nivel_hierarquico,
                         c.cargo,
                         c.departamento,
-                        c.salario,
-                        c.data_admissao,
-                        c.telefone,
-                        c.ativo,
-                        c.origem,
-                        c.wordpress_id,
-                        c.foto_perfil,
-                        c.observacoes,
-                        c.created_at,
-                        c.updated_at,
                         c.unidade_principal_id,
                         c.setor_principal,
-                        u.nome as unidade_nome,
-                        u.codigo as unidade_codigo,
-                        COALESCE(c.setor_principal, c.departamento) as setor_nome
+                        c.ativo,
+                        c.origem,
+                        u.nome as unidade_nome
                     FROM colaboradores c
                     LEFT JOIN unidades u ON c.unidade_principal_id = u.id
                     WHERE {$whereClause}
                     ORDER BY c.nome ASC
                     LIMIT {$perPage} OFFSET {$offset}";
         } else {
-            // Estrutura antiga: sem JOIN, mas ainda usando alias
+            // Estrutura antiga: sem JOIN (mesma do diagnóstico)
             $sql = "SELECT
                         c.id,
                         c.nome,
                         c.email,
-                        c.cpf,
                         c.nivel_hierarquico,
                         c.cargo,
                         c.departamento,
-                        c.salario,
-                        c.data_admissao,
-                        c.telefone,
                         c.ativo,
-                        c.origem,
-                        c.wordpress_id,
-                        c.foto_perfil,
-                        c.observacoes,
-                        c.created_at,
-                        c.updated_at
+                        c.origem
                     FROM colaboradores c
                     WHERE {$whereClause}
                     ORDER BY c.nome ASC
@@ -138,13 +118,14 @@ class Colaborador {
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($bindings);
-        $colaboradores = $stmt->fetchAll();
+        $colaboradores = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Normaliza os dados para garantir compatibilidade
+        // Normaliza os dados (mesma lógica do diagnóstico)
         foreach ($colaboradores as &$colaborador) {
-            // Se tem estrutura nova, usa setor_nome; senão usa departamento
-            if ($usarNovaEstrutura && isset($colaborador['setor_nome'])) {
-                $colaborador['departamento_exibicao'] = $colaborador['setor_nome'];
+            // Se tem setor_principal, usa ele; senão usa departamento
+            if ($temSetorPrincipal) {
+                $setor = $colaborador['setor_principal'] ?? $colaborador['departamento'] ?? null;
+                $colaborador['departamento_exibicao'] = $setor;
             } else {
                 $colaborador['departamento_exibicao'] = $colaborador['departamento'] ?? null;
             }
