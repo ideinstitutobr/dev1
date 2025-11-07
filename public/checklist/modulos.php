@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['acao_modulo'])) {
     try {
         switch ($_POST['acao_modulo']) {
             case 'criar':
-                $moduloModel->criar([
+                $moduloId = $moduloModel->criar([
                     'nome' => $_POST['nome'],
                     'descricao' => $_POST['descricao'],
                     'total_perguntas' => $_POST['total_perguntas'],
@@ -37,8 +37,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['acao_modulo'])) {
                     'ordem' => $_POST['ordem'],
                     'ativo' => isset($_POST['ativo']) ? 1 : 0
                 ]);
-                $mensagem = 'Módulo criado com sucesso!';
-                $tipo_mensagem = 'success';
+                // Redirecionar automaticamente para criar perguntas
+                header('Location: modulos.php?perguntas_modulo=' . $moduloId . '&novo_modulo=1');
+                exit;
                 break;
 
             case 'editar':
@@ -80,8 +81,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['acao_pergunta'])) {
                     'permite_foto' => isset($_POST['permite_foto']) ? 1 : 0,
                     'ativo' => isset($_POST['ativo']) ? 1 : 0
                 ]);
-                $mensagem = 'Pergunta criada com sucesso!';
-                $tipo_mensagem = 'success';
+                // Redirecionar de volta para a lista de perguntas
+                header('Location: modulos.php?perguntas_modulo=' . $_POST['modulo_id'] . '&pergunta_criada=1');
+                exit;
                 break;
 
             case 'editar':
@@ -358,6 +360,21 @@ include APP_PATH . 'views/layouts/header.php';
     <?php if ($mensagem): ?>
         <div class="alert alert-<?php echo $tipo_mensagem; ?>">
             <?php echo htmlspecialchars($mensagem); ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if (isset($_GET['novo_modulo']) && $moduloPerguntas): ?>
+        <div class="alert alert-success">
+            ✅ <strong>Módulo criado com sucesso!</strong><br>
+            Agora você pode adicionar as perguntas ao módulo "<strong><?php echo htmlspecialchars($moduloPerguntas['nome']); ?></strong>".<br>
+            Clique no botão "➕ Nova Pergunta" para começar.
+        </div>
+    <?php endif; ?>
+
+    <?php if (isset($_GET['pergunta_criada']) && $moduloPerguntas): ?>
+        <div class="alert alert-success">
+            ✅ <strong>Pergunta criada com sucesso!</strong><br>
+            Continue adicionando mais perguntas ou clique em "❌ Fechar" para voltar à lista de módulos.
         </div>
     <?php endif; ?>
 
