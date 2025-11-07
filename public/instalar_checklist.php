@@ -247,29 +247,48 @@ error_reporting(E_ALL);
                     // Executar schema
                     echo '<span class="info">[INFO] Criando tabelas do banco de dados...</span><br>';
 
-                    $statements = explode(';', $schema);
+                    // Parser SQL melhorado - Remove comentários e processa corretamente
+                    $schema = preg_replace('/--.*$/m', '', $schema); // Remove comentários de linha
+                    $schema = preg_replace('/\/\*.*?\*\//s', '', $schema); // Remove comentários de bloco
+
+                    // Divide por ; mas mantém statements completos
+                    $statements = array_filter(
+                        array_map('trim', explode(';', $schema)),
+                        function($stmt) {
+                            return !empty($stmt) && strlen($stmt) > 5;
+                        }
+                    );
+
                     $executados = 0;
+                    $tabelas = [];
 
                     foreach ($statements as $statement) {
-                        $statement = trim($statement);
-
-                        if (empty($statement) || strpos($statement, '--') === 0) {
+                        // Pular comandos vazios ou apenas USE
+                        if (preg_match('/^\s*(USE\s+|SET\s+)/i', $statement)) {
                             continue;
                         }
 
                         try {
                             $pdo->exec($statement);
                             $executados++;
+
+                            // Extrair nome da tabela para log
+                            if (preg_match('/CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?`?(\w+)`?/i', $statement, $matches)) {
+                                $tabelas[] = $matches[1];
+                                echo '<span class="success">  ✓ Tabela "' . $matches[1] . '" criada</span><br>';
+                            }
                         } catch (PDOException $e) {
                             if (strpos($e->getMessage(), 'already exists') !== false) {
-                                echo '<span class="warning">[AVISO] Tabela já existe, pulando...</span><br>';
+                                if (preg_match('/CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?`?(\w+)`?/i', $statement, $matches)) {
+                                    echo '<span class="warning">  ⚠ Tabela "' . $matches[1] . '" já existe</span><br>';
+                                }
                             } else {
                                 throw $e;
                             }
                         }
                     }
 
-                    echo '<span class="success">[OK] Tabelas criadas com sucesso! (' . $executados . ' comandos executados)</span><br><br>';
+                    echo '<span class="success">[OK] Processo concluído! ' . count($tabelas) . ' tabelas verificadas/criadas (' . $executados . ' comandos executados)</span><br><br>';
 
                     // Ler arquivo de seed
                     $seedFile = __DIR__ . '/../database/migrations/checklist_lojas_seed.sql';
@@ -284,29 +303,45 @@ error_reporting(E_ALL);
                     // Executar seed
                     echo '<span class="info">[INFO] Inserindo dados iniciais (módulos, perguntas, lojas)...</span><br>';
 
-                    $statements = explode(';', $seed);
+                    // Parser SQL melhorado - Remove comentários
+                    $seed = preg_replace('/--.*$/m', '', $seed);
+                    $seed = preg_replace('/\/\*.*?\*\//s', '', $seed);
+
+                    $statements = array_filter(
+                        array_map('trim', explode(';', $seed)),
+                        function($stmt) {
+                            return !empty($stmt) && strlen($stmt) > 5;
+                        }
+                    );
+
                     $executados = 0;
+                    $pulados = 0;
 
                     foreach ($statements as $statement) {
-                        $statement = trim($statement);
-
-                        if (empty($statement) || strpos($statement, '--') === 0) {
+                        // Pular comandos vazios, USE ou SET
+                        if (preg_match('/^\s*(USE\s+|SET\s+)/i', $statement)) {
                             continue;
                         }
 
                         try {
                             $pdo->exec($statement);
                             $executados++;
+
+                            // Log de progresso a cada 10 inserts
+                            if ($executados % 10 == 0) {
+                                echo '<span class="info">  • ' . $executados . ' comandos executados...</span><br>';
+                            }
                         } catch (PDOException $e) {
-                            if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
-                                echo '<span class="warning">[AVISO] Registro já existe, pulando...</span><br>';
+                            if (strpos($e->getMessage(), 'Duplicate entry') !== false ||
+                                strpos($e->getMessage(), 'Duplicate key') !== false) {
+                                $pulados++;
                             } else {
                                 throw $e;
                             }
                         }
                     }
 
-                    echo '<span class="success">[OK] Dados iniciais inseridos! (' . $executados . ' comandos executados)</span><br><br>';
+                    echo '<span class="success">[OK] Dados iniciais inseridos! (' . $executados . ' comandos executados, ' . $pulados . ' já existentes)</span><br><br>';
 
                     // Criar diretório de uploads
                     $uploadDir = __DIR__ . '/uploads/fotos_checklist';
