@@ -4,6 +4,8 @@
  * Gerencia perguntas dos módulos de avaliação
  */
 
+require_once __DIR__ . '/../classes/Database.php';
+
 class Pergunta {
     private $db;
     private $pdo;

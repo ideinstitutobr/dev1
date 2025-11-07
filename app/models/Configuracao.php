@@ -4,6 +4,8 @@
  * Gerencia configurações do sistema
  */
 
+require_once __DIR__ . '/../classes/Database.php';
+
 class Configuracao {
     private $db;
     private $pdo;

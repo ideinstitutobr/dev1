@@ -1,0 +1,607 @@
+<?php
+/**
+ * Página: Gerenciar Módulos e Perguntas
+ * CRUD de módulos de avaliação e suas perguntas
+ */
+
+require_once __DIR__ . '/../../app/config/config.php';
+require_once __DIR__ . '/../../app/config/database.php';
+require_once __DIR__ . '/../../app/classes/Database.php';
+require_once __DIR__ . '/../../app/classes/Auth.php';
+
+Auth::requireLogin();
+
+// Verificar permissão (apenas admin e gestor)
+if (!Auth::hasLevel(['admin', 'gestor'])) {
+    die('Você não tem permissão para acessar esta página');
+}
+
+require_once APP_PATH . 'models/ModuloAvaliacao.php';
+require_once APP_PATH . 'models/Pergunta.php';
+
+$moduloModel = new ModuloAvaliacao();
+$perguntaModel = new Pergunta();
+$mensagem = '';
+$tipo_mensagem = '';
+
+// Processar ações de módulo
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['acao_modulo'])) {
+    try {
+        switch ($_POST['acao_modulo']) {
+            case 'criar':
+                $moduloModel->criar([
+                    'nome' => $_POST['nome'],
+                    'descricao' => $_POST['descricao'],
+                    'total_perguntas' => $_POST['total_perguntas'],
+                    'peso_por_pergunta' => $_POST['peso_por_pergunta'],
+                    'ordem' => $_POST['ordem'],
+                    'ativo' => isset($_POST['ativo']) ? 1 : 0
+                ]);
+                $mensagem = 'Módulo criado com sucesso!';
+                $tipo_mensagem = 'success';
+                break;
+
+            case 'editar':
+                $moduloModel->atualizar($_POST['id'], [
+                    'nome' => $_POST['nome'],
+                    'descricao' => $_POST['descricao'],
+                    'total_perguntas' => $_POST['total_perguntas'],
+                    'peso_por_pergunta' => $_POST['peso_por_pergunta'],
+                    'ordem' => $_POST['ordem'],
+                    'ativo' => isset($_POST['ativo']) ? 1 : 0
+                ]);
+                $mensagem = 'Módulo atualizado com sucesso!';
+                $tipo_mensagem = 'success';
+                break;
+
+            case 'deletar':
+                $moduloModel->deletar($_POST['id']);
+                $mensagem = 'Módulo deletado com sucesso!';
+                $tipo_mensagem = 'success';
+                break;
+        }
+    } catch (Exception $e) {
+        $mensagem = 'Erro: ' . $e->getMessage();
+        $tipo_mensagem = 'danger';
+    }
+}
+
+// Processar ações de pergunta
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['acao_pergunta'])) {
+    try {
+        switch ($_POST['acao_pergunta']) {
+            case 'criar':
+                $perguntaModel->criar([
+                    'modulo_id' => $_POST['modulo_id'],
+                    'texto' => $_POST['texto'],
+                    'descricao' => $_POST['descricao'],
+                    'ordem' => $_POST['ordem'],
+                    'obrigatoria' => isset($_POST['obrigatoria']) ? 1 : 0,
+                    'permite_foto' => isset($_POST['permite_foto']) ? 1 : 0,
+                    'ativo' => isset($_POST['ativo']) ? 1 : 0
+                ]);
+                $mensagem = 'Pergunta criada com sucesso!';
+                $tipo_mensagem = 'success';
+                break;
+
+            case 'editar':
+                $perguntaModel->atualizar($_POST['id'], [
+                    'texto' => $_POST['texto'],
+                    'descricao' => $_POST['descricao'],
+                    'ordem' => $_POST['ordem'],
+                    'obrigatoria' => isset($_POST['obrigatoria']) ? 1 : 0,
+                    'permite_foto' => isset($_POST['permite_foto']) ? 1 : 0,
+                    'ativo' => isset($_POST['ativo']) ? 1 : 0
+                ]);
+                $mensagem = 'Pergunta atualizada com sucesso!';
+                $tipo_mensagem = 'success';
+                break;
+
+            case 'deletar':
+                $perguntaModel->deletar($_POST['id']);
+                $mensagem = 'Pergunta deletada com sucesso!';
+                $tipo_mensagem = 'success';
+                break;
+        }
+    } catch (Exception $e) {
+        $mensagem = 'Erro: ' . $e->getMessage();
+        $tipo_mensagem = 'danger';
+    }
+}
+
+// Buscar módulo para edição
+$moduloEditar = null;
+if (isset($_GET['editar_modulo'])) {
+    $moduloEditar = $moduloModel->buscarPorId($_GET['editar_modulo']);
+}
+
+// Buscar perguntas de um módulo
+$moduloPerguntas = null;
+$perguntas = [];
+if (isset($_GET['perguntas_modulo'])) {
+    $moduloPerguntas = $moduloModel->buscarPorId($_GET['perguntas_modulo']);
+    $perguntas = $perguntaModel->listarPorModulo($_GET['perguntas_modulo'], false);
+}
+
+// Buscar pergunta para edição
+$perguntaEditar = null;
+if (isset($_GET['editar_pergunta'])) {
+    $perguntaEditar = $perguntaModel->buscarPorId($_GET['editar_pergunta']);
+}
+
+// Listar todos os módulos
+$modulos = $moduloModel->listarAtivos();
+
+$pageTitle = 'Gerenciar Módulos';
+include APP_PATH . 'views/layouts/header.php';
+include APP_PATH . 'views/layouts/sidebar.php';
+?>
+
+<style>
+    .main-content {
+        margin-left: 260px;
+        padding: 30px;
+        transition: margin-left 0.3s;
+    }
+    .main-content.sidebar-collapsed {
+        margin-left: 70px;
+    }
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s;
+        margin: 5px;
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    .btn-success {
+        background: #28a745;
+        color: white;
+    }
+    .btn-warning {
+        background: #ffc107;
+        color: #212529;
+    }
+    .btn-danger {
+        background: #dc3545;
+        color: white;
+    }
+    .btn-info {
+        background: #17a2b8;
+        color: white;
+    }
+    .btn-sm {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    }
+    .modulos-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    .modulo-card {
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        transition: transform 0.2s;
+    }
+    .modulo-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    }
+    .modulo-card h3 {
+        margin-top: 0;
+        color: #333;
+    }
+    .modulo-card p {
+        color: #666;
+        font-size: 14px;
+        margin: 10px 0;
+    }
+    .modulo-stats {
+        display: flex;
+        gap: 15px;
+        margin: 15px 0;
+    }
+    .stat-item {
+        flex: 1;
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 8px;
+        text-align: center;
+    }
+    .stat-item strong {
+        display: block;
+        font-size: 20px;
+        color: #667eea;
+    }
+    .stat-item span {
+        font-size: 12px;
+        color: #666;
+    }
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 9999;
+        overflow-y: auto;
+    }
+    .modal.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .modal-content {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        max-width: 700px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .modal-header h2 {
+        margin: 0;
+    }
+    .close {
+        font-size: 30px;
+        cursor: pointer;
+        border: none;
+        background: none;
+    }
+    .form-group {
+        margin-bottom: 20px;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #333;
+    }
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 14px;
+    }
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+    .alert {
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    .alert-success {
+        background: #d4edda;
+        color: #155724;
+        border-left: 4px solid #28a745;
+    }
+    .alert-danger {
+        background: #f8d7da;
+        color: #721c24;
+        border-left: 4px solid #dc3545;
+    }
+    .perguntas-lista {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    .pergunta-item {
+        padding: 20px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .pergunta-item:last-child {
+        border-bottom: none;
+    }
+    .pergunta-numero {
+        display: inline-block;
+        background: #667eea;
+        color: white;
+        padding: 5px 12px;
+        border-radius: 50%;
+        font-weight: 600;
+        margin-right: 15px;
+    }
+    .pergunta-info {
+        flex: 1;
+    }
+    .pergunta-info h4 {
+        margin: 0 0 5px 0;
+        color: #333;
+    }
+    .pergunta-info p {
+        margin: 0;
+        color: #666;
+        font-size: 14px;
+    }
+</style>
+
+<div class="main-content" id="mainContent">
+    <div class="page-header">
+        <div>
+            <h1>⚙️ Gerenciar Módulos de Avaliação</h1>
+            <p>Configure os módulos e suas perguntas</p>
+        </div>
+        <button class="btn btn-primary" onclick="abrirModalModulo()">
+            ➕ Novo Módulo
+        </button>
+    </div>
+
+    <?php if ($mensagem): ?>
+        <div class="alert alert-<?php echo $tipo_mensagem; ?>">
+            <?php echo htmlspecialchars($mensagem); ?>
+        </div>
+    <?php endif; ?>
+
+    <!-- Grade de Módulos -->
+    <div class="modulos-grid">
+        <?php foreach ($modulos as $modulo): ?>
+            <?php $totalPerguntas = $moduloModel->contarPerguntas($modulo['id']); ?>
+            <div class="modulo-card">
+                <h3><?php echo htmlspecialchars($modulo['nome']); ?></h3>
+                <p><?php echo htmlspecialchars($modulo['descricao'] ?? 'Sem descrição'); ?></p>
+
+                <div class="modulo-stats">
+                    <div class="stat-item">
+                        <strong><?php echo $totalPerguntas; ?></strong>
+                        <span>Perguntas</span>
+                    </div>
+                    <div class="stat-item">
+                        <strong><?php echo $modulo['ordem']; ?></strong>
+                        <span>Ordem</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 15px;">
+                    <a href="?perguntas_modulo=<?php echo $modulo['id']; ?>" class="btn btn-info btn-sm">📝 Perguntas</a>
+                    <a href="?editar_modulo=<?php echo $modulo['id']; ?>" class="btn btn-warning btn-sm">✏️ Editar</a>
+                    <button onclick="confirmarDeleteModulo(<?php echo $modulo['id']; ?>)" class="btn btn-danger btn-sm">🗑️ Deletar</button>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    </div>
+
+    <!-- Lista de Perguntas (se selecionado) -->
+    <?php if ($moduloPerguntas): ?>
+        <div class="perguntas-lista">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>Perguntas: <?php echo htmlspecialchars($moduloPerguntas['nome']); ?></h2>
+                <div>
+                    <button class="btn btn-primary btn-sm" onclick="abrirModalPergunta(<?php echo $moduloPerguntas['id']; ?>)">
+                        ➕ Nova Pergunta
+                    </button>
+                    <a href="modulos.php" class="btn btn-danger btn-sm">❌ Fechar</a>
+                </div>
+            </div>
+
+            <?php if (empty($perguntas)): ?>
+                <p style="text-align: center; padding: 40px; color: #666;">
+                    Nenhuma pergunta cadastrada neste módulo
+                </p>
+            <?php else: ?>
+                <?php foreach ($perguntas as $index => $pergunta): ?>
+                    <div class="pergunta-item">
+                        <div class="pergunta-info">
+                            <span class="pergunta-numero"><?php echo $index + 1; ?></span>
+                            <h4><?php echo htmlspecialchars($pergunta['texto']); ?></h4>
+                            <?php if (!empty($pergunta['descricao'])): ?>
+                                <p><?php echo htmlspecialchars($pergunta['descricao']); ?></p>
+                            <?php endif; ?>
+                        </div>
+                        <div>
+                            <a href="?perguntas_modulo=<?php echo $moduloPerguntas['id']; ?>&editar_pergunta=<?php echo $pergunta['id']; ?>" class="btn btn-warning btn-sm">✏️</a>
+                            <button onclick="confirmarDeletePergunta(<?php echo $pergunta['id']; ?>, <?php echo $moduloPerguntas['id']; ?>)" class="btn btn-danger btn-sm">🗑️</button>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
+</div>
+
+<!-- Modal de Módulo -->
+<div class="modal" id="modalModulo">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><?php echo $moduloEditar ? 'Editar Módulo' : 'Novo Módulo'; ?></h2>
+            <button class="close" onclick="fecharModalModulo()">&times;</button>
+        </div>
+        <form method="POST">
+            <input type="hidden" name="acao_modulo" value="<?php echo $moduloEditar ? 'editar' : 'criar'; ?>">
+            <?php if ($moduloEditar): ?>
+                <input type="hidden" name="id" value="<?php echo $moduloEditar['id']; ?>">
+            <?php endif; ?>
+
+            <div class="form-group">
+                <label>Nome do Módulo *</label>
+                <input type="text" name="nome" class="form-control" required
+                       value="<?php echo $moduloEditar ? htmlspecialchars($moduloEditar['nome']) : ''; ?>">
+            </div>
+
+            <div class="form-group">
+                <label>Descrição</label>
+                <textarea name="descricao" class="form-control" rows="3"><?php echo $moduloEditar ? htmlspecialchars($moduloEditar['descricao'] ?? '') : ''; ?></textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Total de Perguntas *</label>
+                    <input type="number" name="total_perguntas" class="form-control" required
+                           value="<?php echo $moduloEditar ? $moduloEditar['total_perguntas'] : 8; ?>">
+                </div>
+                <div class="form-group">
+                    <label>Peso por Pergunta *</label>
+                    <input type="number" step="0.001" name="peso_por_pergunta" class="form-control" required
+                           value="<?php echo $moduloEditar ? $moduloEditar['peso_por_pergunta'] : 0.625; ?>">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Ordem de Exibição</label>
+                    <input type="number" name="ordem" class="form-control"
+                           value="<?php echo $moduloEditar ? $moduloEditar['ordem'] : 0; ?>">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="ativo" value="1" <?php echo (!$moduloEditar || $moduloEditar['ativo']) ? 'checked' : ''; ?>>
+                        Módulo Ativo
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group" style="text-align: center;">
+                <button type="submit" class="btn btn-success">💾 Salvar</button>
+                <button type="button" class="btn btn-danger" onclick="fecharModalModulo()">❌ Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal de Pergunta -->
+<div class="modal" id="modalPergunta">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><?php echo $perguntaEditar ? 'Editar Pergunta' : 'Nova Pergunta'; ?></h2>
+            <button class="close" onclick="fecharModalPergunta()">&times;</button>
+        </div>
+        <form method="POST">
+            <input type="hidden" name="acao_pergunta" value="<?php echo $perguntaEditar ? 'editar' : 'criar'; ?>">
+            <?php if ($perguntaEditar): ?>
+                <input type="hidden" name="id" value="<?php echo $perguntaEditar['id']; ?>">
+            <?php endif; ?>
+            <input type="hidden" name="modulo_id" id="modalPerguntaModuloId" value="<?php echo $perguntaEditar ? $perguntaEditar['modulo_id'] : ''; ?>">
+
+            <div class="form-group">
+                <label>Texto da Pergunta *</label>
+                <textarea name="texto" class="form-control" rows="3" required><?php echo $perguntaEditar ? htmlspecialchars($perguntaEditar['texto']) : ''; ?></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Descrição/Orientação</label>
+                <textarea name="descricao" class="form-control" rows="2"><?php echo $perguntaEditar ? htmlspecialchars($perguntaEditar['descricao'] ?? '') : ''; ?></textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Ordem</label>
+                    <input type="number" name="ordem" class="form-control"
+                           value="<?php echo $perguntaEditar ? $perguntaEditar['ordem'] : 0; ?>">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="obrigatoria" value="1" <?php echo (!$perguntaEditar || $perguntaEditar['obrigatoria']) ? 'checked' : ''; ?>>
+                        Obrigatória
+                    </label>
+                    <br>
+                    <label>
+                        <input type="checkbox" name="permite_foto" value="1" <?php echo (!$perguntaEditar || $perguntaEditar['permite_foto']) ? 'checked' : ''; ?>>
+                        Permite Foto
+                    </label>
+                    <br>
+                    <label>
+                        <input type="checkbox" name="ativo" value="1" <?php echo (!$perguntaEditar || $perguntaEditar['ativo']) ? 'checked' : ''; ?>>
+                        Ativa
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group" style="text-align: center;">
+                <button type="submit" class="btn btn-success">💾 Salvar</button>
+                <button type="button" class="btn btn-danger" onclick="fecharModalPergunta()">❌ Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Forms ocultos para deletar -->
+<form method="POST" id="formDeleteModulo" style="display: none;">
+    <input type="hidden" name="acao_modulo" value="deletar">
+    <input type="hidden" name="id" id="deleteModuloId">
+</form>
+
+<form method="POST" id="formDeletePergunta" style="display: none;">
+    <input type="hidden" name="acao_pergunta" value="deletar">
+    <input type="hidden" name="id" id="deletePerguntaId">
+</form>
+
+<script>
+    function abrirModalModulo() {
+        document.getElementById('modalModulo').classList.add('show');
+    }
+
+    function fecharModalModulo() {
+        document.getElementById('modalModulo').classList.remove('show');
+    }
+
+    function abrirModalPergunta(moduloId) {
+        document.getElementById('modalPerguntaModuloId').value = moduloId;
+        document.getElementById('modalPergunta').classList.add('show');
+    }
+
+    function fecharModalPergunta() {
+        document.getElementById('modalPergunta').classList.remove('show');
+    }
+
+    function confirmarDeleteModulo(id) {
+        if (confirm('Tem certeza que deseja deletar este módulo?\n\nATENÇÃO: As perguntas e checklists deste módulo também serão afetados!')) {
+            document.getElementById('deleteModuloId').value = id;
+            document.getElementById('formDeleteModulo').submit();
+        }
+    }
+
+    function confirmarDeletePergunta(id, moduloId) {
+        if (confirm('Tem certeza que deseja deletar esta pergunta?')) {
+            document.getElementById('deletePerguntaId').value = id;
+            document.getElementById('formDeletePergunta').submit();
+        }
+    }
+
+    <?php if ($moduloEditar): ?>
+        abrirModalModulo();
+    <?php endif; ?>
+
+    <?php if ($perguntaEditar): ?>
+        abrirModalPergunta(<?php echo $perguntaEditar['modulo_id']; ?>);
+    <?php endif; ?>
+</script>
+
+<?php include APP_PATH . 'views/layouts/footer.php'; ?>

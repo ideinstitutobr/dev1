@@ -4,6 +4,8 @@
  * Gerencia módulos de avaliação (setores)
  */
 
+require_once __DIR__ . '/../classes/Database.php';
+
 class ModuloAvaliacao {
     private $db;
     private $pdo;

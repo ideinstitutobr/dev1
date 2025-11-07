@@ -4,6 +4,8 @@
  * Gerencia respostas de checklists
  */
 
+require_once __DIR__ . '/../classes/Database.php';
+
 class RespostaChecklist {
     private $db;
     private $pdo;
