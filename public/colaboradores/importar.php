@@ -203,15 +203,21 @@ Nome,CPF,E-mail<br>
 João da Silva,123.456.789-00,joao@empresa.com<br>
 Maria Santos,987.654.321-00,maria@empresa.com
         </div>
-        <a href="template_importacao.csv" class="btn btn-success" download>
-            ⬇️ Baixar Modelo CSV
-        </a>
+        <p style="margin-top: 15px;"><strong>Formatos aceitos:</strong> CSV (.csv) ou Excel (.xlsx, .xls)</p>
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <a href="template_importacao.csv" class="btn btn-success" download>
+                📄 Baixar Modelo CSV
+            </a>
+            <a href="template_excel.php" class="btn btn-success">
+                📊 Baixar Modelo Excel
+            </a>
+        </div>
     </div>
 
     <div class="instructions">
         <h3>📋 Instruções de Importação</h3>
         <ol>
-            <li><strong>Prepare seu arquivo:</strong> Use o modelo CSV acima ou crie um arquivo com as colunas: Nome, CPF e E-mail</li>
+            <li><strong>Prepare seu arquivo:</strong> Use CSV ou Excel com as colunas: Nome, CPF e E-mail (nessa ordem)</li>
             <li><strong>Formato dos dados:</strong>
                 <ul>
                     <li>Nome: Nome completo do colaborador (obrigatório)</li>
@@ -219,8 +225,9 @@ Maria Santos,987.654.321-00,maria@empresa.com
                     <li>E-mail: E-mail válido e único para cada colaborador (obrigatório)</li>
                 </ul>
             </li>
-            <li><strong>Atenção:</strong> A primeira linha deve conter os cabeçalhos (Nome,CPF,E-mail)</li>
-            <li><strong>Codificação:</strong> Salve o arquivo em UTF-8 para evitar problemas com acentos</li>
+            <li><strong>Atenção:</strong> A primeira linha deve conter os cabeçalhos (Nome, CPF, E-mail)</li>
+            <li><strong>Excel:</strong> Se usar Excel, salve como .xlsx ou exporte como CSV</li>
+            <li><strong>CSV:</strong> Salve em UTF-8 para evitar problemas com acentos</li>
             <li><strong>Após importação:</strong> Complete os dados profissionais (Nível Hierárquico, Cargo, etc.) editando cada colaborador</li>
         </ol>
     </div>
