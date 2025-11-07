@@ -193,42 +193,58 @@ include __DIR__ . '/../../app/views/layouts/header.php';
 
 <div class="import-container">
     <h2>📊 Importação em Massa de Colaboradores</h2>
-    <p style="color: #666; margin-bottom: 30px;">Importe vários colaboradores de uma vez usando um arquivo CSV ou Excel</p>
+    <p style="color: #666; margin-bottom: 30px;">Importe vários colaboradores de uma vez usando um arquivo CSV</p>
 
     <div class="template-box">
         <h4>📥 Modelo de Arquivo para Importação</h4>
-        <p>O arquivo deve conter as seguintes colunas (na ordem exata):</p>
+        <p>O arquivo CSV deve conter as colunas obrigatórias: <strong>Nome</strong> e <strong>E-mail</strong>. A coluna <strong>CPF</strong> é opcional.</p>
+        <p style="margin-top: 10px;"><strong>✨ Detecção inteligente:</strong> As colunas podem estar em qualquer ordem e aceitar variações de nome:</p>
+        <ul style="margin: 10px 0; padding-left: 20px;">
+            <li><strong>Nome:</strong> aceita "Nome", "Nome Completo", "Nome do Colaborador", "Colaborador", "Funcionário"</li>
+            <li><strong>CPF:</strong> aceita "CPF", "Documento", "Doc"</li>
+            <li><strong>E-mail:</strong> aceita "E-mail", "Email", "Mail", "Correio", "Email Corporativo"</li>
+        </ul>
         <div class="csv-preview">
 Nome,CPF,E-mail<br>
 João da Silva,123.456.789-00,joao@empresa.com<br>
 Maria Santos,987.654.321-00,maria@empresa.com
         </div>
-        <p style="margin-top: 15px;"><strong>Formatos aceitos:</strong> CSV (.csv) ou Excel (.xlsx, .xls)</p>
-        <div style="display: flex; gap: 10px; margin-top: 15px;">
-            <a href="template_importacao.csv" class="btn btn-success" download>
-                📄 Baixar Modelo CSV
-            </a>
-            <a href="template_excel.php" class="btn btn-success">
-                📊 Baixar Modelo Excel
-            </a>
-        </div>
+        <p style="margin-top: 15px;"><strong>Formato:</strong> CSV (.csv) com codificação UTF-8</p>
+        <a href="template_importacao.csv" class="btn btn-success" download>
+            📄 Baixar Modelo CSV
+        </a>
     </div>
 
     <div class="instructions">
         <h3>📋 Instruções de Importação</h3>
         <ol>
-            <li><strong>Prepare seu arquivo:</strong> Use CSV ou Excel com as colunas: Nome, CPF e E-mail (nessa ordem)</li>
-            <li><strong>Formato dos dados:</strong>
+            <li><strong>Prepare seu arquivo CSV:</strong>
                 <ul>
-                    <li>Nome: Nome completo do colaborador (obrigatório)</li>
-                    <li>CPF: Pode incluir ou não formatação (000.000.000-00 ou 00000000000)</li>
-                    <li>E-mail: E-mail válido e único para cada colaborador (obrigatório)</li>
+                    <li>Primeira linha deve ter o cabeçalho com os nomes das colunas</li>
+                    <li>As colunas podem estar em qualquer ordem</li>
+                    <li>Aceita variações nos nomes (ex: "E-mail" ou "Email" ou "Mail")</li>
                 </ul>
             </li>
-            <li><strong>Atenção:</strong> A primeira linha deve conter os cabeçalhos (Nome, CPF, E-mail)</li>
-            <li><strong>Excel:</strong> Use apenas .xlsx (Excel 2007+). Arquivos .xls antigos NÃO são suportados - salve como .xlsx ou CSV</li>
-            <li><strong>CSV:</strong> Salve em UTF-8 para evitar problemas com acentos</li>
-            <li><strong>Após importação:</strong> Complete os dados profissionais (Nível Hierárquico, Cargo, etc.) editando cada colaborador</li>
+            <li><strong>Campos obrigatórios:</strong>
+                <ul>
+                    <li><strong>Nome:</strong> Nome completo do colaborador</li>
+                    <li><strong>E-mail:</strong> E-mail válido e único para cada colaborador</li>
+                </ul>
+            </li>
+            <li><strong>Campos opcionais:</strong>
+                <ul>
+                    <li><strong>CPF:</strong> Com ou sem formatação (123.456.789-00 ou 12345678900)</li>
+                </ul>
+            </li>
+            <li><strong>Formato do arquivo:</strong>
+                <ul>
+                    <li>Arquivo CSV (.csv)</li>
+                    <li>Codificação UTF-8 (para acentos funcionarem corretamente)</li>
+                    <li>Delimitador: vírgula, ponto-vírgula ou tab (detectado automaticamente)</li>
+                </ul>
+            </li>
+            <li><strong>Se você tem Excel:</strong> Salve como → CSV UTF-8 (*.csv)</li>
+            <li><strong>Após importação:</strong> Complete os dados profissionais (Nível Hierárquico, Cargo, Setor, etc.) editando cada colaborador</li>
         </ol>
     </div>
 
@@ -246,9 +262,9 @@ Maria Santos,987.654.321-00,maria@empresa.com
 
         <div class="file-upload-area" id="uploadArea">
             <label for="file" class="file-upload-label">
-                📁 Selecionar Arquivo CSV/Excel
+                📁 Selecionar Arquivo CSV
             </label>
-            <input type="file" name="file" id="file" accept=".csv,.xlsx" required>
+            <input type="file" name="file" id="file" accept=".csv" required>
             <p style="margin-top: 15px; color: #6b7280;">
                 ou arraste e solte o arquivo aqui
             </p>
