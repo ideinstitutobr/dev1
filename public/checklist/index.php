@@ -9,7 +9,7 @@ require_once __DIR__ . '/../../app/config/database.php';
 require_once __DIR__ . '/../../app/classes/Auth.php';
 
 // Verificar autenticação
-Auth::checkAuth();
+Auth::requireLogin();
 
 // Incluir models e controllers necessários
 require_once APP_PATH . 'models/Checklist.php';
