@@ -238,6 +238,22 @@
         </li>
 
         <li>
+            <a href="#" onclick="toggleSubmenu('formularios'); return false;">
+                <span class="icon">📋</span>
+                <span class="text">Formulários</span>
+            </a>
+            <ul class="submenu" id="submenu-formularios">
+                <li><a href="<?php echo BASE_URL; ?>checklist/">📝 Checklists de Lojas</a></li>
+                <li><a href="<?php echo BASE_URL; ?>checklist/novo.php">➕ Nova Avaliação</a></li>
+                <li><a href="<?php echo BASE_URL; ?>checklist/lojas.php">🏪 Gerenciar Lojas</a></li>
+                <li><a href="<?php echo BASE_URL; ?>checklist/relatorios/">📊 Dashboard & Relatórios</a></li>
+                <?php if (Auth::hasLevel(['admin', 'gestor'])): ?>
+                <li><a href="<?php echo BASE_URL; ?>checklist/modulos.php">⚙️ Configurar Módulos</a></li>
+                <?php endif; ?>
+            </ul>
+        </li>
+
+        <li>
             <a href="#" onclick="toggleSubmenu('relatorios'); return false;">
                 <span class="icon">📈</span>
                 <span class="text">Relatórios</span>
