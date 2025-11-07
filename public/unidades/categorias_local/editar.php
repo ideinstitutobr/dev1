@@ -239,4 +239,4 @@ include __DIR__ . '/../../../app/views/layouts/header.php';
         </form>
     
 
-<?php include __DIR__ . '/../../app/views/layouts/footer.php'; ?>
+<?php include __DIR__ . '/../../../app/views/layouts/footer.php'; ?>
