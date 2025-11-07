@@ -31,16 +31,14 @@ class Colaborador {
         // Verifica se campos da nova estrutura existem
         $temUnidadePrincipal = $this->hasColumn('colaboradores', 'unidade_principal_id');
         $temSetorPrincipal = $this->hasColumn('colaboradores', 'setor_principal');
+        $usarNovaEstrutura = $temUnidadePrincipal && $temSetorPrincipal;
 
-        // Define alias da tabela baseado na estrutura
-        $tablePrefix = ($temUnidadePrincipal && $temSetorPrincipal) ? 'c.' : '';
-
-        // Monta query com filtros
+        // Monta query com filtros - usando alias sempre
         $where = ['1=1'];
         $bindings = [];
 
         if (!empty($search)) {
-            $where[] = "({$tablePrefix}nome LIKE ? OR {$tablePrefix}email LIKE ? OR {$tablePrefix}cpf LIKE ?)";
+            $where[] = "(c.nome LIKE ? OR c.email LIKE ? OR c.cpf LIKE ?)";
             $searchTerm = "%{$search}%";
             $bindings[] = $searchTerm;
             $bindings[] = $searchTerm;
@@ -48,46 +46,42 @@ class Colaborador {
         }
 
         if (!empty($nivel)) {
-            $where[] = "{$tablePrefix}nivel_hierarquico = ?";
+            $where[] = "c.nivel_hierarquico = ?";
             $bindings[] = $nivel;
         }
 
         if ($ativo !== '') {
-            $where[] = "{$tablePrefix}ativo = ?";
+            $where[] = "c.ativo = ?";
             $bindings[] = $ativo;
         }
 
         if (!empty($cargo)) {
-            $where[] = "{$tablePrefix}cargo = ?";
+            $where[] = "c.cargo = ?";
             $bindings[] = $cargo;
         }
 
         if (!empty($departamento)) {
-            $where[] = "{$tablePrefix}departamento = ?";
+            $where[] = "c.departamento = ?";
             $bindings[] = $departamento;
         }
 
         // Adiciona filtro de setor somente se a coluna existir
         if (!empty($setor) && $this->hasColumn('colaboradores', 'setor')) {
-            $where[] = "{$tablePrefix}setor = ?";
+            $where[] = "c.setor = ?";
             $bindings[] = $setor;
         }
 
         $whereClause = implode(' AND ', $where);
 
-        // Conta total
-        if ($temUnidadePrincipal && $temSetorPrincipal) {
-            $sql = "SELECT COUNT(*) as total FROM colaboradores c WHERE {$whereClause}";
-        } else {
-            $sql = "SELECT COUNT(*) as total FROM colaboradores WHERE {$whereClause}";
-        }
+        // Conta total - sempre usando alias
+        $sql = "SELECT COUNT(*) as total FROM colaboradores c WHERE {$whereClause}";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($bindings);
         $total = $stmt->fetch()['total'];
 
-        // Busca dados com JOINs adequados
-        if ($temUnidadePrincipal && $temSetorPrincipal) {
-            // Nova estrutura: busca dados de unidade e setor
+        // Busca dados - sempre usando SELECT explícito
+        if ($usarNovaEstrutura) {
+            // Nova estrutura: com JOIN
             $sql = "SELECT
                         c.id,
                         c.nome,
@@ -117,10 +111,28 @@ class Colaborador {
                     ORDER BY c.nome ASC
                     LIMIT {$perPage} OFFSET {$offset}";
         } else {
-            // Estrutura antiga: busca dados diretos
-            $sql = "SELECT * FROM colaboradores
+            // Estrutura antiga: sem JOIN, mas ainda usando alias
+            $sql = "SELECT
+                        c.id,
+                        c.nome,
+                        c.email,
+                        c.cpf,
+                        c.nivel_hierarquico,
+                        c.cargo,
+                        c.departamento,
+                        c.salario,
+                        c.data_admissao,
+                        c.telefone,
+                        c.ativo,
+                        c.origem,
+                        c.wordpress_id,
+                        c.foto_perfil,
+                        c.observacoes,
+                        c.created_at,
+                        c.updated_at
+                    FROM colaboradores c
                     WHERE {$whereClause}
-                    ORDER BY nome ASC
+                    ORDER BY c.nome ASC
                     LIMIT {$perPage} OFFSET {$offset}";
         }
 
@@ -131,7 +143,7 @@ class Colaborador {
         // Normaliza os dados para garantir compatibilidade
         foreach ($colaboradores as &$colaborador) {
             // Se tem estrutura nova, usa setor_nome; senão usa departamento
-            if ($temSetorPrincipal && isset($colaborador['setor_nome'])) {
+            if ($usarNovaEstrutura && isset($colaborador['setor_nome'])) {
                 $colaborador['departamento_exibicao'] = $colaborador['setor_nome'];
             } else {
                 $colaborador['departamento_exibicao'] = $colaborador['departamento'] ?? null;
@@ -168,9 +180,10 @@ class Colaborador {
         // Verifica se campos da nova estrutura existem
         $temUnidadePrincipal = $this->hasColumn('colaboradores', 'unidade_principal_id');
         $temSetorPrincipal = $this->hasColumn('colaboradores', 'setor_principal');
+        $usarNovaEstrutura = $temUnidadePrincipal && $temSetorPrincipal;
 
-        if ($temUnidadePrincipal && $temSetorPrincipal) {
-            // Nova estrutura: busca com JOINs
+        if ($usarNovaEstrutura) {
+            // Nova estrutura: com JOIN
             $sql = "SELECT
                         c.id,
                         c.nome,
@@ -198,8 +211,27 @@ class Colaborador {
                     LEFT JOIN unidades u ON c.unidade_principal_id = u.id
                     WHERE c.id = ?";
         } else {
-            // Estrutura antiga
-            $sql = "SELECT * FROM colaboradores WHERE id = ?";
+            // Estrutura antiga: sem JOIN, mas com SELECT explícito
+            $sql = "SELECT
+                        c.id,
+                        c.nome,
+                        c.email,
+                        c.cpf,
+                        c.nivel_hierarquico,
+                        c.cargo,
+                        c.departamento,
+                        c.salario,
+                        c.data_admissao,
+                        c.telefone,
+                        c.ativo,
+                        c.origem,
+                        c.wordpress_id,
+                        c.foto_perfil,
+                        c.observacoes,
+                        c.created_at,
+                        c.updated_at
+                    FROM colaboradores c
+                    WHERE c.id = ?";
         }
 
         $stmt = $this->pdo->prepare($sql);
@@ -208,7 +240,7 @@ class Colaborador {
 
         if ($colaborador) {
             // Normaliza os dados
-            if ($temSetorPrincipal && isset($colaborador['setor_nome'])) {
+            if ($usarNovaEstrutura && isset($colaborador['setor_nome'])) {
                 $colaborador['departamento_exibicao'] = $colaborador['setor_nome'];
             } else {
                 $colaborador['departamento_exibicao'] = $colaborador['departamento'] ?? null;
