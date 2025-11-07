@@ -91,6 +91,13 @@ class CategoriaLocalUnidadeController {
     }
 
     /**
+     * Exclui categoria
+     */
+    public function excluir($id) {
+        return $this->model->excluir($id);
+    }
+
+    /**
      * Valida dados
      */
     private function validarDados($dados) {

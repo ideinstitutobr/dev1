@@ -19,7 +19,7 @@ $sucesso = $_SESSION['success_message'] ?? '';
 $erro = $_SESSION['error_message'] ?? '';
 unset($_SESSION['success_message'], $_SESSION['error_message']);
 
-// Ações de ativar/inativar
+// Ações de ativar/inativar/excluir
 if (isset($_GET['acao']) && isset($_GET['id'])) {
     $id = filter_var($_GET['id'], FILTER_VALIDATE_INT);
     if ($id) {
@@ -27,6 +27,8 @@ if (isset($_GET['acao']) && isset($_GET['id'])) {
             $resultado = $controller->inativar($id);
         } elseif ($_GET['acao'] === 'ativar') {
             $resultado = $controller->ativar($id);
+        } elseif ($_GET['acao'] === 'excluir') {
+            $resultado = $controller->excluir($id);
         }
 
         if (isset($resultado)) {
@@ -168,6 +170,10 @@ include __DIR__ . '/../../../app/views/layouts/header.php';
         background: #6c757d;
         color: white;
     }
+    .action-btn-delete {
+        background: #dc3545;
+        color: white;
+    }
     .action-btn:hover {
         opacity: 0.8;
     }
@@ -294,6 +300,13 @@ include __DIR__ . '/../../../app/views/layouts/header.php';
                                             ✅ Ativar
                                         </a>
                                     <?php endif; ?>
+                                    <a
+                                        href="listar.php?acao=excluir&id=<?php echo $cat['id']; ?>"
+                                        class="action-btn action-btn-delete"
+                                        onclick="return confirm('⚠️ ATENÇÃO: Deseja realmente EXCLUIR esta categoria?\n\nEsta ação é PERMANENTE e não pode ser desfeita!\n\nSe houver unidades vinculadas a esta categoria, a exclusão NÃO será permitida.');"
+                                    >
+                                        🗑️ Excluir
+                                    </a>
                                 </div>
                             </td>
                         </tr>
