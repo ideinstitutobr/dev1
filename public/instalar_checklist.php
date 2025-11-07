@@ -6,7 +6,7 @@
  * do sistema de checklist de lojas.
  *
  * INSTRUÇÕES:
- * 1. Acesse este arquivo pelo navegador: http://seudominio.com/database/instalar_checklist.php
+ * 1. Acesse este arquivo pelo navegador: http://seudominio.com/instalar_checklist.php
  * 2. Clique em "Instalar Banco de Dados"
  * 3. Aguarde a conclusão
  * 4. Por segurança, DELETE este arquivo após a instalação
@@ -21,8 +21,8 @@ define('INSTALADOR_ATIVO', true);
 require_once __DIR__ . '/../app/config/database.php';
 
 // Verificar se já foi instalado (opcional - pode comentar esta linha para reinstalar)
-// if (file_exists(__DIR__ . '/.checklist_instalado')) {
-//     die('Sistema de checklist já foi instalado! Delete o arquivo .checklist_instalado para reinstalar.');
+// if (file_exists(__DIR__ . '/uploads/.checklist_instalado')) {
+//     die('Sistema de checklist já foi instalado! Delete o arquivo uploads/.checklist_instalado para reinstalar.');
 // }
 
 ?>
@@ -219,7 +219,7 @@ require_once __DIR__ . '/../app/config/database.php';
                     echo '<span class="info">[INFO] Iniciando instalação...</span><br><br>';
 
                     // Ler arquivo de schema
-                    $schemaFile = __DIR__ . '/migrations/checklist_lojas_schema.sql';
+                    $schemaFile = __DIR__ . '/../database/migrations/checklist_lojas_schema.sql';
                     if (!file_exists($schemaFile)) {
                         throw new Exception('Arquivo de schema não encontrado: ' . $schemaFile);
                     }
@@ -253,7 +253,7 @@ require_once __DIR__ . '/../app/config/database.php';
                     echo '<span class="success">[OK] Tabelas criadas: ' . $executados . ' de ' . $totalStatements . ' comandos executados</span><br><br>';
 
                     // Ler arquivo de seed
-                    $seedFile = __DIR__ . '/migrations/checklist_lojas_seed.sql';
+                    $seedFile = __DIR__ . '/../database/migrations/checklist_lojas_seed.sql';
                     if (!file_exists($seedFile)) {
                         throw new Exception('Arquivo de seed não encontrado: ' . $seedFile);
                     }
@@ -287,7 +287,7 @@ require_once __DIR__ . '/../app/config/database.php';
                     echo '<span class="success">[OK] Dados iniciais inseridos: ' . $executados . ' de ' . $totalStatements . ' comandos executados</span><br><br>';
 
                     // Criar diretório de uploads
-                    $uploadDir = __DIR__ . '/../public/uploads/fotos_checklist';
+                    $uploadDir = __DIR__ . '/uploads/fotos_checklist';
                     if (!is_dir($uploadDir)) {
                         mkdir($uploadDir, 0755, true);
                         echo '<span class="success">[OK] Diretório de uploads criado</span><br>';
@@ -296,7 +296,7 @@ require_once __DIR__ . '/../app/config/database.php';
                     }
 
                     // Marcar como instalado
-                    file_put_contents(__DIR__ . '/.checklist_instalado', date('Y-m-d H:i:s'));
+                    file_put_contents(__DIR__ . '/uploads/.checklist_instalado', date('Y-m-d H:i:s'));
 
                     echo '<br><span class="success">[SUCESSO] ✅ Instalação concluída com sucesso!</span><br>';
                     echo '<span class="info">[INFO] Sistema pronto para uso!</span><br>';
