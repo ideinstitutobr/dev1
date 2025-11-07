@@ -10,6 +10,7 @@ define('SGC_SYSTEM', true);
 require_once __DIR__ . '/../../app/config/config.php';
 require_once __DIR__ . '/../../app/classes/Database.php';
 require_once __DIR__ . '/../../app/classes/Auth.php';
+require_once __DIR__ . '/../../app/classes/SimpleExcelReader.php';
 require_once __DIR__ . '/../../app/models/Colaborador.php';
 require_once __DIR__ . '/../../app/controllers/ColaboradorController.php';
 
@@ -101,11 +102,43 @@ if ($fileExtension === 'csv') {
 
     fclose($handle);
 } elseif (in_array($fileExtension, ['xlsx', 'xls'])) {
-    // Para Excel, primeiro converte para CSV ou usa biblioteca
-    // Por simplicidade, vamos pedir apenas CSV por enquanto
-    $_SESSION['error_message'] = 'Por favor, use arquivos CSV. Converta seu Excel para CSV antes de importar.';
-    header('Location: importar.php');
-    exit;
+    // Processa Excel
+    try {
+        // Lê arquivo Excel
+        $excelData = SimpleExcelReader::readFile($file['tmp_name']);
+
+        if (empty($excelData)) {
+            $_SESSION['error_message'] = 'Arquivo Excel vazio ou inválido';
+            header('Location: importar.php');
+            exit;
+        }
+
+        // Remove cabeçalho (primeira linha)
+        $header = array_shift($excelData);
+
+        // Converte para formato padrão
+        $linhaAtual = 1; // Contador para debug
+        foreach ($excelData as $row) {
+            $linhaAtual++;
+
+            // Pula linhas vazias
+            if (empty(array_filter($row))) {
+                continue;
+            }
+
+            // Extrai dados (suporta arquivos com mais colunas)
+            $colaboradores[] = [
+                'nome' => trim($row[0] ?? ''),
+                'cpf' => trim($row[1] ?? ''),
+                'email' => trim($row[2] ?? ''),
+                '_linha_arquivo' => $linhaAtual
+            ];
+        }
+    } catch (Exception $e) {
+        $_SESSION['error_message'] = 'Erro ao ler arquivo Excel: ' . $e->getMessage();
+        header('Location: importar.php');
+        exit;
+    }
 }
 
 // Valida se tem dados
