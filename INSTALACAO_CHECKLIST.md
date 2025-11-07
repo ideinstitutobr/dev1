@@ -6,7 +6,7 @@
 
 Acesse pelo navegador:
 ```
-http://seudominio.com/database/instalar_checklist.php
+http://seudominio.com/instalar_checklist.php
 ```
 
 Clique no botão **"🚀 Instalar Banco de Dados"**
@@ -138,12 +138,12 @@ Estas páginas ainda precisam ser criadas, mas você já pode usar o sistema:
 ## ⚠️ IMPORTANTE - Segurança
 
 ### **Após a Instalação:**
-1. ✅ DELETE o arquivo `database/instalar_checklist.php`
+1. ✅ DELETE o arquivo `public/instalar_checklist.php`
 2. ✅ Verifique as permissões da pasta `public/uploads/fotos_checklist/`
 
 ```bash
 # Deletar instalador
-rm database/instalar_checklist.php
+rm public/instalar_checklist.php
 
 # Ajustar permissões (se necessário)
 chmod 755 public/uploads/fotos_checklist
@@ -212,11 +212,12 @@ chown www-data:www-data public/uploads/fotos_checklist
 
 ## ✅ Checklist de Instalação
 
-- [ ] Executou `database/instalar_checklist.php` com sucesso
+- [ ] Acessou `http://seudominio.com/instalar_checklist.php`
+- [ ] Executou a instalação com sucesso
 - [ ] Menu "Formulários" aparece no sidebar
 - [ ] Consegue acessar "Nova Avaliação"
 - [ ] Consegue acessar "Dashboard & Relatórios"
-- [ ] Deletou o arquivo `instalar_checklist.php` (segurança)
+- [ ] Deletou o arquivo `public/instalar_checklist.php` (segurança)
 - [ ] Verificou permissões da pasta de uploads
 
 ---
