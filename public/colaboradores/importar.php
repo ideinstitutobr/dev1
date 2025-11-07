@@ -229,6 +229,11 @@ Maria Santos,987.654.321-00,maria@empresa.com
         <strong>⚠️ Atenção:</strong> E-mails e CPFs duplicados serão ignorados durante a importação.
     </div>
 
+    <div class="info-box" style="background: #e0f7fa; border-left: 4px solid #00bcd4; padding: 15px; margin: 20px 0; border-radius: 5px;">
+        <strong>🔍 Problemas com a importação?</strong><br>
+        Use a ferramenta de <a href="diagnosticar_csv.php" style="color: #0277bd; font-weight: bold;">Diagnóstico CSV</a> para verificar se seu arquivo está sendo lido corretamente pelo sistema.
+    </div>
+
     <form method="POST" action="processar_importacao.php" enctype="multipart/form-data" id="importForm">
         <input type="hidden" name="csrf_token" value="<?php echo csrf_token(); ?>">
 

@@ -51,7 +51,7 @@ if (!in_array($fileExtension, ['csv', 'xlsx', 'xls'])) {
 $colaboradores = [];
 
 if ($fileExtension === 'csv') {
-    // Processa CSV
+    // Processa CSV com detecção automática de delimitador
     $handle = fopen($file['tmp_name'], 'r');
 
     if ($handle === false) {
@@ -60,12 +60,29 @@ if ($fileExtension === 'csv') {
         exit;
     }
 
+    // Lê primeira linha para detectar delimitador
+    $primeiraLinha = fgets($handle);
+    rewind($handle);
+
+    // Detecta delimitador
+    $virgulas = substr_count($primeiraLinha, ',');
+    $pontoVirgulas = substr_count($primeiraLinha, ';');
+    $tabs = substr_count($primeiraLinha, "\t");
+
+    if ($pontoVirgulas > $virgulas && $pontoVirgulas > $tabs) {
+        $delimitador = ';';
+    } elseif ($tabs > $virgulas && $tabs > $pontoVirgulas) {
+        $delimitador = "\t";
+    } else {
+        $delimitador = ',';
+    }
+
     // Pula cabeçalho
-    $header = fgetcsv($handle, 10000, ',');
+    $header = fgetcsv($handle, 10000, $delimitador);
 
     // Lê linhas - aumentado limite para 10000 bytes
     $linhaAtual = 1; // Contador para debug
-    while (($data = fgetcsv($handle, 10000, ',')) !== false) {
+    while (($data = fgetcsv($handle, 10000, $delimitador)) !== false) {
         $linhaAtual++;
 
         // Pula linhas vazias
@@ -73,7 +90,7 @@ if ($fileExtension === 'csv') {
             continue;
         }
 
-        // Extrai dados
+        // Extrai dados (suporta arquivos com mais colunas)
         $colaboradores[] = [
             'nome' => trim($data[0] ?? ''),
             'cpf' => trim($data[1] ?? ''),
