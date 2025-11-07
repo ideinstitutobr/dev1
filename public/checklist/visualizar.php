@@ -251,7 +251,7 @@ include APP_PATH . 'views/layouts/header.php';
                 <label>Avaliador</label>
                 <strong><?php echo htmlspecialchars($checklist['colaborador_nome']); ?></strong>
             </div>
-            <?php if ($checklist['finalizado_em']): ?>
+            <?php if (!empty($checklist['finalizado_em'])): ?>
             <div class="info-item">
                 <label>Finalizado em</label>
                 <strong><?php echo date('d/m/Y H:i', strtotime($checklist['finalizado_em'])); ?></strong>

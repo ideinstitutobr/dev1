@@ -120,7 +120,10 @@ class Checklist {
     public function finalizar($checklistId) {
         $this->calcularPontuacao($checklistId);
 
-        $sql = "UPDATE checklists SET status = 'finalizado' WHERE id = ?";
+        $sql = "UPDATE checklists
+                SET status = 'finalizado',
+                    finalizado_em = NOW()
+                WHERE id = ?";
         $stmt = $this->pdo->prepare($sql);
         return $stmt->execute([$checklistId]);
     }
