@@ -141,21 +141,22 @@ include APP_PATH . 'views/layouts/header.php';
     }
     .estrela {
         position: relative;
-        font-size: 50px;
+        width: 50px;
+        height: 50px;
         cursor: pointer;
         transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         user-select: none;
         filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
     }
     .estrela.empty {
-        color: transparent;
-        -webkit-text-stroke: 2px #ddd;
-        text-stroke: 2px #ddd;
+        fill: transparent;
+        stroke: #ddd;
+        stroke-width: 2;
     }
     .estrela.filled {
-        color: #ffd700;
-        -webkit-text-stroke: 2px #f39c12;
-        text-stroke: 2px #f39c12;
+        fill: #ffd700;
+        stroke: #f39c12;
+        stroke-width: 2;
         filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
         animation: starPulse 0.4s ease-out;
     }
@@ -164,9 +165,9 @@ include APP_PATH . 'views/layouts/header.php';
         filter: drop-shadow(0 4px 12px rgba(255, 215, 0, 0.4));
     }
     .estrela.hover-preview {
-        color: #ffed4e;
-        -webkit-text-stroke: 2px #f39c12;
-        text-stroke: 2px #f39c12;
+        fill: #ffed4e;
+        stroke: #f39c12;
+        stroke-width: 2;
         transform: scale(1.15);
     }
     @keyframes starPulse {
@@ -311,11 +312,13 @@ include APP_PATH . 'views/layouts/header.php';
 
             <div class="estrelas-container" data-pergunta-id="<?php echo $pergunta['id']; ?>">
                 <?php for ($i = 1; $i <= 5; $i++): ?>
-                    <span class="estrela <?php echo $i <= $estrelasAtuais ? 'filled' : 'empty'; ?>"
-                          data-valor="<?php echo $i; ?>"
-                          onclick="selecionarEstrela(<?php echo $pergunta['id']; ?>, <?php echo $i; ?>)">
-                        ⭐
-                    </span>
+                    <svg class="estrela <?php echo $i <= $estrelasAtuais ? 'filled' : 'empty'; ?>"
+                         data-valor="<?php echo $i; ?>"
+                         onclick="selecionarEstrela(<?php echo $pergunta['id']; ?>, <?php echo $i; ?>)"
+                         xmlns="http://www.w3.org/2000/svg"
+                         viewBox="0 0 24 24">
+                        <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>
+                    </svg>
                 <?php endfor; ?>
             </div>
 
