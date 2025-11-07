@@ -52,7 +52,7 @@ class RespostaChecklist {
         if ($existente) {
             // Atualizar resposta existente
             $sqlUpdate = "UPDATE respostas_checklist
-                          SET estrelas = ?, pontuacao = ?, observacao = ?
+                          SET estrelas = ?, pontuacao = ?, observacao = ?, foto_evidencia = ?
                           WHERE id = ?";
 
             $stmtUpdate = $this->pdo->prepare($sqlUpdate);
@@ -60,6 +60,7 @@ class RespostaChecklist {
                 $dados['estrelas'],
                 $dados['pontuacao'],
                 $dados['observacao'] ?? null,
+                $dados['foto_evidencia'] ?? null,
                 $existente['id']
             ]);
 
@@ -67,8 +68,8 @@ class RespostaChecklist {
         } else {
             // Criar nova resposta
             $sqlInsert = "INSERT INTO respostas_checklist
-                          (checklist_id, pergunta_id, estrelas, pontuacao, observacao)
-                          VALUES (?, ?, ?, ?, ?)";
+                          (checklist_id, pergunta_id, estrelas, pontuacao, observacao, foto_evidencia)
+                          VALUES (?, ?, ?, ?, ?, ?)";
 
             $stmtInsert = $this->pdo->prepare($sqlInsert);
             $stmtInsert->execute([
@@ -76,7 +77,8 @@ class RespostaChecklist {
                 $dados['pergunta_id'],
                 $dados['estrelas'],
                 $dados['pontuacao'],
-                $dados['observacao'] ?? null
+                $dados['observacao'] ?? null,
+                $dados['foto_evidencia'] ?? null
             ]);
 
             return $this->pdo->lastInsertId();

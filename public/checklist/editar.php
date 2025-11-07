@@ -184,8 +184,44 @@ include APP_PATH . 'views/layouts/header.php';
             filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
         }
     }
+    .opcoes-extras {
+        margin-top: 20px;
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+    .checkbox-container {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        padding: 8px 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+    .checkbox-container:hover {
+        background: #e9ecef;
+    }
+    .checkbox-container input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+    .checkbox-container label {
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        color: #495057;
+        margin: 0;
+    }
     .observacao-area {
         margin-top: 15px;
+        display: none;
+        animation: slideDown 0.3s ease-out;
+    }
+    .observacao-area.show {
+        display: block;
     }
     .observacao-area textarea {
         width: 100%;
@@ -195,6 +231,82 @@ include APP_PATH . 'views/layouts/header.php';
         font-size: 14px;
         resize: vertical;
         min-height: 80px;
+    }
+    .foto-area {
+        margin-top: 15px;
+        display: none;
+        animation: slideDown 0.3s ease-out;
+    }
+    .foto-area.show {
+        display: block;
+    }
+    .foto-upload-container {
+        border: 2px dashed #ddd;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        background: #f8f9fa;
+        transition: all 0.3s;
+    }
+    .foto-upload-container:hover {
+        border-color: #667eea;
+        background: #f0f2ff;
+    }
+    .foto-upload-container input[type="file"] {
+        display: none;
+    }
+    .foto-upload-label {
+        cursor: pointer;
+        color: #667eea;
+        font-weight: 600;
+        display: inline-block;
+        padding: 10px 20px;
+        background: white;
+        border-radius: 5px;
+        border: 1px solid #667eea;
+        transition: all 0.3s;
+    }
+    .foto-upload-label:hover {
+        background: #667eea;
+        color: white;
+    }
+    .foto-preview {
+        margin-top: 15px;
+        display: none;
+    }
+    .foto-preview.show {
+        display: block;
+    }
+    .foto-preview img {
+        max-width: 300px;
+        max-height: 300px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .foto-info {
+        margin-top: 10px;
+        font-size: 13px;
+        color: #666;
+    }
+    .btn-remover-foto {
+        margin-top: 10px;
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 13px;
+    }
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
     .status-resposta {
         display: inline-block;
@@ -300,6 +412,9 @@ include APP_PATH . 'views/layouts/header.php';
         $respostaExistente = $respostasMap[$pergunta['id']] ?? null;
         $estrelasAtuais = $respostaExistente ? $respostaExistente['estrelas'] : 0;
         $observacaoAtual = $respostaExistente ? $respostaExistente['observacao'] : '';
+        $fotoAtual = $respostaExistente ? $respostaExistente['foto_evidencia'] : '';
+        $temObservacao = !empty($observacaoAtual);
+        $temFoto = !empty($fotoAtual);
         ?>
         <div class="pergunta-card" data-pergunta-id="<?php echo $pergunta['id']; ?>">
             <div class="pergunta-header">
@@ -322,13 +437,65 @@ include APP_PATH . 'views/layouts/header.php';
                 <?php endfor; ?>
             </div>
 
-            <div class="observacao-area">
+            <!-- Opções Extras -->
+            <div class="opcoes-extras">
+                <div class="checkbox-container">
+                    <input type="checkbox"
+                           id="check-obs-<?php echo $pergunta['id']; ?>"
+                           <?php echo $temObservacao ? 'checked' : ''; ?>
+                           onchange="toggleObservacao(<?php echo $pergunta['id']; ?>)">
+                    <label for="check-obs-<?php echo $pergunta['id']; ?>">
+                        📝 Adicionar Observação
+                    </label>
+                </div>
+                <div class="checkbox-container">
+                    <input type="checkbox"
+                           id="check-foto-<?php echo $pergunta['id']; ?>"
+                           <?php echo $temFoto ? 'checked' : ''; ?>
+                           onchange="toggleFoto(<?php echo $pergunta['id']; ?>)">
+                    <label for="check-foto-<?php echo $pergunta['id']; ?>">
+                        📷 Adicionar Foto de Evidência
+                    </label>
+                </div>
+            </div>
+
+            <!-- Área de Observação (oculta por padrão) -->
+            <div class="observacao-area <?php echo $temObservacao ? 'show' : ''; ?>" id="obs-area-<?php echo $pergunta['id']; ?>">
                 <textarea class="observacao-input"
                           data-pergunta-id="<?php echo $pergunta['id']; ?>"
-                          placeholder="Observações sobre esta pergunta (opcional)..."><?php echo htmlspecialchars($observacaoAtual); ?></textarea>
+                          placeholder="Digite suas observações sobre esta pergunta..."><?php echo htmlspecialchars($observacaoAtual); ?></textarea>
                 <button class="btn btn-success btn-sm" onclick="salvarObservacao(<?php echo $pergunta['id']; ?>)">
                     💾 Salvar Observação
                 </button>
+            </div>
+
+            <!-- Área de Foto (oculta por padrão) -->
+            <div class="foto-area <?php echo $temFoto ? 'show' : ''; ?>" id="foto-area-<?php echo $pergunta['id']; ?>">
+                <div class="foto-upload-container">
+                    <input type="file"
+                           id="foto-input-<?php echo $pergunta['id']; ?>"
+                           data-pergunta-id="<?php echo $pergunta['id']; ?>"
+                           accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                           onchange="previewFoto(<?php echo $pergunta['id']; ?>, this)">
+                    <label for="foto-input-<?php echo $pergunta['id']; ?>" class="foto-upload-label">
+                        📁 Escolher Foto
+                    </label>
+                    <p style="margin-top: 10px; font-size: 13px; color: #666;">
+                        Formatos aceitos: JPG, PNG, GIF, WEBP (máx. 5MB)
+                    </p>
+                </div>
+
+                <div class="foto-preview <?php echo $temFoto ? 'show' : ''; ?>" id="foto-preview-<?php echo $pergunta['id']; ?>">
+                    <?php if ($temFoto): ?>
+                        <img src="/<?php echo htmlspecialchars($fotoAtual); ?>" alt="Evidência">
+                        <div class="foto-info">
+                            <strong>Foto anexada:</strong> <?php echo basename($fotoAtual); ?>
+                        </div>
+                        <button class="btn-remover-foto" onclick="removerFoto(<?php echo $pergunta['id']; ?>)">
+                            🗑️ Remover Foto
+                        </button>
+                    <?php endif; ?>
+                </div>
             </div>
 
             <span class="status-resposta status-salvo" id="status-<?php echo $pergunta['id']; ?>" style="<?php echo $respostaExistente ? '' : 'display:none;'; ?>">
@@ -492,6 +659,211 @@ function finalizarAvaliacao() {
     .catch(error => {
         console.error('Erro:', error);
         alert('Erro ao finalizar avaliação');
+    });
+}
+
+// Toggle da área de observação
+function toggleObservacao(perguntaId) {
+    const checkbox = document.getElementById(`check-obs-${perguntaId}`);
+    const area = document.getElementById(`obs-area-${perguntaId}`);
+
+    if (checkbox.checked) {
+        area.classList.add('show');
+    } else {
+        area.classList.remove('show');
+    }
+}
+
+// Toggle da área de foto
+function toggleFoto(perguntaId) {
+    const checkbox = document.getElementById(`check-foto-${perguntaId}`);
+    const area = document.getElementById(`foto-area-${perguntaId}`);
+
+    if (checkbox.checked) {
+        area.classList.add('show');
+    } else {
+        area.classList.remove('show');
+    }
+}
+
+// Preview da foto antes de enviar
+function previewFoto(perguntaId, input) {
+    if (!input.files || !input.files[0]) {
+        return;
+    }
+
+    const file = input.files[0];
+
+    // Validar tamanho (máx 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        alert('Arquivo muito grande! Tamanho máximo: 5MB');
+        input.value = '';
+        return;
+    }
+
+    // Validar tipo
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+        alert('Formato de arquivo inválido! Use: JPG, PNG, GIF ou WEBP');
+        input.value = '';
+        return;
+    }
+
+    // Criar preview
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const previewDiv = document.getElementById(`foto-preview-${perguntaId}`);
+        previewDiv.innerHTML = `
+            <img src="${e.target.result}" alt="Preview">
+            <div class="foto-info">
+                <strong>Arquivo:</strong> ${file.name} (${(file.size / 1024).toFixed(2)} KB)
+            </div>
+            <button class="btn-remover-foto" onclick="removerPreviewFoto(${perguntaId})">
+                🗑️ Remover Foto
+            </button>
+            <button class="btn btn-success btn-sm" style="margin-left: 10px;" onclick="enviarFoto(${perguntaId})">
+                💾 Salvar Foto
+            </button>
+        `;
+        previewDiv.classList.add('show');
+    };
+    reader.readAsDataURL(file);
+}
+
+// Remover preview da foto
+function removerPreviewFoto(perguntaId) {
+    const input = document.getElementById(`foto-input-${perguntaId}`);
+    const previewDiv = document.getElementById(`foto-preview-${perguntaId}`);
+
+    input.value = '';
+    previewDiv.innerHTML = '';
+    previewDiv.classList.remove('show');
+}
+
+// Enviar foto para o servidor
+function enviarFoto(perguntaId) {
+    const input = document.getElementById(`foto-input-${perguntaId}`);
+
+    if (!input.files || !input.files[0]) {
+        alert('Nenhuma foto selecionada!');
+        return;
+    }
+
+    const file = input.files[0];
+    const formData = new FormData();
+
+    formData.append('foto', file);
+    formData.append('checklist_id', checklistId);
+    formData.append('pergunta_id', perguntaId);
+
+    // Buscar estrelas e observação atuais
+    const container = document.querySelector(`.estrelas-container[data-pergunta-id="${perguntaId}"]`);
+    const estrelasFilled = container.querySelectorAll('.estrela.filled');
+    const estrelas = estrelasFilled.length || 1;
+    const textarea = document.querySelector(`textarea[data-pergunta-id="${perguntaId}"]`);
+    const observacao = textarea ? textarea.value : '';
+
+    formData.append('estrelas', estrelas);
+    formData.append('observacao', observacao);
+
+    // Mostrar status "salvando"
+    const status = document.getElementById(`status-${perguntaId}`);
+    status.textContent = '⏳ Salvando foto...';
+    status.className = 'status-resposta status-salvando';
+    status.style.display = 'inline-block';
+
+    fetch('salvar_resposta.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Foto salva com sucesso!');
+
+            // Atualizar pontuação
+            document.getElementById('pontuacaoTotal').textContent = data.percentual.toFixed(1) + '%';
+
+            // Mostrar status "salvo"
+            status.textContent = '✓ Salvo (com foto)';
+            status.className = 'status-resposta status-salvo';
+
+            // Atualizar preview com botão de remover
+            const previewDiv = document.getElementById(`foto-preview-${perguntaId}`);
+            previewDiv.innerHTML = `
+                <img src="/${data.foto_path}" alt="Evidência">
+                <div class="foto-info">
+                    <strong>Foto anexada:</strong> ${data.foto_nome}
+                </div>
+                <button class="btn-remover-foto" onclick="removerFoto(${perguntaId})">
+                    🗑️ Remover Foto
+                </button>
+            `;
+
+            // Atualizar progresso
+            atualizarProgresso();
+        } else {
+            alert('Erro ao salvar foto: ' + data.message);
+            status.style.display = 'none';
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao enviar foto');
+        status.style.display = 'none';
+    });
+}
+
+// Remover foto já salva
+function removerFoto(perguntaId) {
+    if (!confirm('Deseja realmente remover esta foto?')) {
+        return;
+    }
+
+    // Buscar estrelas e observação atuais
+    const container = document.querySelector(`.estrelas-container[data-pergunta-id="${perguntaId}"]`);
+    const estrelasFilled = container.querySelectorAll('.estrela.filled');
+    const estrelas = estrelasFilled.length || 1;
+    const textarea = document.querySelector(`textarea[data-pergunta-id="${perguntaId}"]`);
+    const observacao = textarea ? textarea.value : '';
+
+    // Salvar resposta sem foto
+    fetch('salvar_resposta.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            checklist_id: checklistId,
+            pergunta_id: perguntaId,
+            estrelas: estrelas,
+            observacao: observacao,
+            remover_foto: true
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Foto removida com sucesso!');
+
+            // Limpar preview e input
+            const input = document.getElementById(`foto-input-${perguntaId}`);
+            const previewDiv = document.getElementById(`foto-preview-${perguntaId}`);
+            input.value = '';
+            previewDiv.innerHTML = '';
+            previewDiv.classList.remove('show');
+
+            // Desmarcar checkbox
+            const checkbox = document.getElementById(`check-foto-${perguntaId}`);
+            checkbox.checked = false;
+            toggleFoto(perguntaId);
+        } else {
+            alert('Erro ao remover foto: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao remover foto');
     });
 }
 
