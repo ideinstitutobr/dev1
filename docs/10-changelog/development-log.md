@@ -7,6 +7,277 @@
 
  ---
 
+## 🛠️ Atualização: Correção de Formulários de Colaboradores e Importação em Massa
+
+**Data:** 2025-11-07
+
+**Resumo:** Correção crítica do bug de salário no formulário de edição, sincronização completa entre formulários de cadastro e edição, implementação de importação em massa de colaboradores via CSV com detecção inteligente de colunas, e verificação da página de listagem.
+
+### Problemas Identificados e Corrigidos
+
+#### 1. Bug Crítico no Campo de Salário (Formulário de Edição)
+**Problema:** O valor do salário mudava toda vez que o registro era editado. Exemplo: R$ 5.000,00 virava R$ 500.000,00 após salvar.
+
+**Causa Raiz:**
+- O formulário de edição exibia o valor bruto do banco (5000.00) sem formatação
+- Faltava a função JavaScript `formatarMoeda()` no formulário de edição
+- Ao submeter, o controller executava `str_replace('.', '', '5000.00')` resultando em '500000'
+
+**Correção Aplicada:**
+```php
+// Formatação na exibição (public/colaboradores/editar.php:245)
+<input type="text" name="salario"
+       value="<?php echo $colaborador['salario'] ? number_format($colaborador['salario'], 2, ',', '.') : ''; ?>"
+       placeholder="0,00"
+       onkeyup="formatarMoeda(this)">
+
+// Função JavaScript adicionada
+function formatarMoeda(campo) {
+    let valor = campo.value.replace(/\D/g, '');
+    valor = (valor / 100).toFixed(2);
+    valor = valor.replace('.', ',');
+    valor = valor.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+    campo.value = valor;
+}
+```
+
+**Resultado:** Salários agora são formatados corretamente em R$ X.XXX,XX e mantêm o valor correto após edição.
+
+#### 2. Sincronização Formulário de Cadastro ↔ Edição
+**Problema:** Formulários de cadastro e edição tinham estruturas diferentes, causando inconsistências.
+
+**Correções Aplicadas:**
+- ✅ Adicionado suporte para `unidade_principal_id` e `setor_principal` no controller
+- ✅ Sincronizadas máscaras JavaScript (CPF, telefone, moeda)
+- ✅ Validações de campos obrigatórios padronizadas
+- ✅ Estrutura HTML idêntica entre cadastro e edição
+
+**Arquivos Modificados:**
+- `app/controllers/ColaboradorController.php` - Método `sanitizarDados()` atualizado
+- `app/models/Colaborador.php` - Query dinâmica para colunas disponíveis
+- `public/colaboradores/editar.php` - Sincronizado com cadastrar.php
+
+#### 3. Importação em Massa de Colaboradores
+**Implementação:** Sistema completo de importação de colaboradores via arquivo CSV.
+
+**Funcionalidades:**
+- ✅ **Detecção Automática de Delimitador:** Identifica automaticamente se o CSV usa vírgula, ponto-vírgula ou tabulação
+- ✅ **Mapeamento Inteligente de Colunas:** Reconhece variações de nomes de colunas:
+  - **Nome:** aceita "Nome", "Nome Completo", "Nome do Colaborador", "Colaborador", "Funcionário"
+  - **CPF:** aceita "CPF", "Documento", "Doc"
+  - **E-mail:** aceita "E-mail", "Email", "Mail", "Correio", "Email Corporativo"
+- ✅ **Validação de CPF:** Algoritmo completo de validação com dígitos verificadores
+- ✅ **Detecção de Duplicatas:** Verifica duplicatas no banco E dentro do próprio arquivo
+- ✅ **Normalização de Dados:** Remove acentos, espaços extras e caracteres especiais
+- ✅ **Tratamento de Encoding:** UTF-8 com BOM handling
+- ✅ **Relatório Detalhado:** Mostra sucessos, erros e duplicatas linha por linha
+
+**Exemplo de Uso:**
+```csv
+Nome Completo,CPF,E-mail Corporativo
+João Silva,123.456.789-00,joao@empresa.com
+Maria Santos,987.654.321-00,maria@empresa.com
+```
+
+**Algoritmo de Detecção de Delimitador:**
+```php
+$virgulas = substr_count($primeiraLinha, ',');
+$pontoVirgulas = substr_count($primeiraLinha, ';');
+$tabs = substr_count($primeiraLinha, "\t");
+
+if ($pontoVirgulas > $virgulas && $pontoVirgulas > $tabs) {
+    $delimitador = ';';
+} elseif ($tabs > $virgulas && $tabs > $pontoVirgulas) {
+    $delimitador = "\t";
+} else {
+    $delimitador = ',';
+}
+```
+
+**Mapeamento Inteligente:**
+```php
+function normalizarNomeColuna($nome) {
+    $nome = mb_strtolower(trim($nome), 'UTF-8');
+    // Remove acentos
+    $nome = str_replace(['á','à','ã','â','ä'], 'a', $nome);
+    $nome = str_replace(['é','è','ê','ë'], 'e', $nome);
+    // ... mais substituições
+    // Remove tudo exceto letras e números
+    $nome = preg_replace('/[^a-z0-9]/', '', $nome);
+    return $nome;
+}
+
+$variacoes = [
+    'nome' => ['nome', 'nomecompleto', 'nomecolaborador', 'colaborador', 'funcionario'],
+    'cpf' => ['cpf', 'documento', 'doc'],
+    'email' => ['email', 'e-mail', 'mail', 'correio', 'emailcorporativo']
+];
+```
+
+**Caso de Uso Real:** Usuário importou com sucesso 220 colaboradores de um arquivo CSV após a implementação.
+
+#### 4. Ferramenta de Diagnóstico CSV
+**Implementação:** Página de diagnóstico para analisar arquivos CSV antes da importação.
+
+**Funcionalidades:**
+```php
+public/colaboradores/diagnosticar_csv.php
+- Conta total de linhas (wc -l) vs linhas lidas por PHP
+- Testa 3 delimitadores diferentes (vírgula, ponto-vírgula, tab)
+- Detecta encoding (UTF-8, ISO-8859-1, etc.)
+- Exibe preview das primeiras 10 linhas
+- Exibe preview das últimas 10 linhas
+- Identifica problemas de formatação
+```
+
+**Resultado:** Ajudou a identificar que o arquivo do usuário estava mal formatado, permitindo correção antes da importação.
+
+#### 5. Remoção de Suporte Excel
+**Decisão:** Após testes, optou-se por remover o suporte a arquivos Excel em favor de CSV puro.
+
+**Motivo:**
+- Biblioteca SimpleExcelReader causava avisos de XML
+- CSV com detecção inteligente é mais simples e confiável
+- Menor dependência de bibliotecas externas
+- Performance superior
+
+**Arquivos Removidos:**
+- `app/classes/SimpleExcelReader.php` - Classe removida
+
+**Arquivos Atualizados:**
+- `public/colaboradores/importar.php` - Interface atualizada para CSV apenas
+- Mensagens de erro atualizadas
+
+### Verificação da Página de Listagem
+
+**Arquivo:** `public/colaboradores/listar.php`
+
+**Verificação Completa:**
+- ✅ **Nível Hierárquico:** Exibido corretamente com badge azul (linhas 381-389)
+- ✅ **Cargo:** Exibido como texto ou "-" se vazio (linha 390)
+- ✅ **Setor:** Exibido como texto ou "-" se vazio (linha 391)
+
+**Estrutura da Tabela:**
+```php
+<th>Nível Hierárquico</th>
+<th>Cargo</th>
+<th>Setor</th>
+
+// Display com tratamento de valores vazios
+<td><?php echo !empty($col['nivel_hierarquico']) ? e($col['nivel_hierarquico']) : '-'; ?></td>
+<td><?php echo !empty($col['cargo']) ? e($col['cargo']) : '-'; ?></td>
+<td><?php echo !empty($col['departamento']) ? e($col['departamento']) : '-'; ?></td>
+```
+
+**Observação:** Para colaboradores importados via CSV, apenas o campo Nome, E-mail e CPF são preenchidos. Nível Hierárquico recebe o valor padrão "Operacional". Cargo e Setor aparecem como "-" e devem ser preenchidos manualmente via edição.
+
+### Arquivos Criados
+
+```
+public/colaboradores/
+├── importar.php              ✅ Interface de upload CSV
+├── processar_importacao.php  ✅ Processamento com detecção inteligente
+└── diagnosticar_csv.php      ✅ Ferramenta de diagnóstico
+```
+
+### Arquivos Modificados
+
+```
+app/controllers/ColaboradorController.php  ✅ sanitizarDados() atualizado
+app/models/Colaborador.php                 ✅ Query dinâmica para colunas
+public/colaboradores/editar.php            ✅ Correção de salário e sincronização
+public/colaboradores/listar.php            ✅ Verificado (estava correto)
+```
+
+### Melhorias Técnicas
+
+**Detecção Automática:**
+- Delimitador CSV (vírgula, ponto-vírgula, tab)
+- Encoding (UTF-8, ISO-8859-1)
+- Formato de CPF (com ou sem máscara)
+
+**Validações Robustas:**
+- CPF com algoritmo de dígitos verificadores
+- E-mail com filter_var FILTER_VALIDATE_EMAIL
+- Detecção de duplicatas (banco + arquivo)
+
+**Tratamento de Erros:**
+- Relatório detalhado linha por linha
+- Separação de sucessos, erros e duplicatas
+- Mensagens de erro específicas e acionáveis
+
+**Performance:**
+- Timeout aumentado para 300 segundos
+- Memory limit: 256M
+- Buffer de leitura: 10000 bytes por linha
+- Processamento em batch com feedback
+
+### Estatísticas de Importação
+
+**Caso de Uso Real:**
+- Arquivo: CSV com 220 colaboradores
+- Problema Inicial: Apenas 110 importados (limite de buffer + delimitador errado)
+- Solução: Aumentado buffer + detecção automática de delimitador
+- Resultado Final: ✅ 220 colaboradores importados com sucesso
+
+### Testes Realizados
+
+**Cenários Testados:**
+1. ✅ CSV com vírgula como delimitador
+2. ✅ CSV com ponto-vírgula como delimitador
+3. ✅ CSV com tabulação como delimitador
+4. ✅ CSV com UTF-8 BOM
+5. ✅ CSV com colunas em ordem diferente
+6. ✅ CSV com nomes de colunas variados
+7. ✅ CSV com CPF formatado (XXX.XXX.XXX-XX)
+8. ✅ CSV com CPF sem formatação (XXXXXXXXXXX)
+9. ✅ Detecção de duplicatas no banco
+10. ✅ Detecção de duplicatas no arquivo
+11. ✅ CPF inválido
+12. ✅ E-mail inválido
+13. ✅ Arquivo com 220 linhas
+14. ✅ Formulário de edição com salário R$ 5.000,00
+
+### Observações de Produção
+
+**Para Colaboradores Importados via CSV:**
+- Nível Hierárquico: Automaticamente definido como "Operacional"
+- Cargo: Vazio (deve ser preenchido manualmente)
+- Setor: Vazio (deve ser preenchido manualmente)
+- Data de Admissão: Vazio (opcional)
+- Salário: Vazio (opcional)
+- Telefone: Vazio (opcional)
+
+**Fluxo Recomendado:**
+1. Importar colaboradores via CSV (Nome, CPF, E-mail)
+2. Editar individualmente para adicionar Cargo e Setor
+3. Completar demais informações conforme necessário
+
+### Próximos Passos Sugeridos
+
+- [ ] Adicionar mais campos ao CSV (Cargo, Setor, Data Admissão)
+- [ ] Implementar importação com mapeamento de colunas personalizável
+- [ ] Adicionar preview da importação antes de confirmar
+- [ ] Implementar importação com atualização de registros existentes
+
+**Arquivos relacionados:**
+- `public/colaboradores/editar.php` — Correção de salário e sincronização completa
+- `public/colaboradores/importar.php` — Interface de importação CSV
+- `public/colaboradores/processar_importacao.php` — Lógica de importação com detecção inteligente
+- `public/colaboradores/diagnosticar_csv.php` — Ferramenta de diagnóstico
+- `app/controllers/ColaboradorController.php` — Método sanitizarDados() atualizado
+- `app/models/Colaborador.php` — Query dinâmica baseada em colunas disponíveis
+- `public/colaboradores/listar.php` — Verificado e funcionando corretamente
+
+**Observações/Troubleshooting:**
+- Se a importação falhar com timeout, aumentar `max_execution_time` no PHP
+- Se o delimitador não for detectado corretamente, usar a ferramenta de diagnóstico primeiro
+- Para arquivos muito grandes (>1000 linhas), considerar importação em lotes
+- CPFs inválidos são rejeitados automaticamente
+- Duplicatas são detectadas e reportadas sem interromper a importação
+
+---
+
 ## 🛠️ Atualização: Seletores de cor em Configurações
 
 **Data:** 2025-11-05
