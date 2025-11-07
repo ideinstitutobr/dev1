@@ -316,4 +316,4 @@ include __DIR__ . '/../../../app/views/layouts/header.php';
         <?php endif; ?>
     
 
-<?php include __DIR__ . '/../../app/views/layouts/footer.php'; ?>
+<?php include __DIR__ . '/../../../app/views/layouts/footer.php'; ?>

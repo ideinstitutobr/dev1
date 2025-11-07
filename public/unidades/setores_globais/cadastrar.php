@@ -210,4 +210,4 @@ include __DIR__ . '/../../../app/views/layouts/header.php';
         </div>
     
 
-<?php include __DIR__ . '/../../app/views/layouts/footer.php'; ?>
+<?php include __DIR__ . '/../../../app/views/layouts/footer.php'; ?>
