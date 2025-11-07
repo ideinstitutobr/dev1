@@ -226,7 +226,7 @@ Maria Santos,987.654.321-00,maria@empresa.com
                 </ul>
             </li>
             <li><strong>Atenção:</strong> A primeira linha deve conter os cabeçalhos (Nome, CPF, E-mail)</li>
-            <li><strong>Excel:</strong> Se usar Excel, salve como .xlsx ou exporte como CSV</li>
+            <li><strong>Excel:</strong> Use apenas .xlsx (Excel 2007+). Arquivos .xls antigos NÃO são suportados - salve como .xlsx ou CSV</li>
             <li><strong>CSV:</strong> Salve em UTF-8 para evitar problemas com acentos</li>
             <li><strong>Após importação:</strong> Complete os dados profissionais (Nível Hierárquico, Cargo, etc.) editando cada colaborador</li>
         </ol>
@@ -248,7 +248,7 @@ Maria Santos,987.654.321-00,maria@empresa.com
             <label for="file" class="file-upload-label">
                 📁 Selecionar Arquivo CSV/Excel
             </label>
-            <input type="file" name="file" id="file" accept=".csv,.xlsx,.xls" required>
+            <input type="file" name="file" id="file" accept=".csv,.xlsx" required>
             <p style="margin-top: 15px; color: #6b7280;">
                 ou arraste e solte o arquivo aqui
             </p>

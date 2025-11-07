@@ -21,10 +21,16 @@ class SimpleExcelReader {
             throw new Exception("Arquivo não encontrado: {$this->filePath}");
         }
 
+        // Detecta se é .xls (antigo) ou .xlsx (novo)
+        $extension = strtolower(pathinfo($this->filePath, PATHINFO_EXTENSION));
+        if ($extension === 'xls') {
+            throw new Exception("Arquivos .xls (Excel antigo) não são suportados. Por favor, salve como .xlsx ou exporte como CSV.");
+        }
+
         // Verifica se é um arquivo ZIP válido (arquivos .xlsx são ZIP)
         $zip = new ZipArchive();
-        if ($zip->open($this->filePath) !== true) {
-            throw new Exception("Não foi possível abrir o arquivo Excel. Verifique se o arquivo está corrompido.");
+        if (@$zip->open($this->filePath) !== true) {
+            throw new Exception("Não foi possível abrir o arquivo Excel. Verifique se o arquivo está corrompido ou salve como .xlsx.");
         }
 
         // Lê strings compartilhadas (se existir)
@@ -50,30 +56,42 @@ class SimpleExcelReader {
      * Parseia as strings compartilhadas
      */
     private function parseSharedStrings($xml) {
-        $xmlObj = simplexml_load_string($xml);
+        // Suprime erros XML
+        libxml_use_internal_errors(true);
+
+        $xmlObj = @simplexml_load_string($xml);
         if ($xmlObj === false) {
+            libxml_clear_errors();
             return;
         }
 
         $xmlObj->registerXPathNamespace('x', 'http://schemas.openxmlformats.org/spreadsheetml/2006/main');
         $strings = $xmlObj->xpath('//x:si');
 
-        foreach ($strings as $string) {
-            $value = '';
-            // Concatena todos os textos (pode ter formatação)
-            foreach ($string->xpath('.//x:t') as $t) {
-                $value .= (string)$t;
+        if ($strings) {
+            foreach ($strings as $string) {
+                $value = '';
+                // Concatena todos os textos (pode ter formatação)
+                foreach ($string->xpath('.//x:t') as $t) {
+                    $value .= (string)$t;
+                }
+                $this->sharedStrings[] = $value;
             }
-            $this->sharedStrings[] = $value;
         }
+
+        libxml_clear_errors();
     }
 
     /**
      * Parseia a planilha e retorna os dados como array
      */
     private function parseSheet($xml) {
-        $xmlObj = simplexml_load_string($xml);
+        // Suprime erros XML
+        libxml_use_internal_errors(true);
+
+        $xmlObj = @simplexml_load_string($xml);
         if ($xmlObj === false) {
+            libxml_clear_errors();
             throw new Exception("Erro ao parsear XML da planilha");
         }
 
@@ -81,36 +99,41 @@ class SimpleExcelReader {
         $rows = $xmlObj->xpath('//x:row');
 
         $data = [];
-        foreach ($rows as $row) {
-            $rowData = [];
-            $cells = $row->xpath('.//x:c');
+        if ($rows) {
+            foreach ($rows as $row) {
+                $rowData = [];
+                $cells = $row->xpath('.//x:c');
 
-            foreach ($cells as $cell) {
-                $value = '';
-                $type = (string)$cell['t'];
+                if ($cells) {
+                    foreach ($cells as $cell) {
+                        $value = '';
+                        $type = (string)$cell['t'];
 
-                if ($type === 's') {
-                    // String compartilhada
-                    $index = (int)$cell->v;
-                    $value = $this->sharedStrings[$index] ?? '';
-                } elseif ($type === 'inlineStr') {
-                    // String inline
-                    $is = $cell->xpath('.//x:is/x:t');
-                    $value = (string)($is[0] ?? '');
-                } else {
-                    // Número ou outro tipo
-                    $value = (string)$cell->v;
+                        if ($type === 's') {
+                            // String compartilhada
+                            $index = (int)$cell->v;
+                            $value = $this->sharedStrings[$index] ?? '';
+                        } elseif ($type === 'inlineStr') {
+                            // String inline
+                            $is = $cell->xpath('.//x:is/x:t');
+                            $value = (string)($is[0] ?? '');
+                        } else {
+                            // Número ou outro tipo
+                            $value = (string)$cell->v;
+                        }
+
+                        $rowData[] = $value;
+                    }
                 }
 
-                $rowData[] = $value;
-            }
-
-            // Só adiciona linhas não vazias
-            if (!empty(array_filter($rowData))) {
-                $data[] = $rowData;
+                // Só adiciona linhas não vazias
+                if (!empty(array_filter($rowData))) {
+                    $data[] = $rowData;
+                }
             }
         }
 
+        libxml_clear_errors();
         return $data;
     }
 
