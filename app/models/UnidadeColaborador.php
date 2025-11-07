@@ -629,4 +629,89 @@ class UnidadeColaborador {
 
         return $colaboradores;
     }
+
+    /**
+     * Edita o vínculo de um colaborador (muda setor)
+     * Mantém o mesmo registro, apenas atualiza o setor
+     */
+    public function editarVinculo($vinculoId, $novoSetorId, $dados = []) {
+        try {
+            // Busca vínculo atual
+            $vinculoAtual = $this->buscarPorId($vinculoId);
+            if (!$vinculoAtual) {
+                return [
+                    'success' => false,
+                    'message' => 'Vínculo não encontrado.'
+                ];
+            }
+
+            // Valida se o novo setor pertence à mesma unidade
+            $sql = "SELECT COUNT(*) as total FROM unidade_setores
+                    WHERE id = ? AND unidade_id = ? AND ativo = 1";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$novoSetorId, $vinculoAtual['unidade_id']]);
+            if ($stmt->fetch()['total'] == 0) {
+                return [
+                    'success' => false,
+                    'message' => 'Novo setor inválido ou não pertence a esta unidade.'
+                ];
+            }
+
+            // Verifica se colaborador tem liderança neste setor
+            $sql = "SELECT COUNT(*) as total FROM unidade_lideranca
+                    WHERE colaborador_id = ?
+                      AND unidade_setor_id = ?
+                      AND ativo = 1";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$vinculoAtual['colaborador_id'], $vinculoAtual['unidade_setor_id']]);
+            $temLiderancaSetorAtual = $stmt->fetch()['total'] > 0;
+
+            // Atualiza o vínculo
+            $observacoesAtualizadas = $vinculoAtual['observacoes'];
+            if (!empty($dados['motivo_mudanca'])) {
+                $dataHora = date('Y-m-d H:i:s');
+                $observacoesAtualizadas .= ($observacoesAtualizadas ? "\n\n" : '') .
+                    "[$dataHora] Mudança de setor: " . $dados['motivo_mudanca'];
+            }
+
+            $sql = "UPDATE unidade_colaboradores
+                    SET unidade_setor_id = ?,
+                        observacoes = ?,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE id = ?";
+
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([
+                $novoSetorId,
+                $observacoesAtualizadas,
+                $vinculoId
+            ]);
+
+            // Atualiza setor principal se necessário
+            if ($vinculoAtual['is_vinculo_principal'] == 1) {
+                $sql = "UPDATE colaboradores
+                        SET setor_principal = (SELECT setor FROM unidade_setores WHERE id = ?),
+                            updated_at = CURRENT_TIMESTAMP
+                        WHERE id = ?";
+                $stmt = $this->pdo->prepare($sql);
+                $stmt->execute([$novoSetorId, $vinculoAtual['colaborador_id']]);
+            }
+
+            $avisoLideranca = '';
+            if ($temLiderancaSetorAtual) {
+                $avisoLideranca = ' Atenção: Este colaborador possui liderança no setor anterior.';
+            }
+
+            return [
+                'success' => true,
+                'message' => 'Setor do colaborador atualizado com sucesso!' . $avisoLideranca,
+                'tinha_lideranca' => $temLiderancaSetorAtual
+            ];
+        } catch (PDOException $e) {
+            return [
+                'success' => false,
+                'message' => 'Erro ao editar vínculo: ' . $e->getMessage()
+            ];
+        }
+    }
 }

@@ -86,6 +86,44 @@ class UnidadeColaboradorController {
     }
 
     /**
+     * Processa edição de vínculo (mudança de setor)
+     */
+    public function processarEdicaoVinculo() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            return ['success' => false, 'message' => 'Método inválido'];
+        }
+
+        // Valida CSRF
+        if (!csrf_validate($_POST['csrf_token'] ?? '')) {
+            return ['success' => false, 'message' => 'Token de segurança inválido'];
+        }
+
+        $vinculoId = $_POST['vinculo_id'] ?? null;
+        $novoSetorId = $_POST['novo_setor_id'] ?? null;
+        $motivoMudanca = $_POST['motivo_mudanca'] ?? null;
+
+        if (!$vinculoId) {
+            return ['success' => false, 'message' => 'Vínculo não informado'];
+        }
+
+        if (!$novoSetorId) {
+            return ['success' => false, 'message' => 'Novo setor não informado'];
+        }
+
+        if (!$motivoMudanca) {
+            return ['success' => false, 'message' => 'Motivo da mudança é obrigatório'];
+        }
+
+        $dados = [
+            'motivo_mudanca' => trim($motivoMudanca),
+            'data_mudanca' => $_POST['data_mudanca'] ?? date('Y-m-d'),
+            'observacoes_adicionais' => !empty($_POST['observacoes_adicionais']) ? trim($_POST['observacoes_adicionais']) : null
+        ];
+
+        return $this->model->editarVinculo($vinculoId, $novoSetorId, $dados);
+    }
+
+    /**
      * Processa transferência de setor
      */
     public function processarTransferenciaSetor() {
@@ -256,5 +294,12 @@ class UnidadeColaboradorController {
      */
     public function buscarColaboradoresDisponiveis($unidadeId, $filtros = []) {
         return $this->model->buscarColaboradoresDisponiveis($unidadeId, $filtros);
+    }
+
+    /**
+     * Busca vínculo por ID
+     */
+    public function buscarPorId($id) {
+        return $this->model->buscarPorId($id);
     }
 }
