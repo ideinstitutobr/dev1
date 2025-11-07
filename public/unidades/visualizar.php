@@ -361,9 +361,17 @@ include __DIR__ . '/../../app/views/layouts/header.php';
                                             <?php echo e($colab['cargo_especifico'] ?: $colab['cargo']); ?>
                                         </div>
                                     </div>
-                                    <?php if ($colab['is_vinculo_principal']): ?>
-                                        <span class="badge badge-primary">Principal</span>
-                                    <?php endif; ?>
+                                    <div style="display: flex; gap: 8px; align-items: center;">
+                                        <?php if ($colab['is_vinculo_principal']): ?>
+                                            <span class="badge badge-primary">Principal</span>
+                                        <?php endif; ?>
+                                        <a href="colaboradores/editar_vinculo.php?id=<?php echo $colab['vinculo_id']; ?>"
+                                           class="btn btn-sm"
+                                           style="background: #ffa500; color: white; padding: 6px 12px; font-size: 12px;"
+                                           title="Mudar o setor deste colaborador">
+                                            ✏️ Editar Setor
+                                        </a>
+                                    </div>
                                 </li>
                             <?php endforeach; ?>
                         </ul>
@@ -416,7 +424,15 @@ include __DIR__ . '/../../app/views/layouts/header.php';
                             <div style="font-size: 12px; color: #718096;">Setor: <?php echo e($lider['setor_supervisionado']); ?></div>
                         <?php endif; ?>
                     </div>
-                    <span class="badge badge-success">Desde <?php echo date('d/m/Y', strtotime($lider['data_inicio'])); ?></span>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <span class="badge badge-success">Desde <?php echo date('d/m/Y', strtotime($lider['data_inicio'])); ?></span>
+                        <a href="lideranca/remover.php?id=<?php echo $lider['id']; ?>"
+                           class="btn btn-sm"
+                           style="background: #dc3545; color: white; padding: 6px 12px; font-size: 12px;"
+                           onclick="return confirm('Deseja realmente remover esta liderança?')">
+                            🗑️ Remover
+                        </a>
+                    </div>
                 </div>
             <?php endforeach; ?>
         <?php endif; ?>

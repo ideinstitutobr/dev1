@@ -148,6 +148,13 @@ class UnidadeLiderancaController {
     }
 
     /**
+     * Busca liderança por ID
+     */
+    public function buscarPorId($id) {
+        return $this->model->buscarPorId($id);
+    }
+
+    /**
      * Obtém liderança por unidade
      */
     public function getLiderancaPorUnidade($unidadeId, $apenasAtivos = true) {
