@@ -86,8 +86,14 @@ if (isset($_GET['editar_modulo'])) {
     $moduloEditar = $moduloModel->buscarPorId($_GET['editar_modulo']);
 }
 
-// Listar todos os módulos
+// Listar todos os módulos ativos e inativos
 $modulos = $moduloModel->listarAtivos();
+
+// Buscar módulos desativados
+$db = Database::getInstance();
+$pdo = $db->getConnection();
+$stmtInativos = $pdo->query("SELECT * FROM modulos_avaliacao WHERE ativo = 0 ORDER BY ordem, nome");
+$modulosInativos = $stmtInativos->fetchAll(PDO::FETCH_ASSOC);
 
 $pageTitle = 'Gerenciar Módulos';
 include APP_PATH . 'views/layouts/header.php';
@@ -242,11 +248,30 @@ include APP_PATH . 'views/layouts/header.php';
         border: 1px solid #ddd;
         border-radius: 5px;
         font-size: 14px;
+        box-sizing: border-box;
+    }
+    .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
     .form-row {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 15px;
+        margin-bottom: 20px;
+    }
+    .modulo-card.inativo {
+        opacity: 0.6;
+        border: 2px dashed #dc3545;
+    }
+    .badge-inativo {
+        background: #dc3545;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
     }
     .alert {
         padding: 15px;
@@ -281,7 +306,11 @@ include APP_PATH . 'views/layouts/header.php';
         </div>
     <?php endif; ?>
 
-    <!-- Grade de Módulos -->
+    <!-- Grade de Módulos Ativos -->
+    <h2 style="color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px; margin-bottom: 20px;">
+        ✅ Módulos Ativos (<?php echo count($modulos); ?>)
+    </h2>
+
     <div class="modulos-grid">
         <?php foreach ($modulos as $modulo): ?>
             <?php $totalPerguntas = $moduloModel->contarPerguntas($modulo['id']); ?>
@@ -308,6 +337,45 @@ include APP_PATH . 'views/layouts/header.php';
             </div>
         <?php endforeach; ?>
     </div>
+
+    <!-- Módulos Desativados -->
+    <?php if (!empty($modulosInativos)): ?>
+        <div style="margin-top: 40px;">
+            <h2 style="color: #666; border-bottom: 2px solid #dc3545; padding-bottom: 10px; margin-bottom: 20px;">
+                🚫 Módulos Desativados (<?php echo count($modulosInativos); ?>)
+            </h2>
+
+            <div class="modulos-grid">
+                <?php foreach ($modulosInativos as $modulo): ?>
+                    <?php $totalPerguntas = $moduloModel->contarPerguntas($modulo['id']); ?>
+                    <div class="modulo-card inativo">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                            <h3 style="margin: 0;"><?php echo htmlspecialchars($modulo['nome']); ?></h3>
+                            <span class="badge-inativo">DESATIVADO</span>
+                        </div>
+                        <p><?php echo htmlspecialchars($modulo['descricao'] ?? 'Sem descrição'); ?></p>
+
+                        <div class="modulo-stats">
+                            <div class="stat-item">
+                                <strong><?php echo $totalPerguntas; ?></strong>
+                                <span>Perguntas</span>
+                            </div>
+                            <div class="stat-item">
+                                <strong><?php echo $modulo['ordem']; ?></strong>
+                                <span>Ordem</span>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 15px;">
+                            <a href="gerenciar_perguntas.php?modulo_id=<?php echo $modulo['id']; ?>" class="btn btn-info btn-sm">📝 Gerenciar Perguntas</a>
+                            <a href="?editar_modulo=<?php echo $modulo['id']; ?>" class="btn btn-warning btn-sm">✏️ Editar</a>
+                            <button onclick="confirmarDeleteModulo(<?php echo $modulo['id']; ?>)" class="btn btn-danger btn-sm">🗑️ Deletar</button>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    <?php endif; ?>
 
 <!-- Modal de Módulo -->
 <div class="modal" id="modalModulo">
