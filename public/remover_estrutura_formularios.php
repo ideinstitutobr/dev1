@@ -161,11 +161,24 @@ if (!isset($_POST['confirmar']) || $_POST['confirmar'] !== 'SIM_DELETAR_TUDO') {
     // 2. Remover diretório public/checklist
     echo "<h3>2️⃣ Removendo diretório public/checklist/...</h3>";
     $checklistDir = __DIR__ . '/checklist';
+
+    // Função recursiva para remover diretório
+    function removerDiretorioRecursivo($dir) {
+        if (!is_dir($dir)) {
+            return false;
+        }
+
+        $items = array_diff(scandir($dir), ['.', '..']);
+        foreach ($items as $item) {
+            $path = $dir . DIRECTORY_SEPARATOR . $item;
+            is_dir($path) ? removerDiretorioRecursivo($path) : unlink($path);
+        }
+        return rmdir($dir);
+    }
+
     if (is_dir($checklistDir)) {
-        $command = "rm -rf " . escapeshellarg($checklistDir);
-        exec($command, $output, $returnCode);
-        if ($returnCode === 0) {
-            $sucessos[] = "✅ Diretório <code>public/checklist/</code> removido";
+        if (removerDiretorioRecursivo($checklistDir)) {
+            $sucessos[] = "✅ Diretório <code>public/checklist/</code> removido com todos os subdiretórios";
         } else {
             $erros[] = "❌ Erro ao remover diretório public/checklist/";
         }
