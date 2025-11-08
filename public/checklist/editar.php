@@ -664,9 +664,9 @@ function salvarResposta(perguntaId, estrelas, observacao = null) {
 }
 
 function atualizarProgresso() {
-    const totalPerguntas = <?php echo count($perguntas); ?>;
-    const respondidas = document.querySelectorAll('.status-salvo').length;
-    const percentual = (respondidas / totalPerguntas) * 100;
+    const totalPerguntas = <?php echo $totalPerguntas; ?>;
+    const respondidas = document.querySelectorAll('.status-salvo:not([style*="display: none"])').length;
+    const percentual = totalPerguntas > 0 ? (respondidas / totalPerguntas) * 100 : 0;
 
     const progressBar = document.getElementById('progressBar');
     const progressText = document.getElementById('progressText');
@@ -688,8 +688,8 @@ function atualizarProgresso() {
 }
 
 function finalizarAvaliacao() {
-    const totalPerguntas = <?php echo count($perguntas); ?>;
-    const respondidas = document.querySelectorAll('.status-salvo').length;
+    const totalPerguntas = <?php echo $totalPerguntas; ?>;
+    const respondidas = document.querySelectorAll('.status-salvo:not([style*="display: none"])').length;
 
     if (respondidas < totalPerguntas) {
         alert('Por favor, responda todas as perguntas antes de finalizar!');
