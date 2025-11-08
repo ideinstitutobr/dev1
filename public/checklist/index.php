@@ -200,17 +200,6 @@ include APP_PATH . 'views/layouts/header.php';
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Módulo</label>
-                    <select name="modulo_id" class="form-control">
-                        <option value="">Todos os módulos</option>
-                        <?php foreach ($dados['modulos'] as $modulo): ?>
-                            <option value="<?php echo $modulo['id']; ?>" <?php echo ($dados['filtros']['modulo_id'] == $modulo['id']) ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($modulo['nome']); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="form-group">
                     <label>Data Início</label>
                     <input type="date" name="data_inicio" class="form-control" value="<?php echo $dados['filtros']['data_inicio'] ?? ''; ?>">
                 </div>
@@ -242,7 +231,7 @@ include APP_PATH . 'views/layouts/header.php';
                     <th>ID</th>
                     <th>Data</th>
                     <th>Unidade</th>
-                    <th>Módulo</th>
+                    <th>Responsável</th>
                     <th>Pontuação</th>
                     <th>Status</th>
                     <th>Ações</th>
@@ -261,7 +250,7 @@ include APP_PATH . 'views/layouts/header.php';
                             <td>#<?php echo $checklist['id']; ?></td>
                             <td><?php echo date('d/m/Y', strtotime($checklist['data_avaliacao'])); ?></td>
                             <td><?php echo htmlspecialchars($checklist['unidade_nome']); ?></td>
-                            <td><?php echo htmlspecialchars($checklist['modulo_nome']); ?></td>
+                            <td><?php echo htmlspecialchars($checklist['responsavel_nome'] ?? 'N/A'); ?></td>
                             <td>
                                 <strong><?php echo number_format($checklist['percentual'], 1); ?>%</strong>
                                 <?php if ($checklist['atingiu_meta']): ?>
