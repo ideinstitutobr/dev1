@@ -50,6 +50,7 @@ foreach ($modulos as &$modulo) {
     $todasPerguntas = array_merge($todasPerguntas, $modulo['perguntas']);
     $totalPerguntas += count($modulo['perguntas']);
 }
+unset($modulo); // Limpar referência para evitar comportamento inesperado
 
 // Buscar respostas já salvas
 $respostasExistentes = $respostaModel->obterRespostasCompletas($checklistId);
