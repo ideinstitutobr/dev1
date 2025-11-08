@@ -33,8 +33,7 @@ class ChecklistController {
             'unidade_id' => $_GET['unidade_id'] ?? null,
             'data_inicio' => $_GET['data_inicio'] ?? null,
             'data_fim' => $_GET['data_fim'] ?? null,
-            'status' => $_GET['status'] ?? null,
-            'modulo_id' => $_GET['modulo_id'] ?? null
+            'status' => $_GET['status'] ?? null
         ];
 
         $params = [
@@ -45,7 +44,6 @@ class ChecklistController {
         $resultado = $this->checklistModel->listarComFiltros($filtros, $params);
         $estatisticas = $this->checklistModel->obterEstatisticas($filtros);
         $unidades = $this->unidadeModel->listarAtivas();
-        $modulos = $this->moduloModel->listarAtivos();
 
         return [
             'checklists' => $resultado['registros'],
@@ -56,26 +54,25 @@ class ChecklistController {
             ],
             'estatisticas' => $estatisticas,
             'filtros' => $filtros,
-            'unidades' => $unidades,
-            'modulos' => $modulos
+            'unidades' => $unidades
         ];
     }
 
     /**
      * Exibe formulário para novo checklist
+     * Agora não precisa selecionar módulo - todos serão incluídos automaticamente
      */
     public function exibirFormularioNovo() {
         $unidades = $this->unidadeModel->listarAtivas();
-        $modulos = $this->moduloModel->listarAtivos();
 
         return [
-            'unidades' => $unidades,
-            'modulos' => $modulos
+            'unidades' => $unidades
         ];
     }
 
     /**
      * Cria um novo checklist
+     * Agora avalia TODOS os módulos ativos de uma vez
      */
     public function criar() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -86,7 +83,7 @@ class ChecklistController {
             $dados = [
                 'unidade_id' => $_POST['unidade_id'],
                 'colaborador_id' => $_SESSION['user_id'] ?? 1, // TODO: pegar do usuário logado
-                'modulo_id' => $_POST['modulo_id'],
+                'responsavel_id' => $_POST['responsavel_id'] ?? null,
                 'data_avaliacao' => $_POST['data_avaliacao'] ?? date('Y-m-d'),
                 'observacoes_gerais' => $_POST['observacoes_gerais'] ?? null
             ];
@@ -95,7 +92,7 @@ class ChecklistController {
 
             return [
                 'success' => true,
-                'message' => 'Checklist criado com sucesso!',
+                'message' => 'Checklist criado com sucesso! Agora você pode responder as perguntas de todos os módulos.',
                 'checklist_id' => $checklistId
             ];
 
@@ -109,6 +106,7 @@ class ChecklistController {
 
     /**
      * Exibe formulário de edição
+     * Agora carrega TODOS os módulos ativos e suas perguntas
      */
     public function exibirFormularioEditar($id) {
         $checklist = $this->checklistModel->buscarPorId($id);
@@ -117,8 +115,13 @@ class ChecklistController {
             return ['success' => false, 'message' => 'Checklist não encontrado'];
         }
 
-        // Buscar perguntas do módulo
-        $perguntas = $this->perguntaModel->listarPorModulo($checklist['modulo_id'], true);
+        // Buscar TODOS os módulos ativos
+        $modulos = $this->moduloModel->listarAtivos();
+
+        // Para cada módulo, buscar suas perguntas
+        foreach ($modulos as &$modulo) {
+            $modulo['perguntas'] = $this->perguntaModel->listarPorModulo($modulo['id'], true);
+        }
 
         // Buscar respostas já existentes
         $respostas = $this->respostaModel->obterRespostasCompletas($id);
@@ -129,7 +132,7 @@ class ChecklistController {
 
         return [
             'checklist' => $checklist,
-            'perguntas' => $perguntas,
+            'modulos' => $modulos, // Agora retorna array de módulos com perguntas
             'respostas' => $respostasIndexadas
         ];
     }
@@ -188,6 +191,7 @@ class ChecklistController {
 
     /**
      * Finaliza o checklist
+     * Agora verifica se TODAS as perguntas de TODOS os módulos foram respondidas
      */
     public function finalizar($id) {
         try {
@@ -198,16 +202,23 @@ class ChecklistController {
                 return ['success' => false, 'message' => 'Checklist não encontrado'];
             }
 
-            $perguntasObrigatorias = $this->perguntaModel->listarPorModulo($checklist['modulo_id'], true);
-            $totalPerguntas = count($perguntasObrigatorias);
+            // Buscar TODOS os módulos ativos e suas perguntas obrigatórias
+            $modulos = $this->moduloModel->listarAtivos();
+            $totalPerguntas = 0;
+
+            foreach ($modulos as $modulo) {
+                $perguntas = $this->perguntaModel->listarPorModulo($modulo['id'], true);
+                $totalPerguntas += count($perguntas);
+            }
 
             $respostas = $this->respostaModel->obterRespostasCompletas($id);
             $totalRespostas = count($respostas);
 
             if ($totalRespostas < $totalPerguntas) {
+                $faltam = $totalPerguntas - $totalRespostas;
                 return [
                     'success' => false,
-                    'message' => 'Por favor, responda todas as perguntas obrigatórias antes de finalizar'
+                    'message' => "Por favor, responda todas as perguntas obrigatórias antes de finalizar. Faltam {$faltam} pergunta(s)."
                 ];
             }
 

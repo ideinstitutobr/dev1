@@ -93,30 +93,36 @@ include APP_PATH . 'views/layouts/header.php';
 <?php endif; ?>
 
 <div class="form-card">
-    <form method="POST">
+    <form method="POST" id="formNovoChecklist">
         <div class="form-group">
             <label>Unidade *</label>
-            <select name="unidade_id" class="form-control" required>
+            <select name="unidade_id" id="unidade_id" class="form-control" required>
                 <option value="">Selecione uma unidade</option>
                 <?php foreach ($dados['unidades'] as $unidade): ?>
                     <option value="<?php echo $unidade['id']; ?>">
                         <?php echo htmlspecialchars($unidade['nome']); ?>
+                        <?php if (!empty($unidade['cidade'])): ?>
+                            - <?php echo htmlspecialchars($unidade['cidade']); ?>
+                        <?php endif; ?>
                     </option>
                 <?php endforeach; ?>
             </select>
+            <small style="color: #666; display: block; margin-top: 5px;">
+                ℹ️ Todas as perguntas de todos os módulos ativos serão incluídas na avaliação
+            </small>
         </div>
 
         <div class="form-group">
-            <label>Módulo de Avaliação *</label>
-            <select name="modulo_id" class="form-control" required>
-                <option value="">Selecione um módulo</option>
-                <?php foreach ($dados['modulos'] as $modulo): ?>
-                    <option value="<?php echo $modulo['id']; ?>">
-                        <?php echo htmlspecialchars($modulo['nome']); ?>
-                        (<?php echo $modulo['total_perguntas']; ?> perguntas)
-                    </option>
-                <?php endforeach; ?>
+            <label>Responsável pela Unidade *</label>
+            <select name="responsavel_id" id="responsavel_id" class="form-control" required disabled>
+                <option value="">Primeiro selecione uma unidade</option>
             </select>
+            <small style="color: #666; display: block; margin-top: 5px;">
+                👤 Gerente ou supervisor responsável por esta unidade
+            </small>
+            <div id="loading-liderancas" style="display: none; margin-top: 10px; color: #667eea;">
+                ⏳ Carregando lideranças...
+            </div>
         </div>
 
         <div class="form-group">
@@ -136,5 +142,59 @@ include APP_PATH . 'views/layouts/header.php';
         </div>
     </form>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const unidadeSelect = document.getElementById('unidade_id');
+    const responsavelSelect = document.getElementById('responsavel_id');
+    const loadingDiv = document.getElementById('loading-liderancas');
+
+    unidadeSelect.addEventListener('change', function() {
+        const unidadeId = this.value;
+
+        if (!unidadeId) {
+            responsavelSelect.innerHTML = '<option value="">Primeiro selecione uma unidade</option>';
+            responsavelSelect.disabled = true;
+            return;
+        }
+
+        // Mostrar loading
+        loadingDiv.style.display = 'block';
+        responsavelSelect.disabled = true;
+        responsavelSelect.innerHTML = '<option value="">Carregando...</option>';
+
+        // Buscar lideranças via AJAX
+        fetch('buscar_liderancas.php?unidade_id=' + unidadeId)
+            .then(response => response.json())
+            .then(data => {
+                loadingDiv.style.display = 'none';
+
+                if (!data.success || data.data.length === 0) {
+                    responsavelSelect.innerHTML = '<option value="">Nenhuma liderança encontrada para esta unidade</option>';
+                    responsavelSelect.disabled = true;
+                    return;
+                }
+
+                // Preencher select com lideranças
+                let options = '<option value="">Selecione o responsável</option>';
+                data.data.forEach(function(lideranca) {
+                    options += `<option value="${lideranca.id}">
+                        ${lideranca.nome} - ${lideranca.cargo_exibicao}
+                        ${lideranca.setor !== 'Geral' ? '(' + lideranca.setor + ')' : ''}
+                    </option>`;
+                });
+
+                responsavelSelect.innerHTML = options;
+                responsavelSelect.disabled = false;
+            })
+            .catch(error => {
+                console.error('Erro ao buscar lideranças:', error);
+                loadingDiv.style.display = 'none';
+                responsavelSelect.innerHTML = '<option value="">Erro ao carregar lideranças</option>';
+                responsavelSelect.disabled = true;
+            });
+    });
+});
+</script>
 
 <?php include APP_PATH . 'views/layouts/footer.php'; ?>
