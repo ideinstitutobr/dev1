@@ -40,13 +40,16 @@ if ($checklist['status'] !== 'rascunho') {
     exit;
 }
 
-// Buscar TODOS os módulos ativos e suas perguntas
-$modulos = $moduloModel->listarAtivos();
+// Definir tipo específico para formulário diário
+$tipo = 'diario';
+
+// Buscar APENAS módulos ativos do tipo diário e suas perguntas
+$modulos = $moduloModel->listarAtivos($tipo);
 $todasPerguntas = [];
 $totalPerguntas = 0;
 
 foreach ($modulos as &$modulo) {
-    $modulo['perguntas'] = $perguntaModel->listarPorModulo($modulo['id'], true);
+    $modulo['perguntas'] = $perguntaModel->listarPorModulo($modulo['id'], true, $tipo);
     $todasPerguntas = array_merge($todasPerguntas, $modulo['perguntas']);
     $totalPerguntas += count($modulo['perguntas']);
 }
