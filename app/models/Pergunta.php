@@ -17,18 +17,27 @@ class Pergunta {
 
     /**
      * Lista perguntas por módulo
+     * @param int $moduloId
+     * @param bool $apenasAtivas
+     * @param string|null $tipo - 'quinzenal_mensal' ou 'diario'
      */
-    public function listarPorModulo($moduloId, $apenasAtivas = true) {
+    public function listarPorModulo($moduloId, $apenasAtivas = true, $tipo = null) {
         $sql = "SELECT * FROM perguntas WHERE modulo_id = ?";
+        $params = [$moduloId];
 
         if ($apenasAtivas) {
             $sql .= " AND ativo = 1";
         }
 
+        if ($tipo) {
+            $sql .= " AND tipo = ?";
+            $params[] = $tipo;
+        }
+
         $sql .= " ORDER BY ordem, id";
 
         $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([$moduloId]);
+        $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 

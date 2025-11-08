@@ -17,10 +17,17 @@ class ModuloAvaliacao {
 
     /**
      * Lista todos os módulos ativos
+     * @param string|null $tipo - 'quinzenal_mensal' ou 'diario'
      */
-    public function listarAtivos() {
-        $sql = "SELECT * FROM modulos_avaliacao WHERE ativo = 1 ORDER BY ordem, nome";
-        $stmt = $this->pdo->query($sql);
+    public function listarAtivos($tipo = null) {
+        if ($tipo) {
+            $sql = "SELECT * FROM modulos_avaliacao WHERE ativo = 1 AND tipo = ? ORDER BY ordem, nome";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$tipo]);
+        } else {
+            $sql = "SELECT * FROM modulos_avaliacao WHERE ativo = 1 ORDER BY ordem, nome";
+            $stmt = $this->pdo->query($sql);
+        }
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
