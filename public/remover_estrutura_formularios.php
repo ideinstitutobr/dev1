@@ -138,11 +138,16 @@ if (!isset($_POST['confirmar']) || $_POST['confirmar'] !== 'SIM_DELETAR_TUDO') {
         $db = Database::getInstance();
         $pdo = $db->getConnection();
 
+        // Desabilitar verificações de foreign key temporariamente
+        $pdo->exec("SET FOREIGN_KEY_CHECKS = 0");
+
+        // Ordem correta: das dependentes para as principais
         $tabelas = [
-            'respostas_checklist',
-            'checklists',
-            'perguntas',
-            'modulos_avaliacao'
+            'respostas_checklist',  // Depende de checklists e perguntas
+            'checklists',           // Depende de modulos_avaliacao
+            'perguntas',            // Depende de modulos_avaliacao
+            'modulos_avaliacao',    // Tabela principal
+            'fotos_evidencia_checklist' // Se existir
         ];
 
         foreach ($tabelas as $tabela) {
@@ -150,9 +155,15 @@ if (!isset($_POST['confirmar']) || $_POST['confirmar'] !== 'SIM_DELETAR_TUDO') {
                 $pdo->exec("DROP TABLE IF EXISTS $tabela");
                 $sucessos[] = "✅ Tabela <code>$tabela</code> removida";
             } catch (Exception $e) {
-                $erros[] = "❌ Erro ao remover tabela <code>$tabela</code>: " . $e->getMessage();
+                // Ignorar erro se tabela não existe
+                if (strpos($e->getMessage(), 'Unknown table') === false) {
+                    $erros[] = "❌ Erro ao remover tabela <code>$tabela</code>: " . $e->getMessage();
+                }
             }
         }
+
+        // Reabilitar verificações de foreign key
+        $pdo->exec("SET FOREIGN_KEY_CHECKS = 1");
 
     } catch (Exception $e) {
         $erros[] = "❌ Erro de conexão com banco: " . $e->getMessage();
