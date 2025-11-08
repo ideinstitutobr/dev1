@@ -24,11 +24,14 @@ require_once APP_PATH . 'controllers/ChecklistController.php';
 // Instanciar controller
 $controller = new ChecklistController();
 
+// Adicionar filtro de tipo para diário
+$_GET['tipo'] = 'diario';
+
 // Obter dados
 $dados = $controller->listar();
 
 // Título da página
-$pageTitle = 'Checklists de Unidades';
+$pageTitle = 'Avaliações Diárias';
 
 // Incluir header
 include APP_PATH . 'views/layouts/header.php';

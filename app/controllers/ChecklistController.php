@@ -30,6 +30,7 @@ class ChecklistController {
      */
     public function listar() {
         $filtros = [
+            'tipo' => $_GET['tipo'] ?? null,
             'unidade_id' => $_GET['unidade_id'] ?? null,
             'data_inicio' => $_GET['data_inicio'] ?? null,
             'data_fim' => $_GET['data_fim'] ?? null,
@@ -106,7 +107,7 @@ class ChecklistController {
 
     /**
      * Exibe formulário de edição
-     * Agora carrega TODOS os módulos ativos e suas perguntas
+     * Agora carrega TODOS os módulos ativos e suas perguntas baseado no tipo do checklist
      */
     public function exibirFormularioEditar($id) {
         $checklist = $this->checklistModel->buscarPorId($id);
@@ -115,12 +116,13 @@ class ChecklistController {
             return ['success' => false, 'message' => 'Checklist não encontrado'];
         }
 
-        // Buscar TODOS os módulos ativos
-        $modulos = $this->moduloModel->listarAtivos();
+        // Buscar TODOS os módulos ativos do mesmo tipo do checklist
+        $tipo = $checklist['tipo'] ?? 'quinzenal_mensal';
+        $modulos = $this->moduloModel->listarAtivos($tipo);
 
-        // Para cada módulo, buscar suas perguntas
+        // Para cada módulo, buscar suas perguntas do mesmo tipo
         foreach ($modulos as &$modulo) {
-            $modulo['perguntas'] = $this->perguntaModel->listarPorModulo($modulo['id'], true);
+            $modulo['perguntas'] = $this->perguntaModel->listarPorModulo($modulo['id'], true, $tipo);
         }
 
         // Buscar respostas já existentes

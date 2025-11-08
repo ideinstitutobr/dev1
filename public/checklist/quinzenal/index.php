@@ -24,11 +24,14 @@ require_once APP_PATH . 'controllers/ChecklistController.php';
 // Instanciar controller
 $controller = new ChecklistController();
 
+// Adicionar filtro de tipo para quinzenal/mensal
+$_GET['tipo'] = 'quinzenal_mensal';
+
 // Obter dados
 $dados = $controller->listar();
 
 // Título da página
-$pageTitle = 'Checklists de Unidades';
+$pageTitle = 'Avaliações Quinzenais/Mensais';
 
 // Incluir header
 include APP_PATH . 'views/layouts/header.php';
