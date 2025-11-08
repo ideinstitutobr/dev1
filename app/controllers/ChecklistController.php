@@ -204,12 +204,15 @@ class ChecklistController {
                 return ['success' => false, 'message' => 'Checklist não encontrado'];
             }
 
-            // Buscar TODOS os módulos ativos e suas perguntas obrigatórias
-            $modulos = $this->moduloModel->listarAtivos();
+            // Extrair tipo do checklist para validação correta
+            $tipo = $checklist['tipo'] ?? 'quinzenal_mensal';
+
+            // Buscar APENAS módulos ativos do tipo específico e suas perguntas obrigatórias
+            $modulos = $this->moduloModel->listarAtivos($tipo);
             $totalPerguntas = 0;
 
             foreach ($modulos as $modulo) {
-                $perguntas = $this->perguntaModel->listarPorModulo($modulo['id'], true);
+                $perguntas = $this->perguntaModel->listarPorModulo($modulo['id'], true, $tipo);
                 $totalPerguntas += count($perguntas);
             }
 

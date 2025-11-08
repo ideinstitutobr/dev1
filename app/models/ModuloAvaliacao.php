@@ -73,12 +73,13 @@ class ModuloAvaliacao {
      */
     public function criar($dados) {
         $sql = "INSERT INTO modulos_avaliacao
-                (nome, descricao, total_perguntas, peso_por_pergunta, ordem, ativo)
-                VALUES (?, ?, ?, ?, ?, ?)";
+                (nome, tipo, descricao, total_perguntas, peso_por_pergunta, ordem, ativo)
+                VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
             $dados['nome'],
+            $dados['tipo'] ?? 'quinzenal_mensal',
             $dados['descricao'] ?? null,
             $dados['total_perguntas'],
             $dados['peso_por_pergunta'],

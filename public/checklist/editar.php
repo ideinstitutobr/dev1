@@ -40,13 +40,16 @@ if ($checklist['status'] !== 'rascunho') {
     exit;
 }
 
-// Buscar TODOS os módulos ativos e suas perguntas
-$modulos = $moduloModel->listarAtivos();
+// Extrair tipo do checklist para buscar módulos e perguntas corretos
+$tipo = $checklist['tipo'] ?? 'quinzenal_mensal';
+
+// Buscar APENAS módulos ativos do tipo específico e suas perguntas
+$modulos = $moduloModel->listarAtivos($tipo);
 $todasPerguntas = [];
 $totalPerguntas = 0;
 
 foreach ($modulos as &$modulo) {
-    $modulo['perguntas'] = $perguntaModel->listarPorModulo($modulo['id'], true);
+    $modulo['perguntas'] = $perguntaModel->listarPorModulo($modulo['id'], true, $tipo);
     $todasPerguntas = array_merge($todasPerguntas, $modulo['perguntas']);
     $totalPerguntas += count($modulo['perguntas']);
 }

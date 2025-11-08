@@ -60,12 +60,13 @@ class Pergunta {
      */
     public function criar($dados) {
         $sql = "INSERT INTO perguntas
-                (modulo_id, texto, descricao, ordem, obrigatoria, permite_foto, ativo)
-                VALUES (?, ?, ?, ?, ?, ?, ?)";
+                (modulo_id, tipo, texto, descricao, ordem, obrigatoria, permite_foto, ativo)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
             $dados['modulo_id'],
+            $dados['tipo'] ?? 'quinzenal_mensal',
             $dados['texto'],
             $dados['descricao'] ?? null,
             $dados['ordem'] ?? 0,
