@@ -131,9 +131,9 @@ if (!isset($_POST['confirmar']) || $_POST['confirmar'] !== 'SIM_DELETAR_TUDO') {
     // 1. Remover tabelas do banco
     echo "<h3>1️⃣ Removendo tabelas do banco de dados...</h3>";
     try {
-        require_once __DIR__ . '/app/config/config.php';
-        require_once __DIR__ . '/app/config/database.php';
-        require_once __DIR__ . '/app/classes/Database.php';
+        require_once __DIR__ . '/../app/config/config.php';
+        require_once __DIR__ . '/../app/config/database.php';
+        require_once __DIR__ . '/../app/classes/Database.php';
 
         $db = Database::getInstance();
         $pdo = $db->getConnection();
@@ -160,7 +160,7 @@ if (!isset($_POST['confirmar']) || $_POST['confirmar'] !== 'SIM_DELETAR_TUDO') {
 
     // 2. Remover diretório public/checklist
     echo "<h3>2️⃣ Removendo diretório public/checklist/...</h3>";
-    $checklistDir = __DIR__ . '/public/checklist';
+    $checklistDir = __DIR__ . '/checklist';
     if (is_dir($checklistDir)) {
         $command = "rm -rf " . escapeshellarg($checklistDir);
         exec($command, $output, $returnCode);
@@ -176,10 +176,10 @@ if (!isset($_POST['confirmar']) || $_POST['confirmar'] !== 'SIM_DELETAR_TUDO') {
     // 3. Remover Models
     echo "<h3>3️⃣ Removendo Models...</h3>";
     $models = [
-        __DIR__ . '/app/models/Checklist.php',
-        __DIR__ . '/app/models/ModuloAvaliacao.php',
-        __DIR__ . '/app/models/Pergunta.php',
-        __DIR__ . '/app/models/RespostaChecklist.php'
+        __DIR__ . '/../app/models/Checklist.php',
+        __DIR__ . '/../app/models/ModuloAvaliacao.php',
+        __DIR__ . '/../app/models/Pergunta.php',
+        __DIR__ . '/../app/models/RespostaChecklist.php'
     ];
 
     foreach ($models as $file) {
@@ -194,7 +194,7 @@ if (!isset($_POST['confirmar']) || $_POST['confirmar'] !== 'SIM_DELETAR_TUDO') {
 
     // 4. Remover Controllers
     echo "<h3>4️⃣ Removendo Controllers...</h3>";
-    $controller = __DIR__ . '/app/controllers/ChecklistController.php';
+    $controller = __DIR__ . '/../app/controllers/ChecklistController.php';
     if (file_exists($controller)) {
         if (unlink($controller)) {
             $sucessos[] = "✅ Removido: ChecklistController.php";
@@ -205,7 +205,7 @@ if (!isset($_POST['confirmar']) || $_POST['confirmar'] !== 'SIM_DELETAR_TUDO') {
 
     // 5. Remover Helpers
     echo "<h3>5️⃣ Removendo Helpers...</h3>";
-    $helper = __DIR__ . '/app/helpers/PontuacaoHelper.php';
+    $helper = __DIR__ . '/../app/helpers/PontuacaoHelper.php';
     if (file_exists($helper)) {
         if (unlink($helper)) {
             $sucessos[] = "✅ Removido: PontuacaoHelper.php";
@@ -217,8 +217,8 @@ if (!isset($_POST['confirmar']) || $_POST['confirmar'] !== 'SIM_DELETAR_TUDO') {
     // 6. Remover scripts de verificação
     echo "<h3>6️⃣ Removendo scripts auxiliares...</h3>";
     $scripts = [
-        __DIR__ . '/public/verificar_estrutura_modulos.php',
-        __DIR__ . '/public/migration_adicionar_tipo_modulos.php'
+        __DIR__ . '/verificar_estrutura_modulos.php',
+        __DIR__ . '/migration_adicionar_tipo_modulos.php'
     ];
 
     foreach ($scripts as $file) {
@@ -233,7 +233,7 @@ if (!isset($_POST['confirmar']) || $_POST['confirmar'] !== 'SIM_DELETAR_TUDO') {
 
     // 7. Atualizar sidebar - remover links de formulários
     echo "<h3>7️⃣ Atualizando menu (sidebar)...</h3>";
-    $sidebarFile = __DIR__ . '/app/views/layouts/sidebar.php';
+    $sidebarFile = __DIR__ . '/../app/views/layouts/sidebar.php';
     if (file_exists($sidebarFile)) {
         $sidebarContent = file_get_contents($sidebarFile);
 
