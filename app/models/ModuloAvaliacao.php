@@ -18,16 +18,24 @@ class ModuloAvaliacao {
     /**
      * Lista todos os módulos ativos
      * @param string|null $tipo - 'quinzenal_mensal' ou 'diario'
+     * @param bool $incluirInativos - se deve incluir módulos inativos
      */
-    public function listarAtivos($tipo = null) {
-        if ($tipo) {
-            $sql = "SELECT * FROM modulos_avaliacao WHERE ativo = 1 AND tipo = ? ORDER BY ordem, nome";
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute([$tipo]);
-        } else {
-            $sql = "SELECT * FROM modulos_avaliacao WHERE ativo = 1 ORDER BY ordem, nome";
-            $stmt = $this->pdo->query($sql);
+    public function listarAtivos($tipo = null, $incluirInativos = false) {
+        $sql = "SELECT * FROM modulos_avaliacao WHERE 1=1";
+        $params = [];
+
+        if (!$incluirInativos) {
+            $sql .= " AND ativo = 1";
         }
+
+        if ($tipo) {
+            $sql .= " AND tipo = ?";
+            $params[] = $tipo;
+        }
+
+        $sql .= " ORDER BY ordem, nome";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -116,6 +124,13 @@ class ModuloAvaliacao {
         $sql = "DELETE FROM modulos_avaliacao WHERE id = ?";
         $stmt = $this->pdo->prepare($sql);
         return $stmt->execute([$id]);
+    }
+
+    /**
+     * Exclui módulo (alias para deletar)
+     */
+    public function excluir($id) {
+        return $this->deletar($id);
     }
 
     /**

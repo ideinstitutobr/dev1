@@ -25,12 +25,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $sql = file_get_contents(__DIR__ . '/../database/migrations/008_limpar_e_recriar_estrutura.sql');
 
                 // Remover comentários e dividir por statements
+                // Primeiro, remover linhas de comentário
+                $lines = explode("\n", $sql);
+                $cleanedLines = array_filter($lines, function($line) {
+                    $trimmed = trim($line);
+                    return !empty($trimmed) && !preg_match('/^--/', $trimmed);
+                });
+                $cleanedSql = implode("\n", $cleanedLines);
+
+                // Agora dividir por statements
                 $statements = array_filter(
-                    array_map('trim', explode(';', $sql)),
+                    array_map('trim', explode(';', $cleanedSql)),
                     function($stmt) {
-                        return !empty($stmt) &&
-                               !preg_match('/^--/', $stmt) &&
-                               !preg_match('/^SELECT.*AS (status|mensagem)/', $stmt);
+                        $trimmed = trim($stmt);
+                        return !empty($trimmed) &&
+                               !preg_match('/^SELECT/i', $trimmed);
                     }
                 );
 
@@ -48,12 +57,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $sql = file_get_contents(__DIR__ . '/../database/migrations/009_criar_dados_iniciais.sql');
 
                 // Remover comentários e dividir por statements
+                // Primeiro, remover linhas de comentário
+                $lines = explode("\n", $sql);
+                $cleanedLines = array_filter($lines, function($line) {
+                    $trimmed = trim($line);
+                    return !empty($trimmed) && !preg_match('/^--/', $trimmed);
+                });
+                $cleanedSql = implode("\n", $cleanedLines);
+
+                // Agora dividir por statements
                 $statements = array_filter(
-                    array_map('trim', explode(';', $sql)),
+                    array_map('trim', explode(';', $cleanedSql)),
                     function($stmt) {
-                        return !empty($stmt) &&
-                               !preg_match('/^--/', $stmt) &&
-                               !preg_match('/^SELECT.*AS mensagem/', $stmt);
+                        $trimmed = trim($stmt);
+                        return !empty($trimmed) &&
+                               !preg_match('/^SELECT/i', $trimmed);
                     }
                 );
 
@@ -71,12 +89,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
                 // 1. Limpar
                 $sql = file_get_contents(__DIR__ . '/../database/migrations/008_limpar_e_recriar_estrutura.sql');
+
+                // Remover comentários
+                $lines = explode("\n", $sql);
+                $cleanedLines = array_filter($lines, function($line) {
+                    $trimmed = trim($line);
+                    return !empty($trimmed) && !preg_match('/^--/', $trimmed);
+                });
+                $cleanedSql = implode("\n", $cleanedLines);
+
+                // Dividir por statements
                 $statements = array_filter(
-                    array_map('trim', explode(';', $sql)),
+                    array_map('trim', explode(';', $cleanedSql)),
                     function($stmt) {
-                        return !empty($stmt) &&
-                               !preg_match('/^--/', $stmt) &&
-                               !preg_match('/^SELECT.*AS (status|mensagem)/', $stmt);
+                        $trimmed = trim($stmt);
+                        return !empty($trimmed) &&
+                               !preg_match('/^SELECT/i', $trimmed);
                     }
                 );
 
@@ -88,12 +116,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
                 // 2. Popular
                 $sql = file_get_contents(__DIR__ . '/../database/migrations/009_criar_dados_iniciais.sql');
+
+                // Remover comentários
+                $lines = explode("\n", $sql);
+                $cleanedLines = array_filter($lines, function($line) {
+                    $trimmed = trim($line);
+                    return !empty($trimmed) && !preg_match('/^--/', $trimmed);
+                });
+                $cleanedSql = implode("\n", $cleanedLines);
+
+                // Dividir por statements
                 $statements = array_filter(
-                    array_map('trim', explode(';', $sql)),
+                    array_map('trim', explode(';', $cleanedSql)),
                     function($stmt) {
-                        return !empty($stmt) &&
-                               !preg_match('/^--/', $stmt) &&
-                               !preg_match('/^SELECT.*AS mensagem/', $stmt);
+                        $trimmed = trim($stmt);
+                        return !empty($trimmed) &&
+                               !preg_match('/^SELECT/i', $trimmed);
                     }
                 );
 
