@@ -52,6 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     $perguntaModel->criar([
                         'modulo_id' => $moduloId,
+                        'tipo' => $modulo['tipo'], // Usar o tipo do módulo
                         'texto' => $_POST['texto'],
                         'descricao' => $_POST['descricao'] ?? '',
                         'ordem' => $ordem,
@@ -346,7 +347,14 @@ include APP_PATH . 'views/layouts/header.php';
 <!-- Cabeçalho -->
 <div class="page-header">
     <h1>📝 Perguntas do Módulo: <?php echo htmlspecialchars($modulo['nome']); ?></h1>
-    <p><?php echo htmlspecialchars($modulo['descricao'] ?? 'Configure as perguntas deste módulo'); ?></p>
+    <p>
+        <?php if ($modulo['tipo'] == 'quinzenal_mensal'): ?>
+            <span style="background: #667eea; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-right: 10px;">📅 QUINZENAL/MENSAL</span>
+        <?php else: ?>
+            <span style="background: #28a745; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-right: 10px;">📆 DIÁRIO</span>
+        <?php endif; ?>
+        <?php echo htmlspecialchars($modulo['descricao'] ?? 'Configure as perguntas deste módulo'); ?>
+    </p>
 </div>
 
 <!-- Mensagens -->
