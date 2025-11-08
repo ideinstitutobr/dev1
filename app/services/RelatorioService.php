@@ -22,9 +22,9 @@ class RelatorioService {
         $where = ["status = 'finalizado'"];
         $bindings = [];
 
-        if (!empty($filtros['loja_id'])) {
-            $where[] = "loja_id = ?";
-            $bindings[] = $filtros['loja_id'];
+        if (!empty($filtros['unidade_id'])) {
+            $where[] = "unidade_id = ?";
+            $bindings[] = $filtros['unidade_id'];
         }
 
         if (!empty($filtros['data_inicio'])) {
@@ -45,7 +45,7 @@ class RelatorioService {
                     AVG(pontuacao_total) as media_pontuacao,
                     SUM(CASE WHEN atingiu_meta = 1 THEN 1 ELSE 0 END) as total_aprovados,
                     SUM(CASE WHEN atingiu_meta = 0 THEN 1 ELSE 0 END) as total_reprovados,
-                    COUNT(DISTINCT loja_id) as total_lojas,
+                    COUNT(DISTINCT unidade_id) as total_unidades,
                     COUNT(DISTINCT colaborador_id) as total_avaliadores
                 FROM checklists
                 WHERE {$whereClause}";
@@ -63,9 +63,9 @@ class RelatorioService {
     }
 
     /**
-     * Obtém ranking de lojas
+     * Obtém ranking de unidades
      */
-    public function obterRankingLojas($filtros) {
+    public function obterRankingUnidades($filtros) {
         $where = ["c.status = 'finalizado'"];
         $bindings = [];
 
@@ -82,19 +82,19 @@ class RelatorioService {
         $whereClause = implode(' AND ', $where);
 
         $sql = "SELECT
-                    l.id,
-                    l.nome,
-                    l.cidade,
+                    u.id,
+                    u.nome,
+                    u.cidade,
                     COUNT(c.id) as total_avaliacoes,
                     AVG(c.percentual) as media_percentual,
                     AVG(c.pontuacao_total) as media_pontuacao,
                     SUM(CASE WHEN c.atingiu_meta = 1 THEN 1 ELSE 0 END) as total_aprovados,
                     MAX(c.percentual) as melhor_nota,
                     MIN(c.percentual) as pior_nota
-                FROM lojas l
-                LEFT JOIN checklists c ON l.id = c.loja_id
+                FROM unidades u
+                LEFT JOIN checklists c ON u.id = c.unidade_id
                 WHERE {$whereClause}
-                GROUP BY l.id, l.nome, l.cidade
+                GROUP BY u.id, u.nome, u.cidade
                 HAVING total_avaliacoes > 0
                 ORDER BY media_percentual DESC";
 
@@ -110,9 +110,9 @@ class RelatorioService {
         $where = ["status = 'finalizado'"];
         $bindings = [];
 
-        if (!empty($filtros['loja_id'])) {
-            $where[] = "loja_id = ?";
-            $bindings[] = $filtros['loja_id'];
+        if (!empty($filtros['unidade_id'])) {
+            $where[] = "unidade_id = ?";
+            $bindings[] = $filtros['unidade_id'];
         }
 
         if (!empty($filtros['data_inicio'])) {
@@ -148,9 +148,9 @@ class RelatorioService {
         $where = ["status = 'finalizado'"];
         $bindings = [];
 
-        if (!empty($filtros['loja_id'])) {
-            $where[] = "loja_id = ?";
-            $bindings[] = $filtros['loja_id'];
+        if (!empty($filtros['unidade_id'])) {
+            $where[] = "unidade_id = ?";
+            $bindings[] = $filtros['unidade_id'];
         }
 
         if (!empty($filtros['data_inicio'])) {
@@ -199,9 +199,9 @@ class RelatorioService {
         $where = ["c.status = 'finalizado'"];
         $bindings = [];
 
-        if (!empty($filtros['loja_id'])) {
-            $where[] = "c.loja_id = ?";
-            $bindings[] = $filtros['loja_id'];
+        if (!empty($filtros['unidade_id'])) {
+            $where[] = "c.unidade_id = ?";
+            $bindings[] = $filtros['unidade_id'];
         }
 
         if (!empty($filtros['data_inicio'])) {
@@ -242,9 +242,9 @@ class RelatorioService {
         $where = ["c.status = 'finalizado'", "p.modulo_id = ?"];
         $bindings = [$filtros['modulo_id']];
 
-        if (!empty($filtros['loja_id'])) {
-            $where[] = "c.loja_id = ?";
-            $bindings[] = $filtros['loja_id'];
+        if (!empty($filtros['unidade_id'])) {
+            $where[] = "c.unidade_id = ?";
+            $bindings[] = $filtros['unidade_id'];
         }
 
         if (!empty($filtros['data_inicio'])) {
