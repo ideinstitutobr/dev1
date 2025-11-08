@@ -77,9 +77,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     break;
 
                 case 'deletar':
-                    $perguntaModel->deletar($_POST['id']);
-                    $mensagem = 'Pergunta deletada com sucesso!';
-                    $tipo_mensagem = 'success';
+                    $perguntaId = $_POST['id'];
+                    $temRespostas = $perguntaModel->temRespostas($perguntaId);
+                    $perguntaModel->deletar($perguntaId);
+
+                    if ($temRespostas) {
+                        $mensagem = 'Pergunta desativada com sucesso! (Não foi possível deletar pois existem respostas associadas. A pergunta foi ocultada mas o histórico foi preservado.)';
+                        $tipo_mensagem = 'warning';
+                    } else {
+                        $mensagem = 'Pergunta deletada com sucesso!';
+                        $tipo_mensagem = 'success';
+                    }
                     break;
             }
         }
