@@ -48,9 +48,18 @@ try {
     }
 
     // Verificar se todas as perguntas foram respondidas
+    require_once APP_PATH . 'models/ModuloAvaliacao.php';
+
     $perguntaModel = new Pergunta();
-    $perguntas = $perguntaModel->listarPorModulo($checklist['modulo_id']);
-    $totalPerguntas = count($perguntas);
+    $moduloModel = new ModuloAvaliacao();
+
+    // Buscar todos os módulos ativos e suas perguntas
+    $modulos = $moduloModel->listarAtivos();
+    $totalPerguntas = 0;
+    foreach ($modulos as $modulo) {
+        $perguntasModulo = $perguntaModel->listarPorModulo($modulo['id'], true);
+        $totalPerguntas += count($perguntasModulo);
+    }
 
     $respostaModel = new RespostaChecklist();
     $respostas = $respostaModel->obterRespostasCompletas($checklistId);

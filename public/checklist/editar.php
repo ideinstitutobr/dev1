@@ -712,7 +712,7 @@ function finalizarAvaliacao() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert('Avaliação finalizada com sucesso!');
+            // Redirecionar diretamente para visualizar resultado
             window.location.href = 'visualizar.php?id=' + checklistId;
         } else {
             alert('Erro ao finalizar: ' + data.message);
