@@ -6,10 +6,10 @@
 
 header('Content-Type: application/json');
 
-require_once __DIR__ . '/../../app/config/config.php';
-require_once __DIR__ . '/../../app/config/database.php';
-require_once __DIR__ . '/../../app/classes/Database.php';
-require_once __DIR__ . '/../../app/models/Unidade.php';
+require_once __DIR__ . '/../../../app/config/config.php';
+require_once __DIR__ . '/../../../app/config/database.php';
+require_once __DIR__ . '/../../../app/classes/Database.php';
+require_once __DIR__ . '/../../../app/models/Unidade.php';
 
 $unidadeId = $_GET['unidade_id'] ?? null;
 

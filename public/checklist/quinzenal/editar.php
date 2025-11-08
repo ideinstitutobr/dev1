@@ -4,10 +4,10 @@
  * Preencher avaliação com sistema de estrelas
  */
 
-require_once __DIR__ . '/../../app/config/config.php';
-require_once __DIR__ . '/../../app/config/database.php';
-require_once __DIR__ . '/../../app/classes/Database.php';
-require_once __DIR__ . '/../../app/classes/Auth.php';
+require_once __DIR__ . '/../../../app/config/config.php';
+require_once __DIR__ . '/../../../app/config/database.php';
+require_once __DIR__ . '/../../../app/classes/Database.php';
+require_once __DIR__ . '/../../../app/classes/Auth.php';
 
 Auth::requireLogin();
 
