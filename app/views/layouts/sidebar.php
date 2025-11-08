@@ -243,11 +243,17 @@
                 <span class="text">Formulários</span>
             </a>
             <ul class="submenu" id="submenu-formularios">
-                <li><a href="<?php echo BASE_URL; ?>checklist/">📝 Checklists de Unidades</a></li>
-                <li><a href="<?php echo BASE_URL; ?>checklist/novo.php">➕ Nova Avaliação</a></li>
-                <li><a href="<?php echo BASE_URL; ?>checklist/relatorios/">📊 Dashboard & Relatórios</a></li>
+                <li style="padding: 8px 15px; font-weight: 600; color: #667eea; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">📅 Quinzenais/Mensais</li>
+                <li><a href="<?php echo BASE_URL; ?>checklist/quinzenal/">📝 Lista de Avaliações</a></li>
+                <li><a href="<?php echo BASE_URL; ?>checklist/quinzenal/novo.php">➕ Nova Avaliação</a></li>
+
+                <li style="padding: 8px 15px; font-weight: 600; color: #28a745; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 10px;">📆 Avaliações Diárias</li>
+                <li><a href="<?php echo BASE_URL; ?>checklist/diario/">📝 Lista de Avaliações</a></li>
+                <li><a href="<?php echo BASE_URL; ?>checklist/diario/novo.php">➕ Nova Avaliação</a></li>
+
                 <?php if (Auth::hasLevel(['admin', 'gestor'])): ?>
-                <li><a href="<?php echo BASE_URL; ?>checklist/modulos.php">⚙️ Configurar Módulos</a></li>
+                <li style="padding: 8px 15px; font-weight: 600; color: #6c757d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 10px;">⚙️ Configurações</li>
+                <li><a href="<?php echo BASE_URL; ?>checklist/modulos.php">📦 Módulos</a></li>
                 <?php endif; ?>
             </ul>
         </li>
