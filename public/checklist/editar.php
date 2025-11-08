@@ -381,8 +381,8 @@ include APP_PATH . 'views/layouts/header.php';
         <h1>📋 Preencher Avaliação</h1>
         <div class="checklist-info">
             <div class="info-item">
-                <label>Loja</label>
-                <strong><?php echo htmlspecialchars($checklist['loja_nome']); ?></strong>
+                <label>Unidade</label>
+                <strong><?php echo htmlspecialchars($checklist['unidade_nome']); ?></strong>
             </div>
             <div class="info-item">
                 <label>Módulo</label>

@@ -13,7 +13,7 @@ Auth::requireLogin();
 
 require_once APP_PATH . 'models/Checklist.php';
 require_once APP_PATH . 'models/ModuloAvaliacao.php';
-require_once APP_PATH . 'models/Loja.php';
+require_once APP_PATH . 'models/Unidade.php';
 require_once APP_PATH . 'controllers/ChecklistController.php';
 
 $controller = new ChecklistController();
@@ -95,12 +95,12 @@ include APP_PATH . 'views/layouts/header.php';
 <div class="form-card">
     <form method="POST">
         <div class="form-group">
-            <label>Loja *</label>
-            <select name="loja_id" class="form-control" required>
-                <option value="">Selecione uma loja</option>
-                <?php foreach ($dados['lojas'] as $loja): ?>
-                    <option value="<?php echo $loja['id']; ?>">
-                        <?php echo htmlspecialchars($loja['nome']); ?>
+            <label>Unidade *</label>
+            <select name="unidade_id" class="form-control" required>
+                <option value="">Selecione uma unidade</option>
+                <?php foreach ($dados['unidades'] as $unidade): ?>
+                    <option value="<?php echo $unidade['id']; ?>">
+                        <?php echo htmlspecialchars($unidade['nome']); ?>
                     </option>
                 <?php endforeach; ?>
             </select>
