@@ -16,6 +16,29 @@ class Pergunta {
     }
 
     /**
+     * Lista todas as perguntas por tipo
+     * @param string $tipo - 'quinzenal_mensal' ou 'diario'
+     * @param bool $incluirInativos
+     */
+    public function listarPorTipo($tipo, $incluirInativos = false) {
+        $sql = "SELECT p.*, m.nome as modulo_nome, m.ordem as modulo_ordem
+                FROM perguntas p
+                INNER JOIN modulos_avaliacao m ON p.modulo_id = m.id
+                WHERE p.tipo = ?";
+        $params = [$tipo];
+
+        if (!$incluirInativos) {
+            $sql .= " AND p.ativo = 1";
+        }
+
+        $sql .= " ORDER BY m.ordem, p.ordem, p.id";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
      * Lista perguntas por módulo
      * @param int $moduloId
      * @param bool $apenasAtivas
@@ -118,6 +141,13 @@ class Pergunta {
             $stmt = $this->pdo->prepare($sql);
             return $stmt->execute([$id]);
         }
+    }
+
+    /**
+     * Exclui pergunta (alias para deletar)
+     */
+    public function excluir($id) {
+        return $this->deletar($id);
     }
 
     /**
