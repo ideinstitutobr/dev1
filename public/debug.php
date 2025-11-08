@@ -296,8 +296,8 @@ include APP_PATH . 'views/layouts/header.php';
     $correcoesQuinzenal = contarLinhasComPadrao(__DIR__ . '/checklist/quinzenal/editar.php', '/\\.\\.\\/shared\\/(finalizar|salvar_resposta)\\.php/');
     $correcoesGenerico = contarLinhasComPadrao(__DIR__ . '/checklist/editar.php', '/shared\\/(finalizar|salvar_resposta)\\.php/');
 
-    $filtroTipoDiario = contarLinhasComPadrao(__DIR__ . '/checklist/diario/editar.php', "/\\$tipo\\s*=\\s*'diario'/");
-    $filtroTipoQuinzenal = contarLinhasComPadrao(__DIR__ . '/checklist/quinzenal/editar.php', "/\\$tipo\\s*=\\s*'quinzenal_mensal'/");
+    $filtroTipoDiario = contarLinhasComPadrao(__DIR__ . '/checklist/diario/editar.php', '/\$tipo\s*=\s*\'diario\'/');
+    $filtroTipoQuinzenal = contarLinhasComPadrao(__DIR__ . '/checklist/quinzenal/editar.php', '/\$tipo\s*=\s*\'quinzenal_mensal\'/');
 
     // ========================================
     // 3. CALCULAR SCORE GERAL
