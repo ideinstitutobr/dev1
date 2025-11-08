@@ -38,8 +38,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['acao_modulo'])) {
                     'ordem' => $_POST['ordem'],
                     'ativo' => isset($_POST['ativo']) ? 1 : 0
                 ]);
-                // Redirecionar automaticamente para criar perguntas
-                header('Location: modulos.php?perguntas_modulo=' . $moduloId . '&novo_modulo=1');
+                // Redirecionar para gerenciar perguntas
+                header('Location: gerenciar_perguntas.php?modulo_id=' . $moduloId);
                 exit;
                 break;
 
@@ -88,9 +88,18 @@ if (isset($_GET['editar_modulo'])) {
     $moduloEditar = $moduloModel->buscarPorId($_GET['editar_modulo']);
 }
 
-// Listar módulos separados por tipo
-$modulosQuinzenal = $moduloModel->listarAtivos('quinzenal_mensal', true);
-$modulosDiario = $moduloModel->listarAtivos('diario', true);
+// Verificar se há filtro de tipo
+$tipoFiltro = $_GET['tipo'] ?? null;
+
+// Listar módulos separados por tipo ou filtrado
+if ($tipoFiltro) {
+    // Modo filtrado - mostrar apenas um tipo
+    $modulos = $moduloModel->listarAtivos($tipoFiltro, true);
+} else {
+    // Modo completo - mostrar todos separados
+    $modulosQuinzenal = $moduloModel->listarAtivos('quinzenal_mensal', true);
+    $modulosDiario = $moduloModel->listarAtivos('diario', true);
+}
 
 $pageTitle = 'Gerenciar Módulos';
 include APP_PATH . 'views/layouts/header.php';
@@ -289,8 +298,16 @@ include APP_PATH . 'views/layouts/header.php';
 
 <div class="page-header">
         <div>
-            <h1>⚙️ Gerenciar Módulos de Avaliação</h1>
-            <p>Configure os módulos e suas perguntas</p>
+            <?php if ($tipoFiltro == 'quinzenal_mensal'): ?>
+                <h1>📅 Módulos - Formulários Quinzenais/Mensais</h1>
+                <p>Configure os módulos e perguntas para avaliações quinzenais/mensais</p>
+            <?php elseif ($tipoFiltro == 'diario'): ?>
+                <h1>📆 Módulos - Formulários Diários</h1>
+                <p>Configure os módulos e perguntas para avaliações diárias</p>
+            <?php else: ?>
+                <h1>⚙️ Gerenciar Módulos de Avaliação</h1>
+                <p>Configure os módulos e suas perguntas</p>
+            <?php endif; ?>
         </div>
         <button class="btn btn-primary" onclick="abrirModalModulo()">
             ➕ Novo Módulo
@@ -303,68 +320,69 @@ include APP_PATH . 'views/layouts/header.php';
         </div>
     <?php endif; ?>
 
-    <!-- Módulos Quinzenais/Mensais -->
-    <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-        📅 Módulos para Formulários Quinzenais/Mensais
-        <span style="font-size: 14px; font-weight: normal; color: #666;">(<?php echo count($modulosQuinzenal); ?> módulos)</span>
-    </h2>
-
-    <div class="modulos-grid">
-        <?php if (empty($modulosQuinzenal)): ?>
-            <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #999;">
-                <p style="font-size: 16px;">Nenhum módulo quinzenal/mensal cadastrado ainda.</p>
-                <p style="font-size: 14px;">Clique em "Novo Módulo" para criar o primeiro!</p>
-            </div>
-        <?php else: ?>
-            <?php foreach ($modulosQuinzenal as $modulo): ?>
-                <?php $totalPerguntas = $moduloModel->contarPerguntas($modulo['id']); ?>
-                <div class="modulo-card <?php echo $modulo['ativo'] ? '' : 'inativo'; ?>">
-                    <?php if (!$modulo['ativo']): ?>
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
-                            <h3 style="margin: 0;"><?php echo htmlspecialchars($modulo['nome']); ?></h3>
-                            <span class="badge-inativo">DESATIVADO</span>
-                        </div>
+    <?php if ($tipoFiltro): ?>
+        <!-- Modo Filtrado - Mostrar apenas um tipo -->
+        <div class="modulos-grid">
+            <?php if (empty($modulos)): ?>
+                <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #999;">
+                    <?php if ($tipoFiltro == 'quinzenal_mensal'): ?>
+                        <p style="font-size: 16px;">Nenhum módulo quinzenal/mensal cadastrado ainda.</p>
                     <?php else: ?>
-                        <h3><?php echo htmlspecialchars($modulo['nome']); ?></h3>
+                        <p style="font-size: 16px;">Nenhum módulo diário cadastrado ainda.</p>
                     <?php endif; ?>
-                    <p><?php echo htmlspecialchars($modulo['descricao'] ?? 'Sem descrição'); ?></p>
-
-                    <div class="modulo-stats">
-                        <div class="stat-item">
-                            <strong><?php echo $totalPerguntas; ?></strong>
-                            <span>Perguntas</span>
-                        </div>
-                        <div class="stat-item">
-                            <strong><?php echo $modulo['ordem']; ?></strong>
-                            <span>Ordem</span>
-                        </div>
-                    </div>
-
-                    <div style="margin-top: 15px;">
-                        <a href="gerenciar_perguntas.php?modulo_id=<?php echo $modulo['id']; ?>" class="btn btn-info btn-sm">📝 Gerenciar Perguntas</a>
-                        <a href="?editar_modulo=<?php echo $modulo['id']; ?>" class="btn btn-warning btn-sm">✏️ Editar</a>
-                        <button onclick="confirmarDeleteModulo(<?php echo $modulo['id']; ?>)" class="btn btn-danger btn-sm">🗑️ Deletar</button>
-                    </div>
+                    <p style="font-size: 14px;">Clique em "Novo Módulo" para criar o primeiro!</p>
                 </div>
-            <?php endforeach; ?>
-        <?php endif; ?>
-    </div>
+            <?php else: ?>
+                <?php foreach ($modulos as $modulo): ?>
+                    <?php $totalPerguntas = $moduloModel->contarPerguntas($modulo['id']); ?>
+                    <div class="modulo-card <?php echo $modulo['ativo'] ? '' : 'inativo'; ?>">
+                        <?php if (!$modulo['ativo']): ?>
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                                <h3 style="margin: 0;"><?php echo htmlspecialchars($modulo['nome']); ?></h3>
+                                <span class="badge-inativo">DESATIVADO</span>
+                            </div>
+                        <?php else: ?>
+                            <h3><?php echo htmlspecialchars($modulo['nome']); ?></h3>
+                        <?php endif; ?>
+                        <p><?php echo htmlspecialchars($modulo['descricao'] ?? 'Sem descrição'); ?></p>
 
-    <!-- Módulos Diários -->
-    <div style="margin-top: 50px;">
-        <h2 style="color: #28a745; border-bottom: 2px solid #28a745; padding-bottom: 10px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-            📆 Módulos para Formulários Diários
-            <span style="font-size: 14px; font-weight: normal; color: #666;">(<?php echo count($modulosDiario); ?> módulos)</span>
+                        <div class="modulo-stats">
+                            <div class="stat-item">
+                                <strong><?php echo $totalPerguntas; ?></strong>
+                                <span>Perguntas</span>
+                            </div>
+                            <div class="stat-item">
+                                <strong><?php echo $modulo['ordem']; ?></strong>
+                                <span>Ordem</span>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 15px;">
+                            <a href="gerenciar_perguntas.php?modulo_id=<?php echo $modulo['id']; ?>" class="btn btn-info btn-sm">📝 Gerenciar Perguntas</a>
+                            <a href="?editar_modulo=<?php echo $modulo['id']; ?>&tipo=<?php echo $tipoFiltro; ?>" class="btn btn-warning btn-sm">✏️ Editar</a>
+                            <button onclick="confirmarDeleteModulo(<?php echo $modulo['id']; ?>)" class="btn btn-danger btn-sm">🗑️ Deletar</button>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
+
+    <?php else: ?>
+        <!-- Modo Completo - Mostrar todos separados por tipo -->
+        <!-- Módulos Quinzenais/Mensais -->
+        <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            📅 Módulos para Formulários Quinzenais/Mensais
+            <span style="font-size: 14px; font-weight: normal; color: #666;">(<?php echo count($modulosQuinzenal); ?> módulos)</span>
         </h2>
 
         <div class="modulos-grid">
-            <?php if (empty($modulosDiario)): ?>
+            <?php if (empty($modulosQuinzenal)): ?>
                 <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #999;">
-                    <p style="font-size: 16px;">Nenhum módulo diário cadastrado ainda.</p>
-                    <p style="font-size: 14px;">Clique em "Novo Módulo" e selecione o tipo "Diário"!</p>
+                    <p style="font-size: 16px;">Nenhum módulo quinzenal/mensal cadastrado ainda.</p>
+                    <p style="font-size: 14px;">Clique em "Novo Módulo" para criar o primeiro!</p>
                 </div>
             <?php else: ?>
-                <?php foreach ($modulosDiario as $modulo): ?>
+                <?php foreach ($modulosQuinzenal as $modulo): ?>
                     <?php $totalPerguntas = $moduloModel->contarPerguntas($modulo['id']); ?>
                     <div class="modulo-card <?php echo $modulo['ativo'] ? '' : 'inativo'; ?>">
                         <?php if (!$modulo['ativo']): ?>
@@ -397,7 +415,56 @@ include APP_PATH . 'views/layouts/header.php';
                 <?php endforeach; ?>
             <?php endif; ?>
         </div>
-    </div>
+
+        <!-- Módulos Diários -->
+        <div style="margin-top: 50px;">
+            <h2 style="color: #28a745; border-bottom: 2px solid #28a745; padding-bottom: 10px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                📆 Módulos para Formulários Diários
+                <span style="font-size: 14px; font-weight: normal; color: #666;">(<?php echo count($modulosDiario); ?> módulos)</span>
+            </h2>
+
+            <div class="modulos-grid">
+                <?php if (empty($modulosDiario)): ?>
+                    <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #999;">
+                        <p style="font-size: 16px;">Nenhum módulo diário cadastrado ainda.</p>
+                        <p style="font-size: 14px;">Clique em "Novo Módulo" e selecione o tipo "Diário"!</p>
+                    </div>
+                <?php else: ?>
+                    <?php foreach ($modulosDiario as $modulo): ?>
+                        <?php $totalPerguntas = $moduloModel->contarPerguntas($modulo['id']); ?>
+                        <div class="modulo-card <?php echo $modulo['ativo'] ? '' : 'inativo'; ?>">
+                            <?php if (!$modulo['ativo']): ?>
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                                    <h3 style="margin: 0;"><?php echo htmlspecialchars($modulo['nome']); ?></h3>
+                                    <span class="badge-inativo">DESATIVADO</span>
+                                </div>
+                            <?php else: ?>
+                                <h3><?php echo htmlspecialchars($modulo['nome']); ?></h3>
+                            <?php endif; ?>
+                            <p><?php echo htmlspecialchars($modulo['descricao'] ?? 'Sem descrição'); ?></p>
+
+                            <div class="modulo-stats">
+                                <div class="stat-item">
+                                    <strong><?php echo $totalPerguntas; ?></strong>
+                                    <span>Perguntas</span>
+                                </div>
+                                <div class="stat-item">
+                                    <strong><?php echo $modulo['ordem']; ?></strong>
+                                    <span>Ordem</span>
+                                </div>
+                            </div>
+
+                            <div style="margin-top: 15px;">
+                                <a href="gerenciar_perguntas.php?modulo_id=<?php echo $modulo['id']; ?>" class="btn btn-info btn-sm">📝 Gerenciar Perguntas</a>
+                                <a href="?editar_modulo=<?php echo $modulo['id']; ?>" class="btn btn-warning btn-sm">✏️ Editar</a>
+                                <button onclick="confirmarDeleteModulo(<?php echo $modulo['id']; ?>)" class="btn btn-danger btn-sm">🗑️ Deletar</button>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+        </div>
+    <?php endif; ?>
 
 <!-- Modal de Módulo -->
 <div class="modal" id="modalModulo">
@@ -420,10 +487,17 @@ include APP_PATH . 'views/layouts/header.php';
 
             <div class="form-group">
                 <label>Tipo de Formulário *</label>
-                <select name="tipo" class="form-control" required>
-                    <option value="quinzenal_mensal" <?php echo ($moduloEditar && $moduloEditar['tipo'] == 'quinzenal_mensal') ? 'selected' : ''; ?>>📅 Quinzenal/Mensal</option>
-                    <option value="diario" <?php echo ($moduloEditar && $moduloEditar['tipo'] == 'diario') ? 'selected' : ''; ?>>📆 Diário</option>
+                <select name="tipo" class="form-control" required <?php echo ($tipoFiltro && !$moduloEditar) ? 'readonly disabled' : ''; ?>>
+                    <?php
+                    $tipoSelecionado = $moduloEditar ? $moduloEditar['tipo'] : ($tipoFiltro ?? 'quinzenal_mensal');
+                    ?>
+                    <option value="quinzenal_mensal" <?php echo ($tipoSelecionado == 'quinzenal_mensal') ? 'selected' : ''; ?>>📅 Quinzenal/Mensal</option>
+                    <option value="diario" <?php echo ($tipoSelecionado == 'diario') ? 'selected' : ''; ?>>📆 Diário</option>
                 </select>
+                <?php if ($tipoFiltro && !$moduloEditar): ?>
+                    <input type="hidden" name="tipo" value="<?php echo htmlspecialchars($tipoFiltro); ?>">
+                    <small style="color: #666; font-size: 12px;">O tipo está pré-selecionado baseado no filtro atual</small>
+                <?php endif; ?>
             </div>
 
             <div class="form-group">
