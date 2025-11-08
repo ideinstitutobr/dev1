@@ -12,7 +12,7 @@ require_once __DIR__ . '/../../../app/classes/Auth.php';
 Auth::requireLogin();
 
 require_once APP_PATH . 'models/Checklist.php';
-require_once APP_PATH . 'models/Loja.php';
+require_once APP_PATH . 'models/Unidade.php';
 require_once APP_PATH . 'models/ModuloAvaliacao.php';
 require_once APP_PATH . 'services/RelatorioService.php';
 require_once APP_PATH . 'helpers/PontuacaoHelper.php';
@@ -22,7 +22,7 @@ require_once APP_PATH . 'controllers/RelatorioChecklistController.php';
 $controller = new RelatorioChecklistController();
 $dados = $controller->dashboard();
 
-$pageTitle = 'Dashboard - Checklist de Lojas';
+$pageTitle = 'Dashboard - Checklist de Unidades';
 include APP_PATH . 'views/layouts/header.php';
 ?>
 
@@ -109,7 +109,7 @@ include APP_PATH . 'views/layouts/header.php';
 </style>
 
 <div class="page-header" style="margin-bottom: 30px;">
-    <h1>📊 Dashboard - Checklist de Lojas</h1>
+    <h1>📊 Dashboard - Checklist de Unidades</h1>
     <p>Visão geral de todas as avaliações realizadas</p>
 </div>
 
@@ -117,12 +117,12 @@ include APP_PATH . 'views/layouts/header.php';
     <div class="filters-card">
         <form method="GET" style="display: flex; gap: 15px; align-items: end;">
             <div>
-                <label style="display: block; margin-bottom: 5px; font-size: 14px;">Loja</label>
-                <select name="loja_id" class="form-control" style="padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-                    <option value="">Todas as lojas</option>
-                    <?php foreach ($dados['lojas'] as $loja): ?>
-                        <option value="<?php echo $loja['id']; ?>" <?php echo ($dados['filtros']['loja_id'] == $loja['id']) ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($loja['nome']); ?>
+                <label style="display: block; margin-bottom: 5px; font-size: 14px;">Unidade</label>
+                <select name="unidade_id" class="form-control" style="padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    <option value="">Todas as unidades</option>
+                    <?php foreach ($dados['unidades'] as $unidade): ?>
+                        <option value="<?php echo $unidade['id']; ?>" <?php echo ($dados['filtros']['unidade_id'] == $unidade['id']) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($unidade['nome']); ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
@@ -161,34 +161,34 @@ include APP_PATH . 'views/layouts/header.php';
             <div class="label">Taxa de Aprovação</div>
         </div>
         <div class="stat-card">
-            <div class="icon">🏪</div>
-            <div class="value"><?php echo $dados['estatisticas_gerais']['total_lojas'] ?? 0; ?></div>
-            <div class="label">Lojas Avaliadas</div>
+            <div class="icon">🏢</div>
+            <div class="value"><?php echo $dados['estatisticas_gerais']['total_unidades'] ?? 0; ?></div>
+            <div class="label">Unidades Avaliadas</div>
         </div>
     </div>
 
-    <!-- Ranking de Lojas -->
+    <!-- Ranking de Unidades -->
     <div class="chart-card">
-        <h3>🏆 Ranking de Lojas</h3>
-        <?php if (empty($dados['ranking_lojas'])): ?>
+        <h3>🏆 Ranking de Unidades</h3>
+        <?php if (empty($dados['ranking_unidades'])): ?>
             <p style="text-align: center; padding: 40px; color: #999;">Nenhum dado disponível para o período selecionado</p>
         <?php else: ?>
             <ul class="ranking-list">
-                <?php foreach (array_slice($dados['ranking_lojas'], 0, 10) as $index => $loja): ?>
+                <?php foreach (array_slice($dados['ranking_unidades'], 0, 10) as $index => $unidade): ?>
                     <li class="ranking-item">
                         <div class="ranking-position"><?php echo $index + 1; ?>º</div>
                         <div class="ranking-info">
-                            <div class="ranking-name"><?php echo htmlspecialchars($loja['nome']); ?></div>
+                            <div class="ranking-name"><?php echo htmlspecialchars($unidade['nome']); ?></div>
                             <div style="font-size: 12px; color: #999;">
-                                <?php echo $loja['cidade'] ?? ''; ?> •
-                                <?php echo $loja['total_avaliacoes']; ?> avaliações
+                                <?php echo $unidade['cidade'] ?? ''; ?> •
+                                <?php echo $unidade['total_avaliacoes']; ?> avaliações
                             </div>
                         </div>
                         <div class="ranking-score">
-                            <div class="score-value"><?php echo number_format($loja['media_percentual'], 1); ?>%</div>
+                            <div class="score-value"><?php echo number_format($unidade['media_percentual'], 1); ?>%</div>
                             <div style="font-size: 12px; color: #999;">
                                 <?php
-                                $estrelas = round($loja['media_percentual'] / 20);
+                                $estrelas = round($unidade['media_percentual'] / 20);
                                 echo str_repeat('⭐', $estrelas);
                                 ?>
                             </div>

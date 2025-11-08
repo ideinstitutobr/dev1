@@ -8,21 +8,21 @@ require_once __DIR__ . '/../models/Checklist.php';
 require_once __DIR__ . '/../models/RespostaChecklist.php';
 require_once __DIR__ . '/../models/ModuloAvaliacao.php';
 require_once __DIR__ . '/../models/Pergunta.php';
-require_once __DIR__ . '/../models/Loja.php';
+require_once __DIR__ . '/../models/Unidade.php';
 
 class ChecklistController {
     private $checklistModel;
     private $respostaModel;
     private $moduloModel;
     private $perguntaModel;
-    private $lojaModel;
+    private $unidadeModel;
 
     public function __construct() {
         $this->checklistModel = new Checklist();
         $this->respostaModel = new RespostaChecklist();
         $this->moduloModel = new ModuloAvaliacao();
         $this->perguntaModel = new Pergunta();
-        $this->lojaModel = new Loja();
+        $this->unidadeModel = new Unidade();
     }
 
     /**
@@ -30,7 +30,7 @@ class ChecklistController {
      */
     public function listar() {
         $filtros = [
-            'loja_id' => $_GET['loja_id'] ?? null,
+            'unidade_id' => $_GET['unidade_id'] ?? null,
             'data_inicio' => $_GET['data_inicio'] ?? null,
             'data_fim' => $_GET['data_fim'] ?? null,
             'status' => $_GET['status'] ?? null,
@@ -44,7 +44,7 @@ class ChecklistController {
 
         $resultado = $this->checklistModel->listarComFiltros($filtros, $params);
         $estatisticas = $this->checklistModel->obterEstatisticas($filtros);
-        $lojas = $this->lojaModel->listarAtivas();
+        $unidades = $this->unidadeModel->listarAtivas();
         $modulos = $this->moduloModel->listarAtivos();
 
         return [
@@ -56,7 +56,7 @@ class ChecklistController {
             ],
             'estatisticas' => $estatisticas,
             'filtros' => $filtros,
-            'lojas' => $lojas,
+            'unidades' => $unidades,
             'modulos' => $modulos
         ];
     }
@@ -65,11 +65,11 @@ class ChecklistController {
      * Exibe formulário para novo checklist
      */
     public function exibirFormularioNovo() {
-        $lojas = $this->lojaModel->listarAtivas();
+        $unidades = $this->unidadeModel->listarAtivas();
         $modulos = $this->moduloModel->listarAtivos();
 
         return [
-            'lojas' => $lojas,
+            'unidades' => $unidades,
             'modulos' => $modulos
         ];
     }
@@ -84,7 +84,7 @@ class ChecklistController {
 
         try {
             $dados = [
-                'loja_id' => $_POST['loja_id'],
+                'unidade_id' => $_POST['unidade_id'],
                 'colaborador_id' => $_SESSION['user_id'] ?? 1, // TODO: pegar do usuário logado
                 'modulo_id' => $_POST['modulo_id'],
                 'data_avaliacao' => $_POST['data_avaliacao'] ?? date('Y-m-d'),

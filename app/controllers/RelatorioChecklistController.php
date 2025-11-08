@@ -5,20 +5,20 @@
  */
 
 require_once __DIR__ . '/../models/Checklist.php';
-require_once __DIR__ . '/../models/Loja.php';
+require_once __DIR__ . '/../models/Unidade.php';
 require_once __DIR__ . '/../models/ModuloAvaliacao.php';
 require_once __DIR__ . '/../services/RelatorioService.php';
 
 class RelatorioChecklistController {
     private $checklistModel;
     private $relatorioService;
-    private $lojaModel;
+    private $unidadeModel;
     private $moduloModel;
 
     public function __construct() {
         $this->checklistModel = new Checklist();
         $this->relatorioService = new RelatorioService();
-        $this->lojaModel = new Loja();
+        $this->unidadeModel = new Unidade();
         $this->moduloModel = new ModuloAvaliacao();
     }
 
@@ -27,19 +27,19 @@ class RelatorioChecklistController {
      */
     public function dashboard() {
         $filtros = [
-            'loja_id' => $_GET['loja_id'] ?? null,
+            'unidade_id' => $_GET['unidade_id'] ?? null,
             'data_inicio' => $_GET['data_inicio'] ?? date('Y-m-d', strtotime('-30 days')),
             'data_fim' => $_GET['data_fim'] ?? date('Y-m-d')
         ];
 
         $dados = [
             'estatisticas_gerais' => $this->relatorioService->obterEstatisticasGerais($filtros),
-            'ranking_lojas' => $this->relatorioService->obterRankingLojas($filtros),
+            'ranking_unidades' => $this->relatorioService->obterRankingUnidades($filtros),
             'evolucao_temporal' => $this->relatorioService->obterEvolucaoTemporal($filtros),
             'distribuicao_notas' => $this->relatorioService->obterDistribuicaoNotas($filtros),
             'desempenho_setores' => $this->relatorioService->obterDesempenhoSetores($filtros),
             'filtros' => $filtros,
-            'lojas' => $this->lojaModel->listarAtivas()
+            'unidades' => $this->unidadeModel->listarAtivas()
         ];
 
         return $dados;
@@ -51,7 +51,7 @@ class RelatorioChecklistController {
     public function porSetor($moduloId) {
         $filtros = [
             'modulo_id' => $moduloId,
-            'loja_id' => $_GET['loja_id'] ?? null,
+            'unidade_id' => $_GET['unidade_id'] ?? null,
             'data_inicio' => $_GET['data_inicio'] ?? date('Y-m-d', strtotime('-30 days')),
             'data_fim' => $_GET['data_fim'] ?? date('Y-m-d')
         ];
@@ -67,20 +67,20 @@ class RelatorioChecklistController {
             'analise_perguntas' => $this->relatorioService->analisarPerguntasSetor($filtros),
             'evolucao' => $this->relatorioService->obterEvolucaoTemporal($filtros),
             'filtros' => $filtros,
-            'lojas' => $this->lojaModel->listarAtivas()
+            'unidades' => $this->unidadeModel->listarAtivas()
         ];
 
         return $dados;
     }
 
     /**
-     * Comparativo entre lojas
+     * Comparativo entre unidades
      */
     public function comparativo() {
-        $lojasIds = $_GET['lojas'] ?? [];
+        $unidadesIds = $_GET['unidades'] ?? [];
 
-        if (empty($lojasIds)) {
-            $lojasIds = array_column($this->lojaModel->listarAtivas(), 'id');
+        if (empty($unidadesIds)) {
+            $unidadesIds = array_column($this->unidadeModel->listarAtivas(), 'id');
         }
 
         $filtros = [
@@ -89,10 +89,10 @@ class RelatorioChecklistController {
         ];
 
         $dados = [
-            'lojas_selecionadas' => $lojasIds,
-            'ranking' => $this->relatorioService->obterRankingLojas($filtros),
+            'unidades_selecionadas' => $unidadesIds,
+            'ranking' => $this->relatorioService->obterRankingUnidades($filtros),
             'filtros' => $filtros,
-            'todas_lojas' => $this->lojaModel->listarAtivas()
+            'todas_unidades' => $this->unidadeModel->listarAtivas()
         ];
 
         return $dados;
@@ -103,7 +103,7 @@ class RelatorioChecklistController {
      */
     public function exportarCSV() {
         $filtros = [
-            'loja_id' => $_GET['loja_id'] ?? null,
+            'unidade_id' => $_GET['unidade_id'] ?? null,
             'data_inicio' => $_GET['data_inicio'] ?? null,
             'data_fim' => $_GET['data_fim'] ?? null
         ];
@@ -112,7 +112,7 @@ class RelatorioChecklistController {
 
         $colunas = [
             'id' => 'ID',
-            'loja_nome' => 'Loja',
+            'unidade_nome' => 'Unidade',
             'modulo_nome' => 'Módulo',
             'colaborador_nome' => 'Avaliador',
             'data_avaliacao' => 'Data',
@@ -131,7 +131,7 @@ class RelatorioChecklistController {
     public function dadosGrafico() {
         $tipo = $_GET['tipo'] ?? null;
         $filtros = [
-            'loja_id' => $_GET['loja_id'] ?? null,
+            'unidade_id' => $_GET['unidade_id'] ?? null,
             'data_inicio' => $_GET['data_inicio'] ?? null,
             'data_fim' => $_GET['data_fim'] ?? null
         ];
@@ -144,7 +144,7 @@ class RelatorioChecklistController {
                 $dados = $this->relatorioService->obterDistribuicaoNotas($filtros);
                 break;
             case 'ranking':
-                $dados = $this->relatorioService->obterRankingLojas($filtros);
+                $dados = $this->relatorioService->obterRankingUnidades($filtros);
                 break;
             case 'setores':
                 $dados = $this->relatorioService->obterDesempenhoSetores($filtros);

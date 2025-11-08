@@ -26,12 +26,12 @@ class Checklist {
         $dados['atingiu_meta'] = 0;
 
         $sql = "INSERT INTO checklists
-                (loja_id, colaborador_id, data_avaliacao, modulo_id, observacoes_gerais, status, pontuacao_maxima)
+                (unidade_id, colaborador_id, data_avaliacao, modulo_id, observacoes_gerais, status, pontuacao_maxima)
                 VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
-            $dados['loja_id'],
+            $dados['unidade_id'],
             $dados['colaborador_id'],
             $dados['data_avaliacao'],
             $dados['modulo_id'],
@@ -48,12 +48,12 @@ class Checklist {
      */
     public function buscarPorId($id) {
         $sql = "SELECT c.*,
-                       l.nome as loja_nome,
+                       u.nome as unidade_nome,
                        col.nome as colaborador_nome,
                        m.nome as modulo_nome,
                        m.total_perguntas
                 FROM checklists c
-                INNER JOIN lojas l ON c.loja_id = l.id
+                INNER JOIN unidades u ON c.unidade_id = u.id
                 INNER JOIN colaboradores col ON c.colaborador_id = col.id
                 INNER JOIN modulos_avaliacao m ON c.modulo_id = m.id
                 WHERE c.id = ?";
@@ -139,9 +139,9 @@ class Checklist {
         $where = ['1=1'];
         $bindings = [];
 
-        if (!empty($filtros['loja_id'])) {
-            $where[] = "c.loja_id = ?";
-            $bindings[] = $filtros['loja_id'];
+        if (!empty($filtros['unidade_id'])) {
+            $where[] = "c.unidade_id = ?";
+            $bindings[] = $filtros['unidade_id'];
         }
 
         if (!empty($filtros['data_inicio'])) {
@@ -175,11 +175,11 @@ class Checklist {
         // Busca registros
         $sql = "SELECT
                     c.*,
-                    l.nome as loja_nome,
+                    u.nome as unidade_nome,
                     col.nome as colaborador_nome,
                     m.nome as modulo_nome
                 FROM checklists c
-                INNER JOIN lojas l ON c.loja_id = l.id
+                INNER JOIN unidades u ON c.unidade_id = u.id
                 INNER JOIN colaboradores col ON c.colaborador_id = col.id
                 INNER JOIN modulos_avaliacao m ON c.modulo_id = m.id
                 WHERE {$whereClause}
@@ -206,9 +206,9 @@ class Checklist {
         $where = ["c.status = 'finalizado'"];
         $bindings = [];
 
-        if (!empty($filtros['loja_id'])) {
-            $where[] = "c.loja_id = ?";
-            $bindings[] = $filtros['loja_id'];
+        if (!empty($filtros['unidade_id'])) {
+            $where[] = "c.unidade_id = ?";
+            $bindings[] = $filtros['unidade_id'];
         }
 
         if (!empty($filtros['data_inicio'])) {

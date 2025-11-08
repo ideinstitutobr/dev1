@@ -17,7 +17,7 @@ require_once APP_PATH . 'models/Checklist.php';
 require_once APP_PATH . 'models/RespostaChecklist.php';
 require_once APP_PATH . 'models/ModuloAvaliacao.php';
 require_once APP_PATH . 'models/Pergunta.php';
-require_once APP_PATH . 'models/Loja.php';
+require_once APP_PATH . 'models/Unidade.php';
 require_once APP_PATH . 'helpers/PontuacaoHelper.php';
 require_once APP_PATH . 'controllers/ChecklistController.php';
 
@@ -28,7 +28,7 @@ $controller = new ChecklistController();
 $dados = $controller->listar();
 
 // Título da página
-$pageTitle = 'Checklists de Lojas';
+$pageTitle = 'Checklists de Unidades';
 
 // Incluir header
 include APP_PATH . 'views/layouts/header.php';
@@ -160,7 +160,7 @@ include APP_PATH . 'views/layouts/header.php';
 </style>
 
 <div class="page-header">
-        <h1>📋 Checklists de Lojas</h1>
+        <h1>📋 Checklists de Unidades</h1>
         <p>Gerencie e visualize todas as avaliações realizadas</p>
     </div>
 
@@ -189,12 +189,12 @@ include APP_PATH . 'views/layouts/header.php';
         <form method="GET">
             <div class="filters-row">
                 <div class="form-group">
-                    <label>Loja</label>
-                    <select name="loja_id" class="form-control">
-                        <option value="">Todas as lojas</option>
-                        <?php foreach ($dados['lojas'] as $loja): ?>
-                            <option value="<?php echo $loja['id']; ?>" <?php echo ($dados['filtros']['loja_id'] == $loja['id']) ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($loja['nome']); ?>
+                    <label>Unidade</label>
+                    <select name="unidade_id" class="form-control">
+                        <option value="">Todas as unidades</option>
+                        <?php foreach ($dados['unidades'] as $unidade): ?>
+                            <option value="<?php echo $unidade['id']; ?>" <?php echo ($dados['filtros']['unidade_id'] == $unidade['id']) ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($unidade['nome']); ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -241,7 +241,7 @@ include APP_PATH . 'views/layouts/header.php';
                 <tr>
                     <th>ID</th>
                     <th>Data</th>
-                    <th>Loja</th>
+                    <th>Unidade</th>
                     <th>Módulo</th>
                     <th>Pontuação</th>
                     <th>Status</th>
@@ -260,7 +260,7 @@ include APP_PATH . 'views/layouts/header.php';
                         <tr>
                             <td>#<?php echo $checklist['id']; ?></td>
                             <td><?php echo date('d/m/Y', strtotime($checklist['data_avaliacao'])); ?></td>
-                            <td><?php echo htmlspecialchars($checklist['loja_nome']); ?></td>
+                            <td><?php echo htmlspecialchars($checklist['unidade_nome']); ?></td>
                             <td><?php echo htmlspecialchars($checklist['modulo_nome']); ?></td>
                             <td>
                                 <strong><?php echo number_format($checklist['percentual'], 1); ?>%</strong>
