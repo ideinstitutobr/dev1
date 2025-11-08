@@ -30,6 +30,7 @@ class ChecklistController {
      */
     public function listar() {
         $filtros = [
+            'tipo' => $_GET['tipo'] ?? null,
             'unidade_id' => $_GET['unidade_id'] ?? null,
             'data_inicio' => $_GET['data_inicio'] ?? null,
             'data_fim' => $_GET['data_fim'] ?? null,
