@@ -465,18 +465,17 @@ include APP_PATH . 'views/layouts/header.php';
                 <span class="modulo-badge"><?php echo count($modulo['perguntas']); ?> pergunta(s)</span>
             </div>
 
-            <?php foreach ($modulo['perguntas'] as $index => $pergunta):
+            <?php
+            foreach ($modulo['perguntas'] as $index => $pergunta):
                 $perguntaGlobalIndex++;
+                $respostaExistente = $respostasMap[$pergunta['id']] ?? null;
+                $estrelasAtuais = $respostaExistente ? $respostaExistente['estrelas'] : 0;
+                $observacaoAtual = $respostaExistente ? $respostaExistente['observacao'] : '';
+                $fotoAtual = $respostaExistente ? $respostaExistente['foto_evidencia'] : '';
+                $temObservacao = !empty($observacaoAtual);
+                $temFoto = !empty($fotoAtual);
             ?>
-        <?php
-        $respostaExistente = $respostasMap[$pergunta['id']] ?? null;
-        $estrelasAtuais = $respostaExistente ? $respostaExistente['estrelas'] : 0;
-        $observacaoAtual = $respostaExistente ? $respostaExistente['observacao'] : '';
-        $fotoAtual = $respostaExistente ? $respostaExistente['foto_evidencia'] : '';
-        $temObservacao = !empty($observacaoAtual);
-        $temFoto = !empty($fotoAtual);
-        ?>
-        <div class="pergunta-card" data-pergunta-id="<?php echo $pergunta['id']; ?>">
+            <div class="pergunta-card" data-pergunta-id="<?php echo $pergunta['id']; ?>">
             <div class="pergunta-header">
                 <span class="pergunta-numero">Pergunta <?php echo $perguntaGlobalIndex; ?> de <?php echo $totalPerguntas; ?></span>
                 <h3 class="pergunta-texto"><?php echo htmlspecialchars($pergunta['texto']); ?></h3>
