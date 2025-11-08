@@ -561,8 +561,8 @@ include APP_PATH . 'views/layouts/header.php';
             <span class="status-resposta status-salvo" id="status-<?php echo $pergunta['id']; ?>" style="<?php echo $respostaExistente ? '' : 'display:none;'; ?>">
                 ✓ Salvo
             </span>
-        </div>
-            <?php endforeach; ?> <!-- Fim foreach perguntas -->
+        </div> <!-- Fim pergunta-card -->
+        <?php endforeach; ?> <!-- Fim foreach perguntas -->
         </div> <!-- Fim modulo-section -->
     <?php endforeach; ?> <!-- Fim foreach módulos -->
 
