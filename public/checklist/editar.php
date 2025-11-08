@@ -14,6 +14,7 @@ Auth::requireLogin();
 require_once APP_PATH . 'models/Checklist.php';
 require_once APP_PATH . 'models/Pergunta.php';
 require_once APP_PATH . 'models/RespostaChecklist.php';
+require_once APP_PATH . 'models/ModuloAvaliacao.php';
 
 if (!isset($_GET['id'])) {
     header('Location: index.php');
@@ -24,6 +25,7 @@ $checklistId = (int) $_GET['id'];
 $checklistModel = new Checklist();
 $perguntaModel = new Pergunta();
 $respostaModel = new RespostaChecklist();
+$moduloModel = new ModuloAvaliacao();
 
 // Buscar checklist
 $checklist = $checklistModel->buscarPorId($checklistId);
@@ -38,8 +40,16 @@ if ($checklist['status'] !== 'rascunho') {
     exit;
 }
 
-// Buscar perguntas do módulo
-$perguntas = $perguntaModel->listarPorModulo($checklist['modulo_id']);
+// Buscar TODOS os módulos ativos e suas perguntas
+$modulos = $moduloModel->listarAtivos();
+$todasPerguntas = [];
+$totalPerguntas = 0;
+
+foreach ($modulos as &$modulo) {
+    $modulo['perguntas'] = $perguntaModel->listarPorModulo($modulo['id'], true);
+    $todasPerguntas = array_merge($todasPerguntas, $modulo['perguntas']);
+    $totalPerguntas += count($modulo['perguntas']);
+}
 
 // Buscar respostas já salvas
 $respostasExistentes = $respostaModel->obterRespostasCompletas($checklistId);
@@ -374,6 +384,42 @@ include APP_PATH . 'views/layouts/header.php';
         font-weight: 600;
         font-size: 14px;
     }
+
+    /* Estilos para Seções de Módulos */
+    .modulo-section {
+        margin: 30px 0;
+        padding: 25px;
+        background: #f8f9fa;
+        border-radius: 12px;
+        border: 2px solid #e9ecef;
+    }
+    .modulo-header {
+        margin-bottom: 25px;
+        padding-bottom: 20px;
+        border-bottom: 3px solid #667eea;
+    }
+    .modulo-titulo {
+        margin: 0 0 10px 0;
+        color: #667eea;
+        font-size: 24px;
+        font-weight: 700;
+    }
+    .modulo-descricao {
+        margin: 5px 0;
+        color: #666;
+        font-size: 14px;
+        font-style: italic;
+    }
+    .modulo-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 6px 15px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        margin-top: 10px;
+    }
 </style>
 
 <!-- Cabeçalho do Checklist -->
@@ -401,13 +447,27 @@ include APP_PATH . 'views/layouts/header.php';
         <!-- Barra de Progresso -->
         <div class="progress-bar">
             <div class="progress-fill" id="progressBar">
-                <span id="progressText">0 de <?php echo count($perguntas); ?> respondidas</span>
+                <span id="progressText">0 de <?php echo $totalPerguntas; ?> respondidas</span>
             </div>
         </div>
     </div>
 
-    <!-- Perguntas -->
-    <?php foreach ($perguntas as $index => $pergunta): ?>
+    <!-- Perguntas Agrupadas por Módulo -->
+    <?php
+    $perguntaGlobalIndex = 0;
+    foreach ($modulos as $modulo):
+        if (empty($modulo['perguntas'])) continue;
+    ?>
+        <div class="modulo-section">
+            <div class="modulo-header">
+                <h2 class="modulo-titulo">📦 <?php echo htmlspecialchars($modulo['nome']); ?></h2>
+                <p class="modulo-descricao"><?php echo htmlspecialchars($modulo['descricao'] ?? ''); ?></p>
+                <span class="modulo-badge"><?php echo count($modulo['perguntas']); ?> pergunta(s)</span>
+            </div>
+
+            <?php foreach ($modulo['perguntas'] as $index => $pergunta):
+                $perguntaGlobalIndex++;
+            ?>
         <?php
         $respostaExistente = $respostasMap[$pergunta['id']] ?? null;
         $estrelasAtuais = $respostaExistente ? $respostaExistente['estrelas'] : 0;
@@ -418,7 +478,7 @@ include APP_PATH . 'views/layouts/header.php';
         ?>
         <div class="pergunta-card" data-pergunta-id="<?php echo $pergunta['id']; ?>">
             <div class="pergunta-header">
-                <span class="pergunta-numero">Pergunta <?php echo $index + 1; ?> de <?php echo count($perguntas); ?></span>
+                <span class="pergunta-numero">Pergunta <?php echo $perguntaGlobalIndex; ?> de <?php echo $totalPerguntas; ?></span>
                 <h3 class="pergunta-texto"><?php echo htmlspecialchars($pergunta['texto']); ?></h3>
                 <?php if (!empty($pergunta['descricao'])): ?>
                     <p class="pergunta-descricao"><?php echo htmlspecialchars($pergunta['descricao']); ?></p>
@@ -502,7 +562,9 @@ include APP_PATH . 'views/layouts/header.php';
                 ✓ Salvo
             </span>
         </div>
-    <?php endforeach; ?>
+            <?php endforeach; ?> <!-- Fim foreach perguntas -->
+        </div> <!-- Fim modulo-section -->
+    <?php endforeach; ?> <!-- Fim foreach módulos -->
 
     <!-- Seção de Finalização -->
     <div class="finalizar-section">

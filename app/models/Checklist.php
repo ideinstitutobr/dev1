@@ -17,6 +17,7 @@ class Checklist {
 
     /**
      * Cria um novo checklist
+     * Agora avalia TODOS os módulos ativos de uma vez
      */
     public function criar($dados) {
         $dados['data_avaliacao'] = $dados['data_avaliacao'] ?? date('Y-m-d');
@@ -26,15 +27,15 @@ class Checklist {
         $dados['atingiu_meta'] = 0;
 
         $sql = "INSERT INTO checklists
-                (unidade_id, colaborador_id, data_avaliacao, modulo_id, observacoes_gerais, status, pontuacao_maxima)
+                (unidade_id, colaborador_id, responsavel_id, data_avaliacao, observacoes_gerais, status, pontuacao_maxima)
                 VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
             $dados['unidade_id'],
             $dados['colaborador_id'],
+            $dados['responsavel_id'] ?? null,
             $dados['data_avaliacao'],
-            $dados['modulo_id'],
             $dados['observacoes_gerais'] ?? null,
             $dados['status'],
             $dados['pontuacao_maxima']
@@ -49,13 +50,15 @@ class Checklist {
     public function buscarPorId($id) {
         $sql = "SELECT c.*,
                        u.nome as unidade_nome,
+                       u.cidade as unidade_cidade,
                        col.nome as colaborador_nome,
-                       m.nome as modulo_nome,
-                       m.total_perguntas
+                       col.email as colaborador_email,
+                       resp.nome as responsavel_nome,
+                       resp.email as responsavel_email
                 FROM checklists c
                 INNER JOIN unidades u ON c.unidade_id = u.id
                 INNER JOIN colaboradores col ON c.colaborador_id = col.id
-                INNER JOIN modulos_avaliacao m ON c.modulo_id = m.id
+                LEFT JOIN colaboradores resp ON c.responsavel_id = resp.id
                 WHERE c.id = ?";
 
         $stmt = $this->pdo->prepare($sql);
@@ -65,29 +68,34 @@ class Checklist {
 
     /**
      * Calcula a pontuação total do checklist
+     * Agora considera TODAS as perguntas de TODOS os módulos
      */
     public function calcularPontuacao($checklistId) {
-        // Buscar total de pontos das respostas
-        $sql = "SELECT SUM(pontuacao) as total
+        // Buscar total de pontos das respostas e quantidade de respostas
+        $sql = "SELECT
+                    SUM(pontuacao) as total_pontos,
+                    COUNT(*) as total_respostas,
+                    AVG(estrelas) as media_estrelas
                 FROM respostas_checklist
                 WHERE checklist_id = ?";
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$checklistId]);
         $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
-        $total = $resultado['total'] ?? 0;
 
-        // Buscar pontuação máxima do módulo
-        $checklist = $this->buscarPorId($checklistId);
-        $pontuacaoMaxima = 5; // Sempre 5 pontos máximo
+        $totalPontos = $resultado['total_pontos'] ?? 0;
+        $totalRespostas = $resultado['total_respostas'] ?? 0;
+        $mediaEstrelas = $resultado['media_estrelas'] ?? 0;
 
-        // Calcular percentual
-        $percentual = $pontuacaoMaxima > 0 ? ($total / $pontuacaoMaxima) * 100 : 0;
+        // Pontuação máxima = total de respostas × 5 (máximo de estrelas)
+        $pontuacaoMaxima = $totalRespostas * 5;
 
-        // Verificar se atingiu meta (4 de 5 = 80%)
-        $metaMinima = $this->getConfiguracao('meta_minima_estrelas') ?? 4;
-        $percentualMeta = ($metaMinima / 5) * 100; // 80%
-        $atingiuMeta = $percentual >= $percentualMeta ? 1 : 0;
+        // Calcular percentual (baseado na média de estrelas)
+        $percentual = $mediaEstrelas > 0 ? ($mediaEstrelas / 5) * 100 : 0;
+
+        // Verificar se atingiu meta (média >= 4 estrelas = 80%)
+        $metaMinima = 4; // 4 de 5 estrelas
+        $atingiuMeta = $mediaEstrelas >= $metaMinima ? 1 : 0;
 
         // Atualizar checklist
         $sqlUpdate = "UPDATE checklists
@@ -99,15 +107,17 @@ class Checklist {
 
         $stmtUpdate = $this->pdo->prepare($sqlUpdate);
         $stmtUpdate->execute([
-            round($total, 2),
-            $pontuacaoMaxima,
+            round($mediaEstrelas, 2),
+            5,
             round($percentual, 2),
             $atingiuMeta,
             $checklistId
         ]);
 
         return [
-            'total' => round($total, 2),
+            'total' => round($totalPontos, 2),
+            'media_estrelas' => round($mediaEstrelas, 2),
+            'total_respostas' => $totalRespostas,
             'maximo' => $pontuacaoMaxima,
             'percentual' => round($percentual, 2),
             'atingiu_meta' => $atingiuMeta
@@ -159,11 +169,6 @@ class Checklist {
             $bindings[] = $filtros['status'];
         }
 
-        if (!empty($filtros['modulo_id'])) {
-            $where[] = "c.modulo_id = ?";
-            $bindings[] = $filtros['modulo_id'];
-        }
-
         $whereClause = implode(' AND ', $where);
 
         // Conta total
@@ -176,12 +181,13 @@ class Checklist {
         $sql = "SELECT
                     c.*,
                     u.nome as unidade_nome,
+                    u.cidade as unidade_cidade,
                     col.nome as colaborador_nome,
-                    m.nome as modulo_nome
+                    resp.nome as responsavel_nome
                 FROM checklists c
                 INNER JOIN unidades u ON c.unidade_id = u.id
                 INNER JOIN colaboradores col ON c.colaborador_id = col.id
-                INNER JOIN modulos_avaliacao m ON c.modulo_id = m.id
+                LEFT JOIN colaboradores resp ON c.responsavel_id = resp.id
                 WHERE {$whereClause}
                 ORDER BY c.data_avaliacao DESC, c.created_at DESC
                 LIMIT ? OFFSET ?";
