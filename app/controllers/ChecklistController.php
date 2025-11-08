@@ -85,6 +85,7 @@ class ChecklistController {
                 'unidade_id' => $_POST['unidade_id'],
                 'colaborador_id' => $_SESSION['user_id'] ?? 1, // TODO: pegar do usuário logado
                 'responsavel_id' => $_POST['responsavel_id'] ?? null,
+                'tipo' => $_POST['tipo'] ?? 'quinzenal_mensal',
                 'data_avaliacao' => $_POST['data_avaliacao'] ?? date('Y-m-d'),
                 'observacoes_gerais' => $_POST['observacoes_gerais'] ?? null
             ];

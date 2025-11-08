@@ -135,6 +135,9 @@ include APP_PATH . 'views/layouts/header.php';
             <textarea name="observacoes_gerais" class="form-control" rows="4" placeholder="Observações gerais sobre a avaliação..."></textarea>
         </div>
 
+        <!-- Campo oculto para tipo de formulário -->
+        <input type="hidden" name="tipo" value="quinzenal_mensal">
+
         <div class="form-group" style="text-align: center;">
             <button type="submit" class="btn btn-primary">
                 ✅ Criar e Começar Avaliação
