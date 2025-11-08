@@ -88,12 +88,37 @@ class Pergunta {
     }
 
     /**
-     * Deleta pergunta
+     * Deleta pergunta (ou desativa se tiver respostas)
      */
     public function deletar($id) {
-        $sql = "DELETE FROM perguntas WHERE id = ?";
+        // Verificar se a pergunta tem respostas associadas
+        $sqlCheck = "SELECT COUNT(*) as total FROM respostas_checklist WHERE pergunta_id = ?";
+        $stmtCheck = $this->pdo->prepare($sqlCheck);
+        $stmtCheck->execute([$id]);
+        $resultado = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+
+        if ($resultado['total'] > 0) {
+            // Se tiver respostas, desativar (soft delete) para preservar histórico
+            $sql = "UPDATE perguntas SET ativo = 0 WHERE id = ?";
+            $stmt = $this->pdo->prepare($sql);
+            return $stmt->execute([$id]);
+        } else {
+            // Se não tiver respostas, pode deletar permanentemente
+            $sql = "DELETE FROM perguntas WHERE id = ?";
+            $stmt = $this->pdo->prepare($sql);
+            return $stmt->execute([$id]);
+        }
+    }
+
+    /**
+     * Verifica se uma pergunta tem respostas
+     */
+    public function temRespostas($id) {
+        $sql = "SELECT COUNT(*) as total FROM respostas_checklist WHERE pergunta_id = ?";
         $stmt = $this->pdo->prepare($sql);
-        return $stmt->execute([$id]);
+        $stmt->execute([$id]);
+        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $resultado['total'] > 0;
     }
 
     /**
