@@ -170,7 +170,7 @@ document.addEventListener('DOMContentLoaded', function() {
         responsavelSelect.innerHTML = '<option value="">Carregando...</option>';
 
         // Buscar lideranças via AJAX
-        fetch('buscar_liderancas.php?unidade_id=' + unidadeId)
+        fetch('../buscar_liderancas.php?unidade_id=' + unidadeId)
             .then(response => response.json())
             .then(data => {
                 loadingDiv.style.display = 'none';

@@ -630,7 +630,7 @@ function salvarResposta(perguntaId, estrelas, observacao = null) {
         observacao = textarea ? textarea.value : '';
     }
 
-    fetch('salvar_resposta.php', {
+    fetch('shared/salvar_resposta.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -703,7 +703,7 @@ function finalizarAvaliacao() {
         return;
     }
 
-    fetch('finalizar.php', {
+    fetch('shared/finalizar.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -837,7 +837,7 @@ function enviarFoto(perguntaId) {
     status.className = 'status-resposta status-salvando';
     status.style.display = 'inline-block';
 
-    fetch('salvar_resposta.php', {
+    fetch('shared/salvar_resposta.php', {
         method: 'POST',
         body: formData
     })
@@ -893,7 +893,7 @@ function removerFoto(perguntaId) {
     const observacao = textarea ? textarea.value : '';
 
     // Salvar resposta sem foto
-    fetch('salvar_resposta.php', {
+    fetch('shared/salvar_resposta.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'

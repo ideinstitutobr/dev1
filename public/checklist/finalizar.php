@@ -53,11 +53,14 @@ try {
     $perguntaModel = new Pergunta();
     $moduloModel = new ModuloAvaliacao();
 
-    // Buscar todos os módulos ativos e suas perguntas
-    $modulos = $moduloModel->listarAtivos();
+    // Extrair tipo do checklist para validação correta
+    $tipo = $checklist['tipo'] ?? 'quinzenal_mensal';
+
+    // Buscar APENAS módulos ativos do tipo específico e suas perguntas
+    $modulos = $moduloModel->listarAtivos($tipo);
     $totalPerguntas = 0;
     foreach ($modulos as $modulo) {
-        $perguntasModulo = $perguntaModel->listarPorModulo($modulo['id'], true);
+        $perguntasModulo = $perguntaModel->listarPorModulo($modulo['id'], true, $tipo);
         $totalPerguntas += count($perguntasModulo);
     }
 
