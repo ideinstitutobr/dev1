@@ -84,8 +84,17 @@ try {
         echo "<span style='color: orange;'>⚠️ " . $e->getMessage() . "</span></p>";
     }
 
-    // 5. Remover coluna modulo_id
-    echo "<p><strong>5. Removendo coluna modulo_id...</strong> ";
+    // 5. Remover constraint unique_checklist (que usa modulo_id)
+    echo "<p><strong>5. Removendo constraint unique_checklist...</strong> ";
+    try {
+        $pdo->exec("ALTER TABLE checklists DROP INDEX unique_checklist");
+        echo "<span style='color: green;'>✅ OK</span></p>";
+    } catch (PDOException $e) {
+        echo "<span style='color: orange;'>⚠️ " . $e->getMessage() . "</span></p>";
+    }
+
+    // 6. Remover coluna modulo_id
+    echo "<p><strong>6. Removendo coluna modulo_id...</strong> ";
     try {
         $pdo->exec("ALTER TABLE checklists DROP COLUMN modulo_id");
         echo "<span style='color: green;'>✅ OK</span></p>";
