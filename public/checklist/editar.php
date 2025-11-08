@@ -431,8 +431,8 @@ include APP_PATH . 'views/layouts/header.php';
                 <strong><?php echo htmlspecialchars($checklist['unidade_nome']); ?></strong>
             </div>
             <div class="info-item">
-                <label>Módulo</label>
-                <strong><?php echo htmlspecialchars($checklist['modulo_nome']); ?></strong>
+                <label>Responsável</label>
+                <strong><?php echo htmlspecialchars($checklist['responsavel_nome'] ?? 'Não informado'); ?></strong>
             </div>
             <div class="info-item">
                 <label>Data da Avaliação</label>
