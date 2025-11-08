@@ -25,16 +25,23 @@ class Checklist {
         $dados['pontuacao_maxima'] = 5;
         $dados['percentual'] = 0;
         $dados['atingiu_meta'] = 0;
+        $dados['tipo'] = $dados['tipo'] ?? 'quinzenal_mensal';
+
+        // Validar tipo
+        if (!in_array($dados['tipo'], ['quinzenal_mensal', 'diario'])) {
+            throw new Exception('Tipo de formulário inválido. Use "quinzenal_mensal" ou "diario".');
+        }
 
         $sql = "INSERT INTO checklists
-                (unidade_id, colaborador_id, responsavel_id, data_avaliacao, observacoes_gerais, status, pontuacao_maxima)
-                VALUES (?, ?, ?, ?, ?, ?, ?)";
+                (unidade_id, colaborador_id, responsavel_id, tipo, data_avaliacao, observacoes_gerais, status, pontuacao_maxima)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
             $dados['unidade_id'],
             $dados['colaborador_id'],
             $dados['responsavel_id'] ?? null,
+            $dados['tipo'],
             $dados['data_avaliacao'],
             $dados['observacoes_gerais'] ?? null,
             $dados['status'],
@@ -149,6 +156,11 @@ class Checklist {
         $where = ['1=1'];
         $bindings = [];
 
+        if (!empty($filtros['tipo'])) {
+            $where[] = "c.tipo = ?";
+            $bindings[] = $filtros['tipo'];
+        }
+
         if (!empty($filtros['unidade_id'])) {
             $where[] = "c.unidade_id = ?";
             $bindings[] = $filtros['unidade_id'];
@@ -211,6 +223,11 @@ class Checklist {
     public function obterEstatisticas($filtros = []) {
         $where = ["c.status = 'finalizado'"];
         $bindings = [];
+
+        if (!empty($filtros['tipo'])) {
+            $where[] = "c.tipo = ?";
+            $bindings[] = $filtros['tipo'];
+        }
 
         if (!empty($filtros['unidade_id'])) {
             $where[] = "c.unidade_id = ?";
