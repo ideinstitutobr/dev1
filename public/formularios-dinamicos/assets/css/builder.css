@@ -475,3 +475,242 @@ body {
 .opcao-edit-item .btn-sm {
     padding: 4px 8px;
 }
+
+/* ========================================
+   PAINEL DE PROPRIEDADES DINÂMICO
+   ======================================== */
+
+.properties-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #e0e0e0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.properties-header h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.btn-close-properties {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 5px;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.btn-close-properties:hover {
+    opacity: 1;
+}
+
+.property-group {
+    padding: 15px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.property-group:last-child {
+    border-bottom: none;
+}
+
+.property-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 8px;
+}
+
+.property-input {
+    font-size: 14px;
+}
+
+.property-group textarea.property-input {
+    resize: vertical;
+    min-height: 70px;
+}
+
+.property-group .form-check {
+    margin-top: 8px;
+}
+
+.property-group .form-check-label {
+    font-size: 14px;
+    font-weight: normal;
+}
+
+/* Opções de Resposta */
+.opcoes-container {
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 10px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.opcao-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    transition: all 0.2s;
+}
+
+.opcao-item:hover {
+    border-color: #667eea;
+    box-shadow: 0 2px 4px rgba(102, 126, 234, 0.1);
+}
+
+.opcao-item:last-child {
+    margin-bottom: 0;
+}
+
+.opcao-handle {
+    cursor: grab;
+    color: #6c757d;
+    font-size: 14px;
+    padding: 4px;
+}
+
+.opcao-handle:active {
+    cursor: grabbing;
+}
+
+.opcao-texto {
+    flex: 1;
+    font-size: 13px;
+    border-color: #dee2e6;
+}
+
+.opcao-item .btn-link {
+    padding: 4px 8px;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.opcao-item .btn-link:hover {
+    background: rgba(220, 53, 69, 0.1);
+    border-radius: 4px;
+}
+
+/* Estado Empty do Painel */
+.builder-properties.empty-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.builder-properties.empty-state .empty-state-content {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+}
+
+.builder-properties.empty-state .empty-state-content i {
+    font-size: 48px;
+    margin-bottom: 15px;
+    opacity: 0.3;
+}
+
+.builder-properties.empty-state .empty-state-content p {
+    margin: 0;
+    font-size: 14px;
+}
+
+/* Estado Ativo do Painel */
+.builder-properties.active {
+    display: block;
+}
+
+/* Grupo de Pontuação Toggle */
+#grupo-pontuacao {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 6px;
+    margin-top: 10px;
+}
+
+/* Tipos de Arquivo */
+.property-group .form-check {
+    padding-left: 0;
+}
+
+.property-group .form-check .form-check-input {
+    margin-right: 8px;
+}
+
+/* Scrollbar para Opções */
+.opcoes-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.opcoes-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.opcoes-container::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+.opcoes-container::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Animação de Entrada do Painel */
+.builder-properties.active .properties-header,
+.builder-properties.active .property-group {
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Responsividade do Painel */
+@media (max-width: 1200px) {
+    .builder-container {
+        grid-template-columns: 200px 1fr 280px;
+    }
+
+    .property-group {
+        padding: 12px;
+    }
+}
+
+@media (max-width: 992px) {
+    .builder-properties {
+        position: fixed;
+        right: -320px;
+        top: 120px;
+        bottom: 50px;
+        width: 320px;
+        z-index: 1000;
+        box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+        transition: right 0.3s ease;
+    }
+
+    .builder-properties.active {
+        right: 0;
+    }
+}

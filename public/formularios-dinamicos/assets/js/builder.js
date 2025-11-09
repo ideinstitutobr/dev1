@@ -24,6 +24,7 @@
         initDragAndDrop();
         initEventHandlers();
         initAutoSave();
+        adicionarValidacoesInline();
     });
 
     /**
@@ -446,8 +447,376 @@
         Builder.perguntaSelecionada = $pergunta.data('pergunta-id');
 
         // Mostra painel de propriedades
-        // TODO: Implementar painel de propriedades dinâmico
+        carregarPainelPropriedades($pergunta.data('pergunta-id'));
     }
+
+    /**
+     * Carrega painel de propriedades para pergunta
+     */
+    function carregarPainelPropriedades(perguntaId) {
+        const $painel = $('#propertiesPanel');
+
+        // Buscar dados da pergunta
+        const $perguntaCard = $(`.pergunta-card[data-pergunta-id="${perguntaId}"]`);
+        const tipoPergunta = $perguntaCard.data('tipo-pergunta');
+        const textoPergunta = $perguntaCard.find('input[data-field="pergunta"]').val() || 'Nova pergunta';
+
+        // Limpar painel
+        $painel.html('');
+
+        // Header
+        $painel.append(`
+            <div class="properties-header">
+                <h4>Propriedades da Pergunta</h4>
+                <button class="btn-close-properties" onclick="fecharPainelPropriedades()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `);
+
+        // Campos básicos
+        $painel.append(`
+            <div class="property-group">
+                <label>Texto da Pergunta</label>
+                <textarea
+                    class="form-control property-input"
+                    data-campo="pergunta"
+                    rows="3">${textoPergunta}</textarea>
+            </div>
+
+            <div class="property-group">
+                <label>Descrição/Ajuda (opcional)</label>
+                <input
+                    type="text"
+                    class="form-control property-input"
+                    data-campo="descricao"
+                    placeholder="Texto de ajuda para o respondente">
+            </div>
+
+            <div class="property-group">
+                <div class="form-check">
+                    <input
+                        class="form-check-input property-input"
+                        type="checkbox"
+                        data-campo="obrigatoria"
+                        id="prop-obrigatoria">
+                    <label class="form-check-label" for="prop-obrigatoria">
+                        Pergunta obrigatória
+                    </label>
+                </div>
+            </div>
+        `);
+
+        // Campos específicos por tipo
+        adicionarCamposEspecificos($painel, tipoPergunta, perguntaId);
+
+        // Botão deletar
+        $painel.append(`
+            <div class="property-group mt-4">
+                <button class="btn btn-danger btn-sm w-100" onclick="deletarPerguntaSelecionada()">
+                    <i class="fas fa-trash"></i> Deletar Pergunta
+                </button>
+            </div>
+        `);
+
+        // Event listeners
+        $painel.find('.property-input').on('change', function() {
+            const campo = $(this).data('campo');
+            let valor = $(this).val();
+
+            if ($(this).is(':checkbox')) {
+                valor = $(this).is(':checked') ? 1 : 0;
+            }
+
+            const dados = {};
+            dados[campo] = valor;
+
+            atualizarPergunta(perguntaId, dados);
+        });
+
+        // Mostrar painel
+        $painel.removeClass('empty-state').addClass('active');
+    }
+
+    /**
+     * Adiciona campos específicos por tipo de pergunta
+     */
+    function adicionarCamposEspecificos($painel, tipoPergunta, perguntaId) {
+        switch(tipoPergunta) {
+            case 'texto_curto':
+                $painel.append(`
+                    <div class="property-group">
+                        <label>Tipo de validação</label>
+                        <select class="form-control property-input" data-campo="validacao">
+                            <option value="">Sem validação</option>
+                            <option value="email">E-mail</option>
+                            <option value="url">URL</option>
+                            <option value="numero">Número</option>
+                            <option value="cpf">CPF</option>
+                            <option value="telefone">Telefone</option>
+                        </select>
+                    </div>
+                    <div class="property-group">
+                        <label>Caracteres máximos</label>
+                        <input type="number" class="form-control property-input"
+                               data-campo="max_caracteres" value="255" min="1" max="255">
+                    </div>
+                `);
+                break;
+
+            case 'texto_longo':
+                $painel.append(`
+                    <div class="property-group">
+                        <label>Caracteres máximos</label>
+                        <input type="number" class="form-control property-input"
+                               data-campo="max_caracteres" value="5000" min="1" max="10000">
+                    </div>
+                `);
+                break;
+
+            case 'multipla_escolha':
+            case 'caixas_selecao':
+            case 'lista_suspensa':
+                carregarOpcoesResposta($painel, perguntaId, tipoPergunta);
+                break;
+
+            case 'escala_linear':
+                $painel.append(`
+                    <div class="property-group">
+                        <label>Valor mínimo</label>
+                        <input type="number" class="form-control property-input"
+                               data-campo="escala_min" value="0" min="0" max="10">
+                    </div>
+                    <div class="property-group">
+                        <label>Valor máximo</label>
+                        <input type="number" class="form-control property-input"
+                               data-campo="escala_max" value="10" min="1" max="10">
+                    </div>
+                    <div class="property-group">
+                        <label>Label mínimo</label>
+                        <input type="text" class="form-control property-input"
+                               data-campo="label_min" placeholder="Ex: Muito insatisfeito">
+                    </div>
+                    <div class="property-group">
+                        <label>Label máximo</label>
+                        <input type="text" class="form-control property-input"
+                               data-campo="label_max" placeholder="Ex: Muito satisfeito">
+                    </div>
+                `);
+                break;
+
+            case 'arquivo':
+                $painel.append(`
+                    <div class="property-group">
+                        <label>Tipos de arquivo permitidos</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="pdf" id="tipo-pdf" checked>
+                            <label class="form-check-label" for="tipo-pdf">PDF</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="imagem" id="tipo-img" checked>
+                            <label class="form-check-label" for="tipo-img">Imagens (JPG, PNG)</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="doc" id="tipo-doc">
+                            <label class="form-check-label" for="tipo-doc">Documentos (DOC, DOCX)</label>
+                        </div>
+                    </div>
+                    <div class="property-group">
+                        <label>Tamanho máximo (MB)</label>
+                        <input type="number" class="form-control property-input"
+                               data-campo="tamanho_max" value="5" min="1" max="50">
+                    </div>
+                `);
+                break;
+        }
+
+        // Pontuação
+        $painel.append(`
+            <hr>
+            <div class="property-group">
+                <div class="form-check">
+                    <input class="form-check-input property-input" type="checkbox"
+                           data-campo="tem_pontuacao" id="prop-tem-pontuacao">
+                    <label class="form-check-label" for="prop-tem-pontuacao">
+                        Esta pergunta tem pontuação
+                    </label>
+                </div>
+            </div>
+            <div class="property-group" id="grupo-pontuacao" style="display: none;">
+                <label>Pontuação máxima</label>
+                <input type="number" class="form-control property-input"
+                       data-campo="pontuacao_maxima" value="10" min="0" step="0.1">
+            </div>
+        `);
+
+        // Toggle pontuação
+        $('#prop-tem-pontuacao').on('change', function() {
+            $('#grupo-pontuacao').toggle($(this).is(':checked'));
+        });
+    }
+
+    /**
+     * Carrega opções de resposta para perguntas de múltipla escolha
+     */
+    function carregarOpcoesResposta($painel, perguntaId, tipoPergunta) {
+        $painel.append(`
+            <div class="property-group">
+                <label>Opções de Resposta</label>
+                <div id="lista-opcoes" class="opcoes-container">
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-spinner fa-spin"></i> Carregando opções...
+                    </div>
+                </div>
+                <button class="btn btn-sm btn-primary mt-2 w-100" onclick="adicionarOpcao(${perguntaId})">
+                    <i class="fas fa-plus"></i> Adicionar Opção
+                </button>
+            </div>
+        `);
+
+        // Buscar opções via AJAX (simulado - na prática virá da página)
+        const $perguntaCard = $(`.pergunta-card[data-pergunta-id="${perguntaId}"]`);
+        const opcoes = $perguntaCard.data('opcoes') || [];
+
+        renderizarOpcoes(opcoes, perguntaId);
+    }
+
+    /**
+     * Renderiza lista de opções
+     */
+    function renderizarOpcoes(opcoes, perguntaId) {
+        const $lista = $('#lista-opcoes');
+        $lista.html('');
+
+        if (opcoes.length === 0) {
+            $lista.html(`
+                <div class="text-center text-muted py-2">
+                    <small>Nenhuma opção adicionada</small>
+                </div>
+            `);
+            return;
+        }
+
+        opcoes.forEach((opcao, index) => {
+            $lista.append(`
+                <div class="opcao-item" data-opcao-id="${opcao.id}">
+                    <span class="opcao-handle"><i class="fas fa-grip-vertical"></i></span>
+                    <input type="text" class="form-control form-control-sm opcao-texto"
+                           value="${opcao.texto_opcao}"
+                           onchange="atualizarOpcao(${opcao.id}, this.value)">
+                    <button class="btn btn-sm btn-link text-danger"
+                            onclick="deletarOpcao(${opcao.id}, ${perguntaId})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `);
+        });
+
+        // Tornar opções reordenáveis
+        new Sortable($lista[0], {
+            handle: '.opcao-handle',
+            animation: 150,
+            onEnd: function(evt) {
+                reordenarOpcoes(perguntaId);
+            }
+        });
+    }
+
+    /**
+     * Adiciona nova opção
+     */
+    window.adicionarOpcao = function(perguntaId) {
+        $.ajax({
+            url: BASE_URL + 'formularios-dinamicos/api/salvar_opcao.php',
+            method: 'POST',
+            data: JSON.stringify({
+                pergunta_id: perguntaId,
+                texto_opcao: 'Nova opção'
+            }),
+            contentType: 'application/json',
+            success: function(response) {
+                if (response.success) {
+                    location.reload();
+                }
+            }
+        });
+    };
+
+    /**
+     * Atualiza texto da opção
+     */
+    window.atualizarOpcao = function(opcaoId, novoTexto) {
+        $.ajax({
+            url: BASE_URL + 'formularios-dinamicos/api/salvar_opcao.php',
+            method: 'POST',
+            data: JSON.stringify({
+                id: opcaoId,
+                texto_opcao: novoTexto
+            }),
+            contentType: 'application/json',
+            success: function(response) {
+                if (response.success) {
+                    Builder.isDirty = false;
+                    updateSaveStatus('saved');
+                }
+            }
+        });
+    };
+
+    /**
+     * Deleta opção
+     */
+    window.deletarOpcao = function(opcaoId, perguntaId) {
+        if (!confirm('Deletar esta opção?')) {
+            return;
+        }
+
+        $.ajax({
+            url: BASE_URL + 'formularios-dinamicos/api/deletar_opcao.php',
+            method: 'POST',
+            data: JSON.stringify({ id: opcaoId }),
+            contentType: 'application/json',
+            success: function(response) {
+                if (response.success) {
+                    location.reload();
+                }
+            }
+        });
+    };
+
+    /**
+     * Reordena opções
+     */
+    function reordenarOpcoes(perguntaId) {
+        const ordens = [];
+        $('#lista-opcoes .opcao-item').each(function(index) {
+            ordens.push({
+                id: $(this).data('opcao-id'),
+                ordem: index + 1
+            });
+        });
+
+        // API para reordenar opções (similar ao reordenar.php)
+        console.log('Reordenar opções:', ordens);
+    }
+
+    /**
+     * Fecha painel de propriedades
+     */
+    window.fecharPainelPropriedades = function() {
+        $('#propertiesPanel').removeClass('active').addClass('empty-state');
+        $('.pergunta-card').removeClass('selected');
+        Builder.perguntaSelecionada = null;
+    };
+
+    /**
+     * Deleta pergunta selecionada
+     */
+    window.deletarPerguntaSelecionada = function() {
+        if (Builder.perguntaSelecionada) {
+            deletarPergunta(Builder.perguntaSelecionada);
+        }
+    };
 
     /**
      * Abre preview do formulário
@@ -464,11 +833,135 @@
      * Publica formulário
      */
     function publicarFormulario() {
+        // Validar antes de publicar
+        const erros = validarFormularioParaPublicacao();
+
+        if (erros.length > 0) {
+            let mensagemErro = 'Não é possível publicar o formulário:\n\n';
+            erros.forEach((erro, index) => {
+                mensagemErro += `${index + 1}. ${erro}\n`;
+            });
+            alert(mensagemErro);
+            return;
+        }
+
         if (!confirm('Tem certeza que deseja publicar este formulário?')) {
             return;
         }
 
         atualizarStatusFormulario('ativo');
+    }
+
+    /**
+     * Valida formulário antes de publicar
+     */
+    function validarFormularioParaPublicacao() {
+        const erros = [];
+
+        // Validar título do formulário
+        const tituloFormulario = $('#formTitle').val().trim();
+        if (!tituloFormulario || tituloFormulario.length < 3) {
+            erros.push('O título do formulário deve ter pelo menos 3 caracteres');
+        }
+
+        // Validar se tem pelo menos uma seção
+        const totalSecoes = $('.secao-card').length;
+        if (totalSecoes === 0) {
+            erros.push('O formulário deve ter pelo menos uma seção');
+        }
+
+        // Validar se tem pelo menos uma pergunta
+        const totalPerguntas = $('.pergunta-card').length;
+        if (totalPerguntas === 0) {
+            erros.push('O formulário deve ter pelo menos uma pergunta');
+        }
+
+        // Validar se todas as perguntas têm texto
+        $('.pergunta-card').each(function() {
+            const textoPergunta = $(this).find('input[data-field="pergunta"]').val().trim();
+            if (!textoPergunta || textoPergunta.length < 3) {
+                erros.push('Todas as perguntas devem ter pelo menos 3 caracteres');
+                return false; // break
+            }
+        });
+
+        // Validar se perguntas de múltipla escolha têm opções
+        $('.pergunta-card[data-tipo-pergunta="multipla_escolha"], .pergunta-card[data-tipo-pergunta="caixas_selecao"], .pergunta-card[data-tipo-pergunta="lista_suspensa"]').each(function() {
+            const perguntaId = $(this).data('pergunta-id');
+            const opcoes = $(this).data('opcoes') || [];
+
+            if (opcoes.length < 2) {
+                const textoPergunta = $(this).find('input[data-field="pergunta"]').val().trim();
+                erros.push(`A pergunta "${textoPergunta}" precisa ter pelo menos 2 opções de resposta`);
+            }
+        });
+
+        // Validar se todas as seções têm título
+        $('.secao-card').each(function() {
+            const tituloSecao = $(this).find('input[data-field="titulo"]').val().trim();
+            if (!tituloSecao || tituloSecao.length < 3) {
+                erros.push('Todas as seções devem ter título com pelo menos 3 caracteres');
+                return false; // break
+            }
+        });
+
+        return erros;
+    }
+
+    /**
+     * Validações inline para campos
+     */
+    function adicionarValidacoesInline() {
+        // Validar título do formulário
+        $('#formTitle').on('blur', function() {
+            const valor = $(this).val().trim();
+            if (valor.length > 0 && valor.length < 3) {
+                $(this).addClass('is-invalid');
+                showValidationError(this, 'O título deve ter pelo menos 3 caracteres');
+            } else {
+                $(this).removeClass('is-invalid');
+                removeValidationError(this);
+            }
+        });
+
+        // Validar títulos de seções
+        $(document).on('blur', '.secao-card input[data-field="titulo"]', function() {
+            const valor = $(this).val().trim();
+            if (valor.length > 0 && valor.length < 3) {
+                $(this).addClass('is-invalid');
+                showValidationError(this, 'O título deve ter pelo menos 3 caracteres');
+            } else {
+                $(this).removeClass('is-invalid');
+                removeValidationError(this);
+            }
+        });
+
+        // Validar texto de perguntas
+        $(document).on('blur', '.pergunta-card input[data-field="pergunta"]', function() {
+            const valor = $(this).val().trim();
+            if (valor.length > 0 && valor.length < 3) {
+                $(this).addClass('is-invalid');
+                showValidationError(this, 'A pergunta deve ter pelo menos 3 caracteres');
+            } else {
+                $(this).removeClass('is-invalid');
+                removeValidationError(this);
+            }
+        });
+    }
+
+    /**
+     * Mostra erro de validação
+     */
+    function showValidationError(element, mensagem) {
+        removeValidationError(element);
+        $(element).after(`<div class="invalid-feedback d-block">${mensagem}</div>`);
+    }
+
+    /**
+     * Remove erro de validação
+     */
+    function removeValidationError(element) {
+        $(element).next('.invalid-feedback').remove();
     }
 
     /**
