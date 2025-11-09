@@ -1,0 +1,477 @@
+/**
+ * Builder Visual de Formulários Dinâmicos
+ * Estilos para interface drag-and-drop
+ */
+
+/* Reset e Base */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f7fa;
+    overflow: hidden;
+}
+
+/* Barra Superior */
+.builder-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px 30px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+}
+
+.builder-header input[type="text"] {
+    font-size: 20px;
+}
+
+.builder-header input[type="text"]:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+/* Container Principal */
+.builder-container {
+    display: grid;
+    grid-template-columns: 260px 1fr 320px;
+    gap: 0;
+    height: calc(100vh - 70px - 50px); /* Header + Footer */
+    margin-top: 70px;
+    overflow: hidden;
+}
+
+/* Painel Esquerdo: Paleta */
+.builder-palette {
+    background: white;
+    border-right: 1px solid #e0e0e0;
+    padding: 20px 15px;
+    overflow-y: auto;
+}
+
+.palette-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.palette-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 15px;
+    background: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    cursor: grab;
+    transition: all 0.2s;
+}
+
+.palette-item:hover {
+    background: #e9ecef;
+    border-color: #667eea;
+    transform: translateX(5px);
+}
+
+.palette-item:active {
+    cursor: grabbing;
+}
+
+.palette-item i {
+    font-size: 18px;
+    color: #667eea;
+    width: 24px;
+    text-align: center;
+}
+
+.palette-item span {
+    font-size: 14px;
+    font-weight: 500;
+    color: #495057;
+}
+
+/* Canvas Central */
+.builder-canvas {
+    background: #f5f7fa;
+    padding: 30px;
+    overflow-y: auto;
+    position: relative;
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+}
+
+/* Seção Card */
+.secao-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin-bottom: 20px;
+    overflow: hidden;
+    transition: all 0.3s;
+}
+
+.secao-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+.secao-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.secao-handle {
+    cursor: move;
+    font-size: 18px;
+    opacity: 0.7;
+}
+
+.secao-title {
+    flex: 1;
+}
+
+.secao-title input {
+    color: white;
+    font-size: 18px;
+}
+
+.secao-title input::placeholder {
+    color: rgba(255,255,255,0.7);
+}
+
+.secao-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.secao-actions button {
+    color: white;
+}
+
+.secao-descricao {
+    padding: 15px 20px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.secao-descricao textarea {
+    font-size: 14px;
+    color: #6c757d;
+    resize: none;
+}
+
+/* Container de Perguntas */
+.perguntas-container {
+    padding: 20px;
+    min-height: 100px;
+}
+
+.drop-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    color: #6c757d;
+    font-size: 14px;
+    min-height: 150px;
+}
+
+.drop-zone i {
+    font-size: 32px;
+    margin-bottom: 10px;
+    opacity: 0.5;
+}
+
+.drop-zone.drag-over {
+    background: #f0f8ff;
+    border-color: #667eea;
+}
+
+/* Pergunta Card */
+.pergunta-card {
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.pergunta-card:hover {
+    border-color: #667eea;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+}
+
+.pergunta-card.selected {
+    border-color: #667eea;
+    border-width: 2px;
+    background: white;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+.pergunta-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 15px;
+    background: white;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.pergunta-tipo {
+    font-size: 12px;
+    font-weight: 600;
+    color: #667eea;
+    text-transform: uppercase;
+}
+
+.pergunta-body {
+    padding: 15px;
+}
+
+.pergunta-body input {
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.opcoes-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.opcao-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #495057;
+}
+
+.opcao-item i {
+    color: #6c757d;
+}
+
+/* Painel Direito: Propriedades */
+.builder-properties {
+    background: white;
+    border-left: 1px solid #e0e0e0;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.properties-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+}
+
+.properties-content {
+    display: none;
+}
+
+.properties-content.active {
+    display: block;
+}
+
+.property-section {
+    margin-bottom: 25px;
+}
+
+.property-section h6 {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #6c757d;
+    margin-bottom: 15px;
+}
+
+.property-field {
+    margin-bottom: 15px;
+}
+
+.property-field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 6px;
+}
+
+.property-field .form-control,
+.property-field .form-select {
+    font-size: 14px;
+}
+
+/* Rodapé */
+.builder-footer {
+    background: white;
+    border-top: 1px solid #e0e0e0;
+    padding: 10px 30px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+}
+
+#autoSaveStatus {
+    font-size: 14px;
+}
+
+#autoSaveStatus i {
+    font-size: 8px;
+    vertical-align: middle;
+}
+
+/* Estados de Salvamento */
+.saving i {
+    color: #ffc107;
+    animation: pulse 1s infinite;
+}
+
+.saved i {
+    color: #28a745;
+}
+
+.error i {
+    color: #dc3545;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Drag and Drop */
+.sortable-ghost {
+    opacity: 0.4;
+}
+
+.sortable-drag {
+    opacity: 0.8;
+    transform: rotate(2deg);
+}
+
+.sortable-chosen {
+    background: #e9ecef !important;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .builder-container {
+        grid-template-columns: 220px 1fr 280px;
+    }
+}
+
+@media (max-width: 992px) {
+    .builder-container {
+        grid-template-columns: 1fr;
+    }
+
+    .builder-palette,
+    .builder-properties {
+        display: none;
+    }
+}
+
+/* Scrollbar Customizada */
+.builder-palette::-webkit-scrollbar,
+.builder-canvas::-webkit-scrollbar,
+.builder-properties::-webkit-scrollbar {
+    width: 8px;
+}
+
+.builder-palette::-webkit-scrollbar-track,
+.builder-canvas::-webkit-scrollbar-track,
+.builder-properties::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.builder-palette::-webkit-scrollbar-thumb,
+.builder-canvas::-webkit-scrollbar-thumb,
+.builder-properties::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.builder-palette::-webkit-scrollbar-thumb:hover,
+.builder-canvas::-webkit-scrollbar-thumb:hover,
+.builder-properties::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Animações */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.secao-card,
+.pergunta-card {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Tooltips e Hints */
+.hint {
+    font-size: 12px;
+    color: #6c757d;
+    margin-top: 4px;
+}
+
+/* Botões de Ação */
+.btn-add-opcao {
+    width: 100%;
+    margin-top: 10px;
+    font-size: 13px;
+}
+
+/* Lista de Opções (edição) */
+.opcoes-edit {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.opcao-edit-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.opcao-edit-item input {
+    flex: 1;
+}
+
+.opcao-edit-item .btn-sm {
+    padding: 4px 8px;
+}
