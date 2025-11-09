@@ -6,7 +6,8 @@
 
 session_start();
 
-require_once __DIR__ . '/../../app/classes/Auth.php';
+define('SGC_SYSTEM', true);
+require_once __DIR__ . '/../../app/config/config.php';
 require_once __DIR__ . '/../../app/controllers/FormularioDinamicoController.php';
 
 // Verificar autenticação

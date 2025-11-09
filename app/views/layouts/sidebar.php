@@ -238,32 +238,9 @@
         </li>
 
         <li>
-            <a href="#" onclick="toggleSubmenu('formularios'); return false;">
-                <span class="icon">📋</span>
-                <span class="text">Formulários</span>
-            </a>
-            <ul class="submenu" id="submenu-formularios">
-                <li style="padding: 8px 15px; font-weight: 600; color: #667eea; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">📅 Quinzenais/Mensais</li>
-                <li><a href="<?php echo BASE_URL; ?>checklist/quinzenal/">📝 Lista de Avaliações</a></li>
-                <li><a href="<?php echo BASE_URL; ?>checklist/quinzenal/novo.php">➕ Nova Avaliação</a></li>
-                <?php if (Auth::hasLevel(['admin', 'gestor'])): ?>
-                <li><a href="<?php echo BASE_URL; ?>checklist/modulos.php?tipo=quinzenal_mensal">📦 Módulos</a></li>
-                <?php endif; ?>
-
-                <li style="padding: 8px 15px; font-weight: 600; color: #28a745; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 10px;">📆 Avaliações Diárias</li>
-                <li><a href="<?php echo BASE_URL; ?>checklist/diario/">📝 Lista de Avaliações</a></li>
-                <li><a href="<?php echo BASE_URL; ?>checklist/diario/novo.php">➕ Nova Avaliação</a></li>
-                <?php if (Auth::hasLevel(['admin', 'gestor'])): ?>
-                <li><a href="<?php echo BASE_URL; ?>checklist/modulos.php?tipo=diario">📦 Módulos</a></li>
-                <?php endif; ?>
-            </ul>
-        </li>
-
-        <li>
             <a href="#" onclick="toggleSubmenu('formularios-dinamicos'); return false;">
                 <span class="icon">📝</span>
-                <span class="text">Formulários Dinâmicos</span>
-                <span class="badge bg-success" style="font-size: 9px; padding: 2px 6px; margin-left: 5px;">NOVO</span>
+                <span class="text">Formulários</span>
             </a>
             <ul class="submenu" id="submenu-formularios-dinamicos">
                 <li><a href="<?php echo BASE_URL; ?>formularios-dinamicos/">📋 Meus Formulários</a></li>

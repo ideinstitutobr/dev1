@@ -4,12 +4,14 @@
  * Placeholder para o Editor Visual (Sprint 2)
  */
 session_start();
-require_once __DIR__ . '/../../app/classes/Auth.php';
+
+define('SGC_SYSTEM', true);
+require_once __DIR__ . '/../../app/config/config.php';
 require_once __DIR__ . '/../../app/models/FormularioDinamico.php';
 
 $auth = new Auth();
 if (!$auth->verificarAutenticacao()) {
-    header('Location: https://dev1.ideinstituto.com.br/public/index.php?erro=acesso_negado');
+    header('Location: ' . BASE_URL . 'index.php?erro=acesso_negado');
     exit;
 }
 
