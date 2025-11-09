@@ -12,8 +12,9 @@ if (php_sapi_name() === 'cli') {
 session_start();
 
 // Configuração
+define('SGC_SYSTEM', true);
 $APP_PATH = __DIR__ . '/../../app/';
-require_once $APP_PATH . 'config/database.php';
+require_once $APP_PATH . 'config/config.php';
 require_once $APP_PATH . 'classes/Auth.php';
 
 // Verificar autenticação e permissão de admin
