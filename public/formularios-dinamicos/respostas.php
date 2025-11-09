@@ -83,6 +83,9 @@ include $APP_PATH . 'views/layouts/header.php';
             <a href="builder.php?id=<?= $formularioId ?>" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left"></i> Voltar ao Builder
             </a>
+            <a href="analytics.php?id=<?= $formularioId ?>" class="btn btn-outline-primary">
+                <i class="fas fa-chart-line"></i> Analytics
+            </a>
             <a href="api/exportar_csv.php?formulario_id=<?= $formularioId ?>" class="btn btn-success">
                 <i class="fas fa-file-excel"></i> Exportar CSV
             </a>

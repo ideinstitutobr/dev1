@@ -105,6 +105,9 @@ include $APP_PATH . 'views/layouts/header.php';
             <a href="respostas.php?id=<?= $formulario['id'] ?>" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left"></i> Voltar à Lista
             </a>
+            <a href="analytics.php?id=<?= $formulario['id'] ?>" class="btn btn-outline-info">
+                <i class="fas fa-chart-line"></i> Analytics
+            </a>
             <button onclick="imprimirResposta()" class="btn btn-outline-primary">
                 <i class="fas fa-print"></i> Imprimir
             </button>
