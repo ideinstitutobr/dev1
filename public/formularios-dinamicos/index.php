@@ -8,6 +8,8 @@ session_start();
 
 define('SGC_SYSTEM', true);
 require_once __DIR__ . '/../../app/config/config.php';
+require_once __DIR__ . '/../../app/classes/Database.php';
+require_once __DIR__ . '/../../app/classes/Auth.php';
 require_once __DIR__ . '/../../app/controllers/FormularioDinamicoController.php';
 
 // Verificar autenticação

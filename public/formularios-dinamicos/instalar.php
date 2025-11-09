@@ -15,6 +15,7 @@ session_start();
 define('SGC_SYSTEM', true);
 $APP_PATH = __DIR__ . '/../../app/';
 require_once $APP_PATH . 'config/config.php';
+require_once $APP_PATH . 'classes/Database.php';
 require_once $APP_PATH . 'classes/Auth.php';
 
 // Verificar autenticação e permissão de admin
