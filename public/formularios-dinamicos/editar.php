@@ -11,13 +11,11 @@ require_once __DIR__ . '/../../app/classes/Database.php';
 require_once __DIR__ . '/../../app/classes/Auth.php';
 require_once __DIR__ . '/../../app/models/FormularioDinamico.php';
 
-$auth = new Auth();
-if (!$auth->verificarAutenticacao()) {
+if (!Auth::isLogged()) {
     header('Location: ' . BASE_URL . 'index.php?erro=acesso_negado');
     exit;
 }
 
-$usuarioLogado = $auth->getUsuarioLogado();
 $id = $_GET['id'] ?? null;
 
 // Buscar formulário
@@ -156,15 +154,15 @@ if ($id) {
             </div>
 
             <div class="d-grid gap-2">
-                <a href="https://dev1.ideinstituto.com.br/public/formularios-dinamicos/" class="btn btn-primary btn-lg">
+                <a href="<?= BASE_URL ?>formularios-dinamicos/" class="btn btn-primary btn-lg">
                     <i class="fas fa-list"></i> Voltar para Meus Formulários
                 </a>
                 <?php if ($formulario): ?>
-                <a href="https://dev1.ideinstituto.com.br/public/formularios-dinamicos/responder/<?= $formulario['slug'] ?>" class="btn btn-outline-primary">
+                <a href="<?= BASE_URL ?>formularios-dinamicos/responder/<?= $formulario['slug'] ?>" class="btn btn-outline-primary">
                     <i class="fas fa-eye"></i> Pré-visualizar Formulário
                 </a>
                 <?php endif; ?>
-                <a href="https://dev1.ideinstituto.com.br/public/dashboard.php" class="btn btn-outline-secondary">
+                <a href="<?= BASE_URL ?>dashboard.php" class="btn btn-outline-secondary">
                     <i class="fas fa-home"></i> Voltar ao Dashboard
                 </a>
             </div>
@@ -173,7 +171,7 @@ if ($id) {
 
             <div class="text-muted small">
                 <p class="mb-1">
-                    <i class="fas fa-user"></i> Usuário logado: <strong><?= htmlspecialchars($usuarioLogado['nome']) ?></strong>
+                    <i class="fas fa-user"></i> Usuário logado: <strong><?= htmlspecialchars(Auth::getUserName()) ?></strong>
                 </p>
                 <p class="mb-0">
                     <i class="fas fa-code"></i> Módulo: Formulários Dinâmicos v1.0

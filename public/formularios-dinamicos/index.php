@@ -13,13 +13,11 @@ require_once __DIR__ . '/../../app/classes/Auth.php';
 require_once __DIR__ . '/../../app/controllers/FormularioDinamicoController.php';
 
 // Verificar autenticação
-$auth = new Auth();
-if (!$auth->verificarAutenticacao()) {
-    header('Location: /public/index.php?erro=acesso_negado');
+if (!Auth::isLogged()) {
+    header('Location: ' . BASE_URL . 'index.php?erro=acesso_negado');
     exit;
 }
 
-$usuarioLogado = $auth->getUsuarioLogado();
 $controller = new FormularioDinamicoController();
 
 // Processar ações
@@ -31,7 +29,7 @@ try {
             $id = $_POST['id'] ?? null;
             if ($id) {
                 $controller->arquivar($id);
-                header('Location: /public/formularios-dinamicos/index.php?sucesso=formulario_arquivado');
+                header('Location: ' . BASE_URL . 'formularios-dinamicos/?sucesso=formulario_arquivado');
                 exit;
             }
             break;
@@ -40,7 +38,7 @@ try {
             $id = $_POST['id'] ?? null;
             if ($id && isset($_POST['confirmar'])) {
                 $controller->excluir($id);
-                header('Location: /public/formularios-dinamicos/index.php?sucesso=formulario_excluido');
+                header('Location: ' . BASE_URL . 'formularios-dinamicos/?sucesso=formulario_excluido');
                 exit;
             }
             break;
@@ -49,7 +47,7 @@ try {
             $id = $_POST['id'] ?? null;
             if ($id) {
                 $novoId = $controller->duplicar($id);
-                header("Location: /public/formularios-dinamicos/editar.php?id=$novoId&sucesso=formulario_duplicado");
+                header('Location: ' . BASE_URL . 'formularios-dinamicos/editar.php?id=' . $novoId . '&sucesso=formulario_duplicado');
                 exit;
             }
             break;
@@ -76,7 +74,7 @@ try {
     <title>Formulários Dinâmicos - SGC</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="/public/assets/css/style.css" rel="stylesheet">
+    <link href="<?= BASE_URL ?>assets/css/style.css" rel="stylesheet">
 </head>
 <body>
     <?php include __DIR__ . '/../../app/views/layouts/navbar.php'; ?>
@@ -92,7 +90,7 @@ try {
                         Formulários Dinâmicos
                     </h1>
                     <div class="btn-toolbar mb-2 mb-md-0">
-                        <a href="/public/formularios-dinamicos/criar.php" class="btn btn-primary">
+                        <a href="<?= BASE_URL ?>formularios-dinamicos/criar.php" class="btn btn-primary">
                             <i class="fas fa-plus"></i> Criar Formulário
                         </a>
                     </div>
@@ -172,10 +170,10 @@ try {
                                     </div>
                                     <div class="card-footer bg-transparent">
                                         <div class="btn-group w-100" role="group">
-                                            <a href="/public/formularios-dinamicos/editar.php?id=<?= $formulario['id'] ?>" class="btn btn-sm btn-outline-primary" title="Editar">
+                                            <a href="<?= BASE_URL ?>formularios-dinamicos/editar.php?id=<?= $formulario['id'] ?>" class="btn btn-sm btn-outline-primary" title="Editar">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <a href="/public/formularios-dinamicos/relatorios/dashboard.php?id=<?= $formulario['id'] ?>" class="btn btn-sm btn-outline-info" title="Relatórios">
+                                            <a href="<?= BASE_URL ?>formularios-dinamicos/relatorios/dashboard.php?id=<?= $formulario['id'] ?>" class="btn btn-sm btn-outline-info" title="Relatórios">
                                                 <i class="fas fa-chart-bar"></i>
                                             </a>
                                             <button type="button" class="btn btn-sm btn-outline-secondary" onclick="duplicarFormulario(<?= $formulario['id'] ?>)" title="Duplicar">
@@ -211,7 +209,7 @@ try {
                         <i class="fas fa-info-circle fa-3x mb-3"></i>
                         <h4>Nenhum formulário encontrado</h4>
                         <p>Comece criando seu primeiro formulário dinâmico!</p>
-                        <a href="/public/formularios-dinamicos/criar.php" class="btn btn-primary">
+                        <a href="<?= BASE_URL ?>formularios-dinamicos/criar.php" class="btn btn-primary">
                             <i class="fas fa-plus"></i> Criar Primeiro Formulário
                         </a>
                     </div>

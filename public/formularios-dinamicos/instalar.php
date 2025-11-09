@@ -19,15 +19,13 @@ require_once $APP_PATH . 'classes/Database.php';
 require_once $APP_PATH . 'classes/Auth.php';
 
 // Verificar autenticação e permissão de admin
-$auth = new Auth();
-if (!$auth->verificarAutenticacao()) {
-    header('Location: /public/index.php?erro=acesso_negado');
+if (!Auth::isLogged()) {
+    header('Location: ' . BASE_URL . 'index.php?erro=acesso_negado');
     exit;
 }
 
-$usuarioLogado = $auth->getUsuarioLogado();
-if ($usuarioLogado['nivel_acesso'] !== 'admin') {
-    die('<h1>Acesso Negado</h1><p>Apenas administradores podem executar o instalador.</p><a href="/public/dashboard.php">Voltar</a>');
+if (!Auth::isAdmin()) {
+    die('<h1>Acesso Negado</h1><p>Apenas administradores podem executar o instalador.</p><a href="' . BASE_URL . 'dashboard.php">Voltar</a>');
 }
 
 // Processar instalação
