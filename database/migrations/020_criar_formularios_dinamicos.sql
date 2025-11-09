@@ -216,10 +216,11 @@ COMMENT='Compartilhamento de formulários';
 
 -- =====================================================
 -- INSERIR DADOS DE EXEMPLO (OPCIONAL)
+-- Usa INSERT IGNORE para evitar erros em reinstalações
 -- =====================================================
 
--- Inserir formulário de exemplo
-INSERT INTO formularios_dinamicos (
+-- Inserir formulário de exemplo (ignora se já existir)
+INSERT IGNORE INTO formularios_dinamicos (
     titulo, descricao, slug, usuario_id, status, tipo_pontuacao
 ) VALUES (
     'Formulário de Exemplo',
@@ -230,35 +231,90 @@ INSERT INTO formularios_dinamicos (
     'soma_simples'
 );
 
-SET @form_id = LAST_INSERT_ID();
+-- Obter ID do formulário (recém criado ou existente)
+SET @form_id = (SELECT id FROM formularios_dinamicos WHERE slug = 'formulario-exemplo' LIMIT 1);
 
--- Inserir seção de exemplo
-INSERT INTO form_secoes (formulario_id, titulo, descricao, ordem, peso) VALUES
-(@form_id, 'Dados Gerais', 'Informações básicas', 1, 1.00);
+-- Inserir seção de exemplo (ignora se já existir)
+INSERT IGNORE INTO form_secoes (formulario_id, titulo, descricao, ordem, peso)
+SELECT @form_id, 'Dados Gerais', 'Informações básicas', 1, 1.00
+WHERE NOT EXISTS (
+    SELECT 1 FROM form_secoes WHERE formulario_id = @form_id AND titulo = 'Dados Gerais'
+);
 
-SET @secao_id = LAST_INSERT_ID();
+-- Obter ID da seção
+SET @secao_id = (SELECT id FROM form_secoes WHERE formulario_id = @form_id AND titulo = 'Dados Gerais' LIMIT 1);
 
--- Inserir perguntas de exemplo
-INSERT INTO form_perguntas (secao_id, tipo_pergunta, pergunta, ordem, obrigatoria) VALUES
-(@secao_id, 'texto_curto', 'Qual é o seu nome?', 1, TRUE),
-(@secao_id, 'texto_longo', 'Conte-nos sobre sua experiência', 2, FALSE),
-(@secao_id, 'multipla_escolha', 'Como você avalia nosso serviço?', 3, TRUE);
+-- Inserir perguntas de exemplo (ignora se já existirem)
+INSERT IGNORE INTO form_perguntas (secao_id, tipo_pergunta, pergunta, ordem, obrigatoria)
+SELECT @secao_id, 'texto_curto', 'Qual é o seu nome?', 1, TRUE
+WHERE NOT EXISTS (
+    SELECT 1 FROM form_perguntas WHERE secao_id = @secao_id AND pergunta = 'Qual é o seu nome?'
+);
 
-SET @pergunta_mc = LAST_INSERT_ID();
+INSERT IGNORE INTO form_perguntas (secao_id, tipo_pergunta, pergunta, ordem, obrigatoria)
+SELECT @secao_id, 'texto_longo', 'Conte-nos sobre sua experiência', 2, FALSE
+WHERE NOT EXISTS (
+    SELECT 1 FROM form_perguntas WHERE secao_id = @secao_id AND pergunta = 'Conte-nos sobre sua experiência'
+);
 
--- Inserir opções para múltipla escolha
-INSERT INTO form_opcoes_resposta (pergunta_id, texto_opcao, ordem, pontuacao) VALUES
-(@pergunta_mc, 'Excelente', 1, 10),
-(@pergunta_mc, 'Bom', 2, 7),
-(@pergunta_mc, 'Regular', 3, 4),
-(@pergunta_mc, 'Ruim', 4, 0);
+INSERT IGNORE INTO form_perguntas (secao_id, tipo_pergunta, pergunta, ordem, obrigatoria)
+SELECT @secao_id, 'multipla_escolha', 'Como você avalia nosso serviço?', 3, TRUE
+WHERE NOT EXISTS (
+    SELECT 1 FROM form_perguntas WHERE secao_id = @secao_id AND pergunta = 'Como você avalia nosso serviço?'
+);
 
--- Inserir faixas de pontuação
-INSERT INTO form_faixas_pontuacao (formulario_id, titulo, pontuacao_minima, pontuacao_maxima, cor, ordem) VALUES
-(@form_id, 'Crítico', 0, 25, '#dc3545', 1),
-(@form_id, 'Regular', 26, 50, '#ffc107', 2),
-(@form_id, 'Bom', 51, 75, '#17a2b8', 3),
-(@form_id, 'Excelente', 76, 100, '#28a745', 4);
+-- Obter ID da pergunta de múltipla escolha
+SET @pergunta_mc = (SELECT id FROM form_perguntas WHERE secao_id = @secao_id AND tipo_pergunta = 'multipla_escolha' LIMIT 1);
+
+-- Inserir opções para múltipla escolha (ignora se já existirem)
+INSERT IGNORE INTO form_opcoes_resposta (pergunta_id, texto_opcao, ordem, pontuacao)
+SELECT @pergunta_mc, 'Excelente', 1, 10
+WHERE @pergunta_mc IS NOT NULL AND NOT EXISTS (
+    SELECT 1 FROM form_opcoes_resposta WHERE pergunta_id = @pergunta_mc AND texto_opcao = 'Excelente'
+);
+
+INSERT IGNORE INTO form_opcoes_resposta (pergunta_id, texto_opcao, ordem, pontuacao)
+SELECT @pergunta_mc, 'Bom', 2, 7
+WHERE @pergunta_mc IS NOT NULL AND NOT EXISTS (
+    SELECT 1 FROM form_opcoes_resposta WHERE pergunta_id = @pergunta_mc AND texto_opcao = 'Bom'
+);
+
+INSERT IGNORE INTO form_opcoes_resposta (pergunta_id, texto_opcao, ordem, pontuacao)
+SELECT @pergunta_mc, 'Regular', 3, 4
+WHERE @pergunta_mc IS NOT NULL AND NOT EXISTS (
+    SELECT 1 FROM form_opcoes_resposta WHERE pergunta_id = @pergunta_mc AND texto_opcao = 'Regular'
+);
+
+INSERT IGNORE INTO form_opcoes_resposta (pergunta_id, texto_opcao, ordem, pontuacao)
+SELECT @pergunta_mc, 'Ruim', 4, 0
+WHERE @pergunta_mc IS NOT NULL AND NOT EXISTS (
+    SELECT 1 FROM form_opcoes_resposta WHERE pergunta_id = @pergunta_mc AND texto_opcao = 'Ruim'
+);
+
+-- Inserir faixas de pontuação (ignora se já existirem)
+INSERT IGNORE INTO form_faixas_pontuacao (formulario_id, titulo, pontuacao_minima, pontuacao_maxima, cor, ordem)
+SELECT @form_id, 'Crítico', 0, 25, '#dc3545', 1
+WHERE @form_id IS NOT NULL AND NOT EXISTS (
+    SELECT 1 FROM form_faixas_pontuacao WHERE formulario_id = @form_id AND titulo = 'Crítico'
+);
+
+INSERT IGNORE INTO form_faixas_pontuacao (formulario_id, titulo, pontuacao_minima, pontuacao_maxima, cor, ordem)
+SELECT @form_id, 'Regular', 26, 50, '#ffc107', 2
+WHERE @form_id IS NOT NULL AND NOT EXISTS (
+    SELECT 1 FROM form_faixas_pontuacao WHERE formulario_id = @form_id AND titulo = 'Regular'
+);
+
+INSERT IGNORE INTO form_faixas_pontuacao (formulario_id, titulo, pontuacao_minima, pontuacao_maxima, cor, ordem)
+SELECT @form_id, 'Bom', 51, 75, '#17a2b8', 3
+WHERE @form_id IS NOT NULL AND NOT EXISTS (
+    SELECT 1 FROM form_faixas_pontuacao WHERE formulario_id = @form_id AND titulo = 'Bom'
+);
+
+INSERT IGNORE INTO form_faixas_pontuacao (formulario_id, titulo, pontuacao_minima, pontuacao_maxima, cor, ordem)
+SELECT @form_id, 'Excelente', 76, 100, '#28a745', 4
+WHERE @form_id IS NOT NULL AND NOT EXISTS (
+    SELECT 1 FROM form_faixas_pontuacao WHERE formulario_id = @form_id AND titulo = 'Excelente'
+);
 
 -- =====================================================
 -- VERIFICAÇÕES PÓS-CRIAÇÃO
