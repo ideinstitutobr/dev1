@@ -61,50 +61,40 @@ $router->group(['middleware' => ['auth']], function ($router) {
     });
 
     // =========================================================================
-    // ROTAS DE TREINAMENTOS (EXEMPLO)
+    // ROTAS DE TREINAMENTOS (MIGRADO - USANDO NOVA ARQUITETURA)
     // =========================================================================
 
     /**
-     * Listar treinamentos
+     * CRUD completo de Treinamentos usando TreinamentoController
      */
-    $router->get('/treinamentos', function () {
-        // Exemplo usando model (quando migrado)
-        // $treinamentos = Treinamento::all();
 
-        return view('treinamentos.index', [
-            'titulo' => 'Treinamentos'
-        ]);
-    });
+    // Listar treinamentos
+    $router->get('/treinamentos', 'App\Controllers\TreinamentoController@index');
 
-    /**
-     * Visualizar treinamento
-     */
-    $router->get('/treinamentos/{id}', function ($id) {
-        // Exemplo usando model
-        // $treinamento = Treinamento::findOrFail($id);
+    // Formulário de criação
+    $router->get('/treinamentos/criar', 'App\Controllers\TreinamentoController@create');
 
-        return view('treinamentos.show', [
-            'titulo' => 'Detalhes do Treinamento',
-            'id' => $id
-        ]);
-    });
+    // Salvar novo treinamento
+    $router->post('/treinamentos', 'App\Controllers\TreinamentoController@store', ['csrf']);
 
-    /**
-     * Criar treinamento (formulário)
-     */
-    $router->get('/treinamentos/criar', function () {
-        return view('treinamentos.criar', [
-            'titulo' => 'Novo Treinamento'
-        ]);
-    });
+    // Visualizar detalhes
+    $router->get('/treinamentos/{id}', 'App\Controllers\TreinamentoController@show');
 
-    /**
-     * Salvar treinamento
-     */
-    $router->post('/treinamentos', function () {
-        // Será implementado com Controller
-        redirect('/treinamentos');
-    });
+    // Formulário de edição
+    $router->get('/treinamentos/{id}/editar', 'App\Controllers\TreinamentoController@edit');
+
+    // Atualizar treinamento
+    $router->put('/treinamentos/{id}', 'App\Controllers\TreinamentoController@update', ['csrf']);
+    $router->post('/treinamentos/{id}/atualizar', 'App\Controllers\TreinamentoController@update', ['csrf']); // Fallback para forms sem method override
+
+    // Deletar treinamento
+    $router->delete('/treinamentos/{id}', 'App\Controllers\TreinamentoController@destroy', ['csrf']);
+    $router->post('/treinamentos/{id}/deletar', 'App\Controllers\TreinamentoController@destroy', ['csrf']); // Fallback
+
+    // Ações especiais
+    $router->post('/treinamentos/{id}/cancelar', 'App\Controllers\TreinamentoController@cancelar', ['csrf']);
+    $router->post('/treinamentos/{id}/executar', 'App\Controllers\TreinamentoController@marcarExecutado', ['csrf']);
+    $router->post('/treinamentos/{id}/iniciar', 'App\Controllers\TreinamentoController@iniciar', ['csrf']);
 
 });
 
@@ -146,30 +136,24 @@ $router->group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], functio
  */
 $router->group(['prefix' => 'api', 'middleware' => ['auth']], function ($router) {
 
-    /**
-     * Listar treinamentos (JSON)
-     */
-    $router->get('/treinamentos', function () {
-        // Exemplo de resposta JSON
-        json_response([
-            'success' => true,
-            'data' => [
-                ['id' => 1, 'titulo' => 'PHP Avançado'],
-                ['id' => 2, 'titulo' => 'Laravel Framework']
-            ]
-        ]);
-    });
+    // =========================================================================
+    // API DE TREINAMENTOS
+    // =========================================================================
 
-    /**
-     * Criar treinamento (JSON)
-     */
-    $router->post('/treinamentos', function () {
-        // Validar e criar
-        json_response([
-            'success' => true,
-            'message' => 'Treinamento criado com sucesso'
-        ], 201);
-    });
+    // Listar treinamentos
+    $router->get('/treinamentos', 'App\Controllers\TreinamentoController@apiIndex');
+
+    // Buscar treinamento por ID
+    $router->get('/treinamentos/{id}', 'App\Controllers\TreinamentoController@apiShow');
+
+    // Criar treinamento
+    $router->post('/treinamentos', 'App\Controllers\TreinamentoController@apiStore');
+
+    // Próximos treinamentos
+    $router->get('/treinamentos/proximos', 'App\Controllers\TreinamentoController@apiProximos');
+
+    // Treinamentos em andamento
+    $router->get('/treinamentos/em-andamento', 'App\Controllers\TreinamentoController@apiEmAndamento');
 
 });
 
