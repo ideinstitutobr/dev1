@@ -182,8 +182,15 @@ include $APP_PATH . 'views/layouts/header.php';
 
     <!-- Lista de Respostas -->
     <div class="card">
-        <div class="card-header">
-            <i class="fas fa-list"></i> Respostas Recebidas (<?= count($respostas) ?>)
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <i class="fas fa-list"></i> Respostas Recebidas (<?= count($respostas) ?>)
+            </div>
+            <div id="compareButton" style="display: none;">
+                <button onclick="compararSelecionadas()" class="btn btn-sm btn-info">
+                    <i class="fas fa-columns"></i> Comparar Selecionadas
+                </button>
+            </div>
         </div>
         <div class="card-body">
             <?php if (empty($respostas)): ?>
@@ -196,6 +203,7 @@ include $APP_PATH . 'views/layouts/header.php';
                     <table class="table table-hover">
                         <thead>
                             <tr>
+                                <th width="40"><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"></th>
                                 <th>ID</th>
                                 <th>Respondente</th>
                                 <th>Data/Hora</th>
@@ -209,6 +217,12 @@ include $APP_PATH . 'views/layouts/header.php';
                         <tbody>
                             <?php foreach ($respostas as $resposta): ?>
                                 <tr>
+                                    <td>
+                                        <input type="checkbox"
+                                               class="compare-checkbox"
+                                               value="<?= $resposta['id'] ?>"
+                                               onchange="updateCompareButton()">
+                                    </td>
                                     <td><strong>#<?= $resposta['id'] ?></strong></td>
                                     <td>
                                         <?php if ($resposta['respondente_nome']): ?>
@@ -321,6 +335,52 @@ function deletarResposta(id) {
             alert(mensagemErro);
         }
     });
+}
+
+function updateCompareButton() {
+    const checkboxes = document.querySelectorAll('.compare-checkbox:checked');
+    const compareButton = document.getElementById('compareButton');
+
+    if (checkboxes.length === 2) {
+        compareButton.style.display = 'block';
+    } else {
+        compareButton.style.display = 'none';
+    }
+
+    // Desabilitar outras checkboxes se já houver 2 selecionadas
+    document.querySelectorAll('.compare-checkbox').forEach(cb => {
+        if (!cb.checked && checkboxes.length >= 2) {
+            cb.disabled = true;
+        } else {
+            cb.disabled = false;
+        }
+    });
+}
+
+function toggleSelectAll() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.compare-checkbox');
+
+    checkboxes.forEach(cb => {
+        cb.checked = selectAll.checked;
+        cb.disabled = false;
+    });
+
+    updateCompareButton();
+}
+
+function compararSelecionadas() {
+    const checkboxes = document.querySelectorAll('.compare-checkbox:checked');
+
+    if (checkboxes.length !== 2) {
+        alert('Selecione exatamente 2 respostas para comparar');
+        return;
+    }
+
+    const id1 = checkboxes[0].value;
+    const id2 = checkboxes[1].value;
+
+    window.location.href = '<?= BASE_URL ?>formularios-dinamicos/comparar.php?id1=' + id1 + '&id2=' + id2;
 }
 </script>
 
