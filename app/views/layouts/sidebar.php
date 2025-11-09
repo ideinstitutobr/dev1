@@ -238,19 +238,10 @@
         </li>
 
         <li>
-            <a href="#" onclick="toggleSubmenu('formularios-dinamicos'); return false;">
+            <a href="<?php echo BASE_URL; ?>formularios-dinamicos/">
                 <span class="icon">📝</span>
                 <span class="text">Formulários</span>
             </a>
-            <ul class="submenu" id="submenu-formularios-dinamicos">
-                <li><a href="<?php echo BASE_URL; ?>formularios-dinamicos/">📋 Meus Formulários</a></li>
-                <li><a href="<?php echo BASE_URL; ?>formularios-dinamicos/criar.php">➕ Criar Novo</a></li>
-                <?php if (Auth::isAdmin()): ?>
-                <li style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: 8px; padding-top: 8px;">
-                    <a href="<?php echo BASE_URL; ?>formularios-dinamicos/instalar.php">⚙️ Instalar/Atualizar</a>
-                </li>
-                <?php endif; ?>
-            </ul>
         </li>
 
         <li>
