@@ -54,13 +54,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirmar_instalacao'
 
         $sql = file_get_contents($sqlFile);
 
-        // Executar SQL em partes (separar por ponto-e-vírgula)
-        $pdo->beginTransaction();
-
         // Remover comentários SQL
         $sql = preg_replace('/--.*$/m', '', $sql);
 
-        // Executar comandos
+        // Executar comandos (sem transação porque DDL faz commit implícito)
         $statements = array_filter(
             array_map('trim', explode(';', $sql)),
             function($stmt) {
@@ -70,21 +67,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirmar_instalacao'
         );
 
         $comandosExecutados = 0;
+        $errosIgnorados = 0;
+
         foreach ($statements as $statement) {
             if (!empty($statement)) {
                 try {
                     $pdo->exec($statement);
                     $comandosExecutados++;
                 } catch (PDOException $e) {
-                    // Ignorar erros de tabela já existente
-                    if (strpos($e->getMessage(), 'already exists') === false) {
-                        throw $e;
+                    // Ignorar erros esperados
+                    $mensagemErro = $e->getMessage();
+
+                    if (strpos($mensagemErro, 'already exists') !== false ||
+                        strpos($mensagemErro, 'Duplicate entry') !== false ||
+                        strpos($mensagemErro, 'duplicate key') !== false) {
+                        $errosIgnorados++;
+                        continue;
                     }
+
+                    // Se for outro tipo de erro, lançar
+                    throw $e;
                 }
             }
         }
-
-        $pdo->commit();
 
         // Verificar tabelas criadas
         $stmt = $pdo->query("SHOW TABLES LIKE 'form%'");
@@ -97,6 +102,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirmar_instalacao'
 
         $mensagens[] = "✅ Instalação concluída com sucesso!";
         $mensagens[] = "📊 Total de comandos SQL executados: $comandosExecutados";
+
+        if ($errosIgnorados > 0) {
+            $mensagens[] = "ℹ️ Comandos ignorados (já existentes): $errosIgnorados";
+        }
+
         $mensagens[] = "🗄️ Total de tabelas criadas/verificadas: $totalTabelas";
         $mensagens[] = "✅ Tabelas: " . implode(', ', array_merge($tabelaPrincipal, $tabelasForm));
 
@@ -108,12 +118,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirmar_instalacao'
         $instalado = true;
 
     } catch (PDOException $e) {
-        if (isset($pdo) && $pdo->inTransaction()) {
-            $pdo->rollBack();
-        }
         $erros[] = "❌ Erro no banco de dados: " . $e->getMessage();
+        error_log("Erro instalador formulários: " . $e->getMessage());
     } catch (Exception $e) {
         $erros[] = "❌ Erro: " . $e->getMessage();
+        error_log("Erro instalador formulários: " . $e->getMessage());
     }
 }
 
@@ -296,23 +305,42 @@ try {
                 <?php endif; ?>
 
                 <?php if ($jaInstalado && !$instalado): ?>
-                    <div class="warning-box">
-                        <h4><i class="fas fa-info-circle text-warning"></i> Módulo Já Instalado</h4>
-                        <p>O módulo de Formulários Dinâmicos já está instalado no sistema.</p>
+                    <div class="success-box">
+                        <h4><i class="fas fa-check-circle text-success"></i> Módulo Já Instalado</h4>
+                        <p>O módulo de Formulários Dinâmicos já está instalado e funcionando no sistema.</p>
                         <p class="mb-0">Total de formulários criados: <strong><?= $totalFormulariosExistentes ?? 0 ?></strong></p>
                         <hr>
                         <div class="d-grid gap-2 mt-3">
-                            <a href="<?= BASE_URL ?>formularios-dinamicos/" class="btn btn-primary btn-lg">
+                            <a href="<?= BASE_URL ?>formularios-dinamicos/" class="btn btn-success btn-lg">
                                 <i class="fas fa-list"></i> Acessar Formulários
+                            </a>
+                            <a href="<?= BASE_URL ?>formularios-dinamicos/criar.php" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Criar Novo Formulário
                             </a>
                             <a href="<?= BASE_URL ?>dashboard.php" class="btn btn-outline-secondary">
                                 <i class="fas fa-home"></i> Voltar ao Dashboard
                             </a>
                         </div>
                         <hr>
-                        <p class="text-muted mb-0">
-                            <small>Se deseja reinstalar, você pode executar novamente o instalador abaixo. As tabelas existentes não serão afetadas.</small>
-                        </p>
+                        <details class="mt-3">
+                            <summary class="text-muted" style="cursor: pointer;">
+                                <small><i class="fas fa-sync-alt"></i> Opções avançadas (reinstalar)</small>
+                            </summary>
+                            <div class="alert alert-warning mt-2">
+                                <p class="mb-2"><strong>⚠️ Atenção:</strong></p>
+                                <p class="mb-0">Você pode executar o instalador novamente se necessário. O sistema irá:</p>
+                                <ul class="mt-2 mb-0">
+                                    <li>Ignorar tabelas que já existem (não remove dados)</li>
+                                    <li>Ignorar formulários duplicados</li>
+                                    <li>Manter todos os dados existentes</li>
+                                </ul>
+                                <form method="POST" class="mt-3" onsubmit="return confirm('Tem certeza? Todos os dados existentes serão mantidos.');">
+                                    <button type="submit" name="confirmar_instalacao" class="btn btn-warning btn-sm">
+                                        <i class="fas fa-sync-alt"></i> Executar Instalador Novamente
+                                    </button>
+                                </form>
+                            </div>
+                        </details>
                     </div>
                 <?php endif; ?>
 
