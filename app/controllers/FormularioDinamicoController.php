@@ -11,11 +11,9 @@ require_once __DIR__ . '/../classes/Auth.php';
 
 class FormularioDinamicoController {
     private $model;
-    private $auth;
 
     public function __construct() {
         $this->model = new FormularioDinamico();
-        $this->auth = new Auth();
     }
 
     /**
@@ -23,15 +21,13 @@ class FormularioDinamicoController {
      */
     public function listar($filtros = [], $params = []) {
         // Verificar autenticação
-        if (!$this->auth->verificarAutenticacao()) {
+        if (!Auth::isLogged()) {
             throw new Exception('Usuário não autenticado');
         }
 
-        $usuarioLogado = $this->auth->getUsuarioLogado();
-
         // Filtrar por usuário automaticamente (a menos que seja admin)
-        if ($usuarioLogado['nivel_acesso'] !== 'admin') {
-            $filtros['usuario_id'] = $usuarioLogado['id'];
+        if (!Auth::isAdmin()) {
+            $filtros['usuario_id'] = Auth::getUserId();
         }
 
         return $this->model->listar($filtros, $params);
@@ -63,12 +59,11 @@ class FormularioDinamicoController {
         }
 
         // Verificar autenticação
-        if (!$this->auth->verificarAutenticacao()) {
+        if (!Auth::isLogged()) {
             throw new Exception('Usuário não autenticado');
         }
 
-        $usuarioLogado = $this->auth->getUsuarioLogado();
-        $dados['usuario_id'] = $usuarioLogado['id'];
+        $dados['usuario_id'] = Auth::getUserId();
 
         // Validar slug se fornecido
         if (!empty($dados['slug']) && !$this->validarSlug($dados['slug'])) {
@@ -210,19 +205,17 @@ class FormularioDinamicoController {
      * Verifica permissão do usuário no formulário
      */
     private function verificarPermissao($formularioId, $acao = 'editar') {
-        if (!$this->auth->verificarAutenticacao()) {
+        if (!Auth::isLogged()) {
             throw new Exception('Usuário não autenticado');
         }
 
-        $usuarioLogado = $this->auth->getUsuarioLogado();
-
         // Admin tem permissão total
-        if ($usuarioLogado['nivel_acesso'] === 'admin') {
+        if (Auth::isAdmin()) {
             return true;
         }
 
         // Verificar se formulário pertence ao usuário
-        if (!$this->model->pertenceAoUsuario($formularioId, $usuarioLogado['id'])) {
+        if (!$this->model->pertenceAoUsuario($formularioId, Auth::getUserId())) {
             // Verificar compartilhamento (será implementado depois)
             throw new Exception('Você não tem permissão para acessar este formulário');
         }
