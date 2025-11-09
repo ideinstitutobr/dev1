@@ -240,14 +240,11 @@
         <li>
             <a href="#" onclick="toggleSubmenu('formularios-dinamicos'); return false;">
                 <span class="icon">📝</span>
-                <span class="text">Formulários Dinâmicos</span>
+                <span class="text">Formulários</span>
             </a>
             <ul class="submenu" id="submenu-formularios-dinamicos">
                 <li><a href="<?php echo BASE_URL; ?>formularios-dinamicos/">📋 Meus Formulários</a></li>
                 <li><a href="<?php echo BASE_URL; ?>formularios-dinamicos/criar.php">➕ Criar Novo</a></li>
-                <?php if (Auth::hasLevel(['admin', 'gestor'])): ?>
-                <li><a href="<?php echo BASE_URL; ?>formularios-dinamicos/relatorios/">📊 Relatórios</a></li>
-                <?php endif; ?>
                 <?php if (Auth::isAdmin()): ?>
                 <li style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: 8px; padding-top: 8px;">
                     <a href="<?php echo BASE_URL; ?>formularios-dinamicos/instalar.php">⚙️ Instalar/Atualizar</a>
