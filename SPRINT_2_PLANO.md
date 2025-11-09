@@ -4,6 +4,16 @@
 **Status:** 🔄 Em Desenvolvimento
 **Início:** Após conclusão Sprint 1
 **Duração:** 3 semanas
+**Progresso:** Fase 2/6 Completa ✅
+
+## 📍 Status das Fases
+
+- ✅ **Fase 1:** Layout, CSS e estrutura JavaScript (Completo)
+- ✅ **Fase 2:** APIs Backend (Completo)
+- ⏳ **Fase 3:** Painel de Propriedades Dinâmico (Pendente)
+- ⏳ **Fase 4:** Preview Modal (Pendente)
+- ⏳ **Fase 5:** Configurações Específicas por Tipo (Pendente)
+- ⏳ **Fase 6:** Validações Frontend (Pendente)
 
 ---
 
