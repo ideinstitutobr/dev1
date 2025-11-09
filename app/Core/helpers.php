@@ -591,3 +591,80 @@ if (!function_exists('has_action')) {
         return event()->hasAction($hook);
     }
 }
+
+// =============================================================================
+// VIEW HELPERS
+// =============================================================================
+
+if (!function_exists('view')) {
+    /**
+     * Renderizar uma view
+     *
+     * @param string $view Nome da view
+     * @param array $data Dados para a view
+     * @param string|null $layout Layout (null = sem layout)
+     * @return string HTML renderizado
+     */
+    function view(string $view, array $data = [], ?string $layout = 'main'): string
+    {
+        return \App\Core\View::make($view, $data, $layout);
+    }
+}
+
+if (!function_exists('view_exists')) {
+    /**
+     * Verificar se view existe
+     *
+     * @param string $view Nome da view
+     * @return bool
+     */
+    function view_exists(string $view): bool
+    {
+        $viewInstance = app(\App\Core\View::class);
+        return $viewInstance->exists($view);
+    }
+}
+
+if (!function_exists('view_share')) {
+    /**
+     * Compartilhar dados com todas as views
+     *
+     * @param string|array $key Chave ou array de dados
+     * @param mixed $value Valor
+     * @return void
+     */
+    function view_share($key, $value = null): void
+    {
+        \App\Core\View::share($key, $value);
+    }
+}
+
+if (!function_exists('json_response')) {
+    /**
+     * Retornar resposta JSON
+     *
+     * @param mixed $data Dados
+     * @param int $statusCode Código HTTP
+     * @return void
+     */
+    function json_response($data, int $statusCode = 200): void
+    {
+        \App\Core\View::json($data, $statusCode);
+    }
+}
+
+if (!function_exists('e')) {
+    /**
+     * Escapar HTML (proteção XSS)
+     *
+     * @param mixed $value Valor a escapar
+     * @return string Valor escapado
+     */
+    function e($value): string
+    {
+        if ($value === null) {
+            return '';
+        }
+        return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8', true);
+    }
+}
