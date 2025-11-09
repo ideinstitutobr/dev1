@@ -467,3 +467,127 @@ if (!function_exists('retry')) {
         }
     }
 }
+
+// =============================================================================
+// EVENT MANAGEMENT HELPERS
+// =============================================================================
+
+if (!function_exists('event')) {
+    /**
+     * Obter instância do EventManager ou disparar evento
+     *
+     * @param string|null $event Nome do evento
+     * @param mixed $payload Dados do evento
+     * @return mixed|\App\Core\EventManager
+     */
+    function event(?string $event = null, $payload = [])
+    {
+        $events = app('EventManager');
+
+        if ($event === null) {
+            return $events;
+        }
+
+        return $events->dispatch($event, $payload);
+    }
+}
+
+if (!function_exists('listen')) {
+    /**
+     * Registrar listener para evento
+     *
+     * @param string|array $events Evento(s)
+     * @param callable|string $listener Listener
+     * @param int $priority Prioridade
+     * @return void
+     */
+    function listen($events, $listener, int $priority = 0): void
+    {
+        event()->listen($events, $listener, $priority);
+    }
+}
+
+if (!function_exists('dispatch')) {
+    /**
+     * Disparar um evento
+     *
+     * @param string $event Nome do evento
+     * @param mixed $payload Dados
+     * @return array Respostas dos listeners
+     */
+    function dispatch(string $event, $payload = []): array
+    {
+        return event()->dispatch($event, $payload);
+    }
+}
+
+if (!function_exists('add_action')) {
+    /**
+     * Adicionar action (estilo WordPress)
+     *
+     * @param string $hook Nome do hook
+     * @param callable|string $callback Callback
+     * @param int $priority Prioridade (10 = padrão)
+     * @return void
+     */
+    function add_action(string $hook, $callback, int $priority = 10): void
+    {
+        event()->addAction($hook, $callback, $priority);
+    }
+}
+
+if (!function_exists('do_action')) {
+    /**
+     * Executar action (estilo WordPress)
+     *
+     * @param string $hook Nome do hook
+     * @param mixed ...$args Argumentos
+     * @return void
+     */
+    function do_action(string $hook, ...$args): void
+    {
+        event()->doAction($hook, ...$args);
+    }
+}
+
+if (!function_exists('apply_filters')) {
+    /**
+     * Aplicar filtros (estilo WordPress)
+     *
+     * @param string $hook Nome do filtro
+     * @param mixed $value Valor a filtrar
+     * @param mixed ...$args Argumentos adicionais
+     * @return mixed Valor filtrado
+     */
+    function apply_filters(string $hook, $value, ...$args)
+    {
+        return event()->applyFilters($hook, $value, ...$args);
+    }
+}
+
+if (!function_exists('remove_action')) {
+    /**
+     * Remover action (estilo WordPress)
+     *
+     * @param string $hook Nome do hook
+     * @param callable|string|null $callback Callback específico ou null para todos
+     * @return void
+     */
+    function remove_action(string $hook, $callback = null): void
+    {
+        event()->removeAction($hook, $callback);
+    }
+}
+
+if (!function_exists('has_action')) {
+    /**
+     * Verificar se hook tem actions (estilo WordPress)
+     *
+     * @param string $hook Nome do hook
+     * @return bool
+     */
+    function has_action(string $hook): bool
+    {
+        return event()->hasAction($hook);
+    }
+}
