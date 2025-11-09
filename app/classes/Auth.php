@@ -25,6 +25,23 @@ class Auth {
      */
     public function login($email, $senha) {
         try {
+            // Verificar rate limiting (proteção contra brute force)
+            if (env('RATE_LIMIT_ENABLED', 'true') === 'true') {
+                require_once __DIR__ . '/RateLimiter.php';
+                $rateLimiter = RateLimiter::forLogin();
+
+                $rateCheck = $rateLimiter->checkLogin($email);
+
+                if (!$rateCheck['allowed']) {
+                    return [
+                        'success' => false,
+                        'message' => $rateCheck['message'],
+                        'rate_limited' => true,
+                        'retry_after' => $rateCheck['wait']
+                    ];
+                }
+            }
+
             // Busca usuário por email
             $stmt = $this->pdo->prepare("
                 SELECT id, nome, email, senha, nivel_acesso, ativo
@@ -36,6 +53,11 @@ class Auth {
 
             // Verifica se usuário existe
             if (!$usuario) {
+                // Registrar tentativa falhada
+                if (isset($rateLimiter)) {
+                    $rateLimiter->recordLoginAttempt($email);
+                }
+
                 return [
                     'success' => false,
                     'message' => 'Email ou senha incorretos'
@@ -44,6 +66,11 @@ class Auth {
 
             // Verifica se usuário está ativo
             if (!$usuario['ativo']) {
+                // Registrar tentativa falhada
+                if (isset($rateLimiter)) {
+                    $rateLimiter->recordLoginAttempt($email);
+                }
+
                 return [
                     'success' => false,
                     'message' => 'Usuário inativo. Contate o administrador.'
@@ -52,10 +79,20 @@ class Auth {
 
             // Verifica senha
             if (!password_verify($senha, $usuario['senha'])) {
+                // Registrar tentativa falhada
+                if (isset($rateLimiter)) {
+                    $rateLimiter->recordLoginAttempt($email);
+                }
+
                 return [
                     'success' => false,
                     'message' => 'Email ou senha incorretos'
                 ];
+            }
+
+            // Login bem-sucedido - limpar tentativas de rate limit
+            if (isset($rateLimiter)) {
+                $rateLimiter->clearLoginAttempts($email);
             }
 
             // Registra último acesso

@@ -9,7 +9,29 @@ if (!defined('SGC_SYSTEM')) {
     define('SGC_SYSTEM', true);
 }
 
-// Carrega configurações do banco de dados
+// Carregar variáveis de ambiente do .env
+require_once __DIR__ . '/../classes/DotEnv.php';
+
+try {
+    $dotenv = new DotEnv(dirname(dirname(__DIR__)));
+    $dotenv->load();
+
+    // Verificar variáveis obrigatórias
+    $dotenv->required([
+        'DB_HOST',
+        'DB_NAME',
+        'DB_USER',
+        'DB_PASS'
+    ]);
+} catch (Exception $e) {
+    die(
+        '<h1>Erro de Configuração</h1>' .
+        '<p>' . htmlspecialchars($e->getMessage()) . '</p>' .
+        '<p>Certifique-se de que o arquivo .env existe e está configurado corretamente.</p>'
+    );
+}
+
+// Carrega configurações do banco de dados (agora com .env carregado)
 require_once __DIR__ . '/database.php';
 
 // Configurações de caminho
@@ -25,30 +47,31 @@ if (file_exists(APP_PATH . 'config/config.local.php')) {
     require_once APP_PATH . 'config/config.local.php';
 }
 
-// Configurações de URL (fallback)
+// Configurações de URL (via .env com fallback)
 if (!defined('BASE_URL')) {
-    define('BASE_URL', 'https://dev1.ideinstituto.com.br/public/');
+    define('BASE_URL', env('APP_URL', 'https://dev1.ideinstituto.com.br') . '/public/');
 }
 define('ASSETS_URL', BASE_URL . 'assets/');
 define('UPLOAD_URL', BASE_URL . 'uploads/');
 
 // Configurações da aplicação
-define('APP_NAME', 'SGC - Sistema de Gestão de Capacitações');
+define('APP_NAME', env('APP_NAME', 'SGC - Sistema de Gestão de Capacitações'));
 define('APP_VERSION', '1.0.0');
 if (!defined('APP_ENV')) {
-    define('APP_ENV', 'development'); // development ou production
+    define('APP_ENV', env('APP_ENV', 'development')); // development ou production
 }
+define('APP_DEBUG', env('APP_DEBUG', 'true') === 'true');
 
 // Timezone
 date_default_timezone_set('America/Sao_Paulo');
 
 // Configurações de sessão (aplicar somente se a sessão NÃO estiver ativa)
 if (session_status() !== PHP_SESSION_ACTIVE) {
-    ini_set('session.cookie_httponly', 1);
+    ini_set('session.cookie_httponly', env('SESSION_HTTPONLY', 'true') === 'true' ? 1 : 0);
     ini_set('session.use_only_cookies', 1);
-    // Cookie Secure configurável via config.local.php (COOKIE_SECURE)
-    ini_set('session.cookie_secure', defined('COOKIE_SECURE') && COOKIE_SECURE ? 1 : 0);
-    ini_set('session.cookie_samesite', 'Lax');
+    ini_set('session.cookie_secure', env('SESSION_SECURE', 'true') === 'true' ? 1 : 0);
+    ini_set('session.cookie_samesite', env('SESSION_SAMESITE', 'Lax'));
+    ini_set('session.gc_maxlifetime', env('SESSION_LIFETIME', 30) * 60); // minutos para segundos
 }
 
 // Configurações de erro
@@ -84,6 +107,10 @@ define('HASH_COST', 12);
 if (file_exists(BASE_PATH . 'vendor/autoload.php')) {
     require_once BASE_PATH . 'vendor/autoload.php';
 }
+
+// Aplicar headers de segurança HTTP (OWASP)
+require_once APP_PATH . 'classes/SecurityHeaders.php';
+SecurityHeaders::apply();
 
 // Inicia sessão se ainda não foi iniciada
 if (session_status() === PHP_SESSION_NONE) {
