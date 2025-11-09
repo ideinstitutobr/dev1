@@ -232,7 +232,7 @@
 
         <li>
             <a href="<?php echo BASE_URL; ?>frequencia/">
-                <span class="icon">📝</span>
+                <span class="icon">📋</span>
                 <span class="text">Frequência</span>
             </a>
         </li>
@@ -240,7 +240,7 @@
         <li>
             <a href="#" onclick="toggleSubmenu('formularios-dinamicos'); return false;">
                 <span class="icon">📝</span>
-                <span class="text">Formulários</span>
+                <span class="text">Formulários Dinâmicos</span>
             </a>
             <ul class="submenu" id="submenu-formularios-dinamicos">
                 <li><a href="<?php echo BASE_URL; ?>formularios-dinamicos/">📋 Meus Formulários</a></li>
