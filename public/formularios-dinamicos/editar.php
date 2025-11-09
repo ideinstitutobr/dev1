@@ -154,15 +154,15 @@ if ($id) {
             </div>
 
             <div class="d-grid gap-2">
-                <a href="https://dev1.ideinstituto.com.br/public/formularios-dinamicos/" class="btn btn-primary btn-lg">
+                <a href="<?= BASE_URL ?>formularios-dinamicos/" class="btn btn-primary btn-lg">
                     <i class="fas fa-list"></i> Voltar para Meus Formulários
                 </a>
                 <?php if ($formulario): ?>
-                <a href="https://dev1.ideinstituto.com.br/public/formularios-dinamicos/responder/<?= $formulario['slug'] ?>" class="btn btn-outline-primary">
+                <a href="<?= BASE_URL ?>formularios-dinamicos/responder/<?= $formulario['slug'] ?>" class="btn btn-outline-primary">
                     <i class="fas fa-eye"></i> Pré-visualizar Formulário
                 </a>
                 <?php endif; ?>
-                <a href="https://dev1.ideinstituto.com.br/public/dashboard.php" class="btn btn-outline-secondary">
+                <a href="<?= BASE_URL ?>dashboard.php" class="btn btn-outline-secondary">
                     <i class="fas fa-home"></i> Voltar ao Dashboard
                 </a>
             </div>

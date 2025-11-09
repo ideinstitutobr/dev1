@@ -105,10 +105,10 @@ if (!Auth::isLogged()) {
             </div>
 
             <div class="d-grid gap-2">
-                <a href="https://dev1.ideinstituto.com.br/public/formularios-dinamicos/" class="btn btn-primary btn-lg">
+                <a href="<?= BASE_URL ?>formularios-dinamicos/" class="btn btn-primary btn-lg">
                     <i class="fas fa-list"></i> Ver Meus Formulários
                 </a>
-                <a href="https://dev1.ideinstituto.com.br/public/dashboard.php" class="btn btn-outline-secondary">
+                <a href="<?= BASE_URL ?>dashboard.php" class="btn btn-outline-secondary">
                     <i class="fas fa-home"></i> Voltar ao Dashboard
                 </a>
             </div>
