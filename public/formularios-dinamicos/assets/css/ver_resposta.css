@@ -1,0 +1,156 @@
+/**
+ * CSS - Visualização Detalhada de Resposta
+ * Estilos para exibição de respostas individuais
+ */
+
+/* ========================================
+   LAYOUT GERAL
+   ======================================== */
+
+.pergunta-resposta {
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+}
+
+.pergunta-titulo {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 8px;
+}
+
+.pergunta-descricao {
+    font-size: 14px;
+    font-style: italic;
+    margin-bottom: 12px;
+}
+
+/* ========================================
+   RESPOSTAS
+   ======================================== */
+
+.resposta-valor {
+    padding: 15px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+.resposta-texto {
+    font-size: 15px;
+    color: #4a5568;
+    line-height: 1.6;
+}
+
+.resposta-opcao {
+    font-size: 15px;
+    color: #2d3748;
+    padding: 8px 12px;
+    background: #f0fff4;
+    border-radius: 6px;
+    border-left: 3px solid #48bb78;
+}
+
+.resposta-opcoes div {
+    font-size: 15px;
+    color: #2d3748;
+    padding: 6px 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.resposta-opcoes div:last-child {
+    border-bottom: none;
+}
+
+.resposta-numero {
+    font-size: 24px;
+    color: #667eea;
+    text-align: center;
+    padding: 10px;
+}
+
+.resposta-data {
+    font-size: 15px;
+    color: #4a5568;
+}
+
+.resposta-arquivo {
+    font-size: 15px;
+    color: #4a5568;
+    padding: 8px 12px;
+    background: #eff6ff;
+    border-radius: 6px;
+    border-left: 3px solid #3b82f6;
+}
+
+/* ========================================
+   ESTATÍSTICAS
+   ======================================== */
+
+.status-badge {
+    padding: 20px 0;
+}
+
+.pontuacao-display h1 {
+    color: #667eea;
+    font-weight: 700;
+}
+
+.faixa-pontuacao {
+    margin-top: 20px;
+}
+
+.faixa-pontuacao h5 {
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+/* ========================================
+   IMPRESSÃO
+   ======================================== */
+
+@media print {
+    .btn,
+    .card-header,
+    nav,
+    .sidebar {
+        display: none !important;
+    }
+
+    .card {
+        border: 1px solid #000;
+        page-break-inside: avoid;
+    }
+
+    .pergunta-resposta {
+        page-break-inside: avoid;
+        border: 1px solid #ccc;
+        margin-bottom: 15px;
+    }
+
+    body {
+        background: white;
+    }
+}
+
+/* ========================================
+   RESPONSIVIDADE
+   ======================================== */
+
+@media (max-width: 768px) {
+    .pergunta-titulo {
+        font-size: 14px;
+    }
+
+    .resposta-texto,
+    .resposta-opcao,
+    .resposta-opcoes div {
+        font-size: 14px;
+    }
+
+    .pontuacao-display h1 {
+        font-size: 48px;
+    }
+}
