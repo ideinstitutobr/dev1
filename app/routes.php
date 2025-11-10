@@ -96,6 +96,43 @@ $router->group(['middleware' => ['auth']], function ($router) {
     $router->post('/treinamentos/{id}/executar', 'App\Controllers\TreinamentoController@marcarExecutado', ['csrf']);
     $router->post('/treinamentos/{id}/iniciar', 'App\Controllers\TreinamentoController@iniciar', ['csrf']);
 
+    // =========================================================================
+    // ROTAS DE COLABORADORES (MIGRADO - USANDO NOVA ARQUITETURA - SPRINT 4)
+    // =========================================================================
+
+    /**
+     * CRUD completo de Colaboradores usando ColaboradorController
+     */
+
+    // Listar colaboradores
+    $router->get('/colaboradores', 'App\Controllers\ColaboradorController@index');
+
+    // Formulário de criação
+    $router->get('/colaboradores/criar', 'App\Controllers\ColaboradorController@create');
+
+    // Exportar para CSV
+    $router->get('/colaboradores/exportar', 'App\Controllers\ColaboradorController@exportarCSV');
+
+    // Salvar novo colaborador
+    $router->post('/colaboradores', 'App\Controllers\ColaboradorController@store', ['csrf']);
+
+    // Visualizar detalhes
+    $router->get('/colaboradores/{id}', 'App\Controllers\ColaboradorController@show');
+
+    // Formulário de edição
+    $router->get('/colaboradores/{id}/editar', 'App\Controllers\ColaboradorController@edit');
+
+    // Atualizar colaborador
+    $router->put('/colaboradores/{id}', 'App\Controllers\ColaboradorController@update', ['csrf']);
+    $router->post('/colaboradores/{id}/atualizar', 'App\Controllers\ColaboradorController@update', ['csrf']); // Fallback para forms sem method override
+
+    // Deletar/Inativar colaborador (apenas admin)
+    $router->delete('/colaboradores/{id}', 'App\Controllers\ColaboradorController@destroy', ['csrf']);
+    $router->post('/colaboradores/{id}/deletar', 'App\Controllers\ColaboradorController@destroy', ['csrf']); // Fallback
+
+    // Ações especiais
+    $router->post('/colaboradores/{id}/ativar', 'App\Controllers\ColaboradorController@ativar', ['csrf']); // Apenas admin
+
 });
 
 // =============================================================================
@@ -154,6 +191,13 @@ $router->group(['prefix' => 'api', 'middleware' => ['auth']], function ($router)
 
     // Treinamentos em andamento
     $router->get('/treinamentos/em-andamento', 'App\Controllers\TreinamentoController@apiEmAndamento');
+
+    // =========================================================================
+    // API DE COLABORADORES
+    // =========================================================================
+
+    // Listar colaboradores (com filtros e paginação)
+    $router->get('/colaboradores', 'App\Controllers\ColaboradorController@api');
 
 });
 
